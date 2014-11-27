@@ -1,12 +1,12 @@
 package com.stehno.effigy.transform
-
+import static EntityModel.extractEntityInfo
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
-import static EntityModel.extractEntityInfo
 import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveMethod
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
+import com.stehno.effigy.repository.CrudOperations
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -21,7 +21,6 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.RowMapper
 
 import java.lang.reflect.Modifier
-
 /**
  * Created by cjstehno on 11/26/2014.
  */
@@ -33,7 +32,8 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         AnnotationNode effigyAnnotNode = nodes[0] as AnnotationNode
         ClassNode repositoryClassNode = nodes[1] as ClassNode
 
-        /// FIXME: use the CrudOperations interface as a marker to turn on/off crud injection
+        boolean implementsCrud = repositoryClassNode.implementsInterface(new ClassNode(CrudOperations))
+        println "Implements crud: $implementsCrud"
 
         injectJdbcTemplate repositoryClassNode
         removeAbstract repositoryClassNode
@@ -44,8 +44,10 @@ class EffigyRepositoryTransformer implements ASTTransformation {
 
         injectRowMapper(entityClassNode, entityInfo)
 
-        injectCreateMethod repositoryClassNode, entityInfo
-        injectRetrieveMethod repositoryClassNode, entityInfo
+        if( implementsCrud ){
+            injectCreateMethod repositoryClassNode, entityInfo
+            injectRetrieveMethod repositoryClassNode, entityInfo
+        }
     }
 
     private static void injectRowMapper(ClassNode entityClassNode, EntityModel entityInfo) {

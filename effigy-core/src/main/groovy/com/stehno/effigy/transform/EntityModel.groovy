@@ -14,7 +14,7 @@ import org.codehaus.groovy.ast.FieldNode
 import java.sql.Types
 
 /**
- * Created by cjstehno on 11/27/2014.
+ * General meta information used by the framework during compilation of entities.
  */
 @ToString(includeNames = true)
 class EntityModel {
