@@ -1,5 +1,6 @@
 package people.repository
 
+import com.stehno.effigy.jdbc.EffigyEntityRowMapper
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -28,9 +29,20 @@ class PersonRepositoryTest {
             married: false
         )
 
-        def id = personRepository.save(person)
+        def id = personRepository.create(person)
 
         assert id == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+
+        def result = retrieve(1)
+        assert result == person
+    }
+
+    public Person retrieve(Long id) {
+        database.jdbcTemplate.queryForObject(
+            'select id,first_name,middle_name,last_name,date_of_birth,married from people where id=?',
+            Person.ROW_MAPPER,
+            id
+        )
     }
 }

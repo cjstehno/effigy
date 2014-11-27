@@ -1,13 +1,15 @@
 package people.entity
 
 import com.stehno.effigy.annotation.Column
-import com.stehno.effigy.annotation.Effigy
+import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.ToString
 
 /**
  * Created by cjstehno on 11/26/2014.
  */
-@Effigy(table='people')
+@EffigyEntity(table='people') @EqualsAndHashCode @ToString(includeNames = true)
 class Person {
 
     @Id Long id

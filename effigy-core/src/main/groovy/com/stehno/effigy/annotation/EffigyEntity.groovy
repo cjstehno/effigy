@@ -1,6 +1,6 @@
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.EffigyTransformer
+import com.stehno.effigy.transform.EffigyEntityTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
@@ -10,8 +10,8 @@ import java.lang.annotation.*
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes=[EffigyTransformer])
-@interface Effigy {
+@GroovyASTTransformationClass(classes=[EffigyEntityTransformer])
+@interface EffigyEntity {
 
     /**
      * The name of the database table represented by the entity. The default will be to use the pluralized name of the entity.
