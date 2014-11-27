@@ -15,7 +15,7 @@ import java.lang.reflect.Modifier
  */
 class CreateMethodInjector {
 
-    static void injectCreateMethod( final ClassNode repositoryClassNode, final EntityInfo entityInfo ){
+    static void injectCreateMethod( final ClassNode repositoryClassNode, final EntityModel entityInfo ){
         def nodes = new AstBuilder().buildFromSpec {
             block {
                 expression {
@@ -34,9 +34,9 @@ class CreateMethodInjector {
                         token('=')
                         constructorCall(PreparedStatementCreatorFactory) {
                             argumentList {
-                                constant("insert into ${entityInfo.table} (${entityInfo.fieldNamesString(false)}) values (${entityInfo.placeholderString(false)})" as String)
+                                constant("insert into ${entityInfo.table} (${entityInfo.findProperties(false).collect {it.columnName}.join(',')}) values (${entityInfo.findProperties(false).collect {'?'}.join(',')})" as String)
                                 array(int.class) {
-                                    entityInfo.types(false).each { typ ->
+                                    entityInfo.findSqlTypes(false).each { typ ->
                                         constant(typ)
                                     }
                                 }
@@ -50,7 +50,7 @@ class CreateMethodInjector {
                         variable('paramValues')
                         token('=')
                         array(Object) {
-                            entityInfo.propertyInfo(false).each { pi ->
+                            entityInfo.findProperties(false).each { pi ->
                                 property {
                                     variable('entity')
                                     constant(pi.propertyName)
@@ -88,7 +88,7 @@ class CreateMethodInjector {
                 expression {
                     methodCall {
                         variable('entity')
-                        constant("set${entityInfo.idPropertyName.capitalize()}" as String)
+                        constant("set${entityInfo.identifier.propertyName.capitalize()}" as String)
                         argumentList {
                             property {
                                 variable('keys')
@@ -110,7 +110,7 @@ class CreateMethodInjector {
         repositoryClassNode.addMethod(new MethodNode(
             'create',
             Modifier.PUBLIC,
-            entityInfo.idType,
+            entityInfo.identifier.type,
             [new Parameter(entityInfo.type, 'entity')] as Parameter[],
             null,
             nodes[0] as Statement

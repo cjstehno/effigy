@@ -2,7 +2,7 @@ package com.stehno.effigy.transform
 
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
-import static com.stehno.effigy.transform.EntityInfo.extractEntityInfo
+import static EntityModel.extractEntityInfo
 import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveMethod
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
@@ -39,7 +39,7 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         removeAbstract repositoryClassNode
 
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
-        EntityInfo entityInfo = extractEntityInfo(entityClassNode)
+        EntityModel entityInfo = extractEntityInfo(entityClassNode)
         println entityInfo
 
         injectRowMapper(entityClassNode, entityInfo)
@@ -48,11 +48,11 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         injectRetrieveMethod repositoryClassNode, entityInfo
     }
 
-    private static void injectRowMapper(ClassNode entityClassNode, EntityInfo entityInfo) {
-        def mapEntries = entityInfo.propertyInfo(true).collect { p ->
+    private static void injectRowMapper(ClassNode entityClassNode, EntityModel entityInfo) {
+        def mapEntries = entityInfo.findProperties().collect { p ->
             new MapEntryExpression(
                 new ConstantExpression(p.propertyName),
-                new ConstantExpression(p.fieldName)
+                new ConstantExpression(p.columnName)
             )
         }
 

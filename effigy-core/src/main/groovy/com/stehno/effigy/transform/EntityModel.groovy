@@ -5,6 +5,7 @@ import static com.stehno.effigy.transform.AnnotationUtils.extractString
 import com.stehno.effigy.annotation.Column
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
+import groovy.transform.Memoized
 import groovy.transform.ToString
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -16,39 +17,24 @@ import java.sql.Types
  * Created by cjstehno on 11/27/2014.
  */
 @ToString(includeNames = true)
-class EntityInfo {
+class EntityModel {
     // TODO: move entity info to the entity class (as static content - might be useful to outside code) ??
 
     ClassNode type
     String table
-    List<EntityPropertyInfo> props = []
+    List<EntityPropertyModel> entityProperties = []
 
-    ClassNode getIdType() {
-        props.find { it.id }.type
+    @Memoized
+    EntityPropertyModel getIdentifier(){
+        entityProperties.find { it.identifier }
     }
 
-    String getIdPropertyName() {
-        props.find { it.id }.propertyName
+    List<EntityPropertyModel> findProperties(boolean includeId=true) {
+        (includeId ? entityProperties : entityProperties.findAll { !it.identifier })
     }
 
-    String getIdFieldName() {
-        props.find { it.id }.fieldName
-    }
-
-    String fieldNamesString(boolean includeId) {
-        propertyInfo(includeId).collect { it.fieldName }.join(',')
-    }
-
-    String placeholderString(boolean includeId) {
-        propertyInfo(includeId).collect { '?' }.join(',')
-    }
-
-    List<EntityPropertyInfo> propertyInfo(boolean includeId) {
-        (includeId ? props : props.findAll { !it.id })
-    }
-
-    List<Integer> types(boolean includeId) {
-        propertyInfo(includeId).collect {
+    List<Integer> findSqlTypes(boolean includeId=true) {
+        findProperties(includeId).collect {
             switch (it.type.nameWithoutPackage) {
                 case 'String': return Types.VARCHAR
                 case 'Date': return Types.TIMESTAMP
@@ -64,7 +50,7 @@ class EntityInfo {
         }
     }
 
-    static EntityInfo extractEntityInfo(final ClassNode entityClassNode) {
+    static EntityModel extractEntityInfo(final ClassNode entityClassNode) {
         AnnotationNode effigyAnnotNode = entityClassNode.getAnnotations(new ClassNode(EffigyEntity))[0]
 
         println "Entity has Effigy annotation: ${effigyAnnotNode != null}"
@@ -75,7 +61,7 @@ class EntityInfo {
         }
 
         // list fields
-        EntityInfo entityInfo = new EntityInfo(
+        EntityModel entityInfo = new EntityModel(
             table: tableName,
             type: entityClassNode
         )
@@ -95,9 +81,9 @@ class EntityInfo {
 
             def idAnnot = field.getAnnotations(new ClassNode(Id))[0]
 
-            entityInfo.props << new EntityPropertyInfo(
-                id: idAnnot != null,
-                fieldName: fieldName,
+            entityInfo.entityProperties << new EntityPropertyModel(
+                identifier: idAnnot != null,
+                columnName: fieldName,
                 propertyName: field.name,
                 type: field.type
             )

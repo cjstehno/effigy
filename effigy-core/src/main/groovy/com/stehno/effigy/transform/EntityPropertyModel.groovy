@@ -1,15 +1,16 @@
 package com.stehno.effigy.transform
 
-import groovy.transform.ToString
+import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
  * Created by cjstehno on 11/27/2014.
  */
-@ToString(includeNames = true)
-class EntityPropertyInfo {
-    boolean id
-    String fieldName
+@Immutable(knownImmutableClasses = [ClassNode])
+class EntityPropertyModel {
+
+    boolean identifier
     String propertyName
     ClassNode type
+    String columnName
 }

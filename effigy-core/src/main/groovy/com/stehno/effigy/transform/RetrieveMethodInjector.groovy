@@ -15,16 +15,16 @@ import java.lang.reflect.Modifier
  */
 class RetrieveMethodInjector {
 
-    static void injectRetrieveMethod(final ClassNode repositoryClassNode, final EntityInfo entityInfo) {
+    static void injectRetrieveMethod(final ClassNode repositoryClassNode, final EntityModel entityInfo) {
         FieldNode mapperNode = entityInfo.type.fields.find { f -> f.static && f.name == 'ROW_MAPPER' }
 
         Statement statement = new ReturnStatement(new MethodCallExpression(
             new VariableExpression('jdbcTemplate'),
             'queryForObject',
             new ArgumentListExpression([
-                new ConstantExpression("select ${entityInfo.fieldNamesString(true)} from ${entityInfo.table} where ${entityInfo.idFieldName}=?" as String),
+                new ConstantExpression("select ${entityInfo.findProperties().collect {it.columnName}.join(',')} from ${entityInfo.table} where ${entityInfo.identifier.columnName}=?" as String),
                 new FieldExpression(mapperNode),
-                new VariableExpression('entityId', entityInfo.idType)
+                new VariableExpression('entityId', entityInfo.identifier.type)
             ])
         ))
 
@@ -32,7 +32,7 @@ class RetrieveMethodInjector {
             'retrieve',
             Modifier.PUBLIC,
             entityInfo.type,
-            [new Parameter(entityInfo.idType, 'entityId')] as Parameter[],
+            [new Parameter(entityInfo.identifier.type, 'entityId')] as Parameter[],
             null,
             statement
         ))
