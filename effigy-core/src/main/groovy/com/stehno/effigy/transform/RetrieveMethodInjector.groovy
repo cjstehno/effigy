@@ -1,12 +1,12 @@
 package com.stehno.effigy.transform
 
 import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.ast.builder.AstBuilder
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
-import org.springframework.jdbc.core.PreparedStatementCreatorFactory
-import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import java.lang.reflect.Modifier
 
@@ -15,92 +15,26 @@ import java.lang.reflect.Modifier
  */
 class RetrieveMethodInjector {
 
-    static void injectRetrieveMethod( final ClassNode repositoryClassNode, final EntityInfo entityInfo ){
-        def nodes = new AstBuilder().buildFromSpec {
-            block {
-                expression {
-                    declaration {
-                        variable('keys')
-                        token('=')
-                        constructorCall(GeneratedKeyHolder) {
-                            argumentList {}
-                        }
-                    }
-                }
+    static void injectRetrieveMethod(final ClassNode repositoryClassNode, final EntityInfo entityInfo) {
+        FieldNode mapperNode = entityInfo.type.fields.find { f -> f.static && f.name == 'ROW_MAPPER' }
 
-                expression {
-                    declaration {
-                        variable('factory')
-                        token('=')
-                        constructorCall(PreparedStatementCreatorFactory) {
-                            argumentList {
-                                constant("insert into ${entityInfo.table} (${entityInfo.fieldNamesString(false)}) values (${entityInfo.placeholderString(false)})" as String)
-                                array(int.class) {
-                                    entityInfo.types(false).each { typ ->
-                                        constant(typ)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                expression {
-                    declaration {
-                        variable('paramValues')
-                        token('=')
-                        array(Object) {
-                            entityInfo.propertyInfo(false).each { pi ->
-                                property {
-                                    variable('entity')
-                                    constant(pi.propertyName)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                expression {
-                    declaration {
-                        variable('psc')
-                        token('=')
-                        methodCall {
-                            variable 'factory'
-                            constant 'newPreparedStatementCreator'
-                            argumentList {
-                                variable('paramValues')
-                            }
-                        }
-                    }
-                }
-
-                expression {
-                    methodCall {
-                        variable('jdbcTemplate')
-                        constant('update')
-                        argumentList {
-                            variable('psc')
-                            variable('keys')
-                        }
-                    }
-                }
-
-                returnStatement {
-                    property {
-                        variable('keys')
-                        constant('key')
-                    }
-                }
-            }
-        }
+        Statement statement = new ReturnStatement(new MethodCallExpression(
+            new VariableExpression('jdbcTemplate'),
+            'queryForObject',
+            new ArgumentListExpression([
+                new ConstantExpression("select ${entityInfo.fieldNamesString(true)} from ${entityInfo.table} where ${entityInfo.idFieldName}=?" as String),
+                new FieldExpression(mapperNode),
+                new VariableExpression('entityId', entityInfo.idType)
+            ])
+        ))
 
         repositoryClassNode.addMethod(new MethodNode(
-            'create',
+            'retrieve',
             Modifier.PUBLIC,
-            entityInfo.idType,
-            [new Parameter(entityInfo.type, 'entity')] as Parameter[],
+            entityInfo.type,
+            [new Parameter(entityInfo.idType, 'entityId')] as Parameter[],
             null,
-            nodes[0] as Statement
+            statement
         ))
     }
 }

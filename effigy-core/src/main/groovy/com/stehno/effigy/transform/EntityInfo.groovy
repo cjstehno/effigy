@@ -1,4 +1,5 @@
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.transform.AnnotationUtils.extractString
 
 import com.stehno.effigy.annotation.Column
@@ -10,11 +11,14 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 
 import java.sql.Types
+
 /**
  * Created by cjstehno on 11/27/2014.
  */
 @ToString(includeNames = true)
 class EntityInfo {
+    // TODO: move entity info to the entity class (as static content - might be useful to outside code) ??
+
     ClassNode type
     String table
     List<EntityPropertyInfo> props = []
@@ -23,8 +27,12 @@ class EntityInfo {
         props.find { it.id }.type
     }
 
-    String getIdPropertyName(){
+    String getIdPropertyName() {
         props.find { it.id }.propertyName
+    }
+
+    String getIdFieldName() {
+        props.find { it.id }.fieldName
     }
 
     String fieldNamesString(boolean includeId) {
@@ -73,6 +81,8 @@ class EntityInfo {
         )
 
         entityClassNode.fields.each { FieldNode field ->
+            if( field.static ) return
+
             String fieldName
 
             AnnotationNode fieldColumnAnnot = field.getAnnotations(new ClassNode(Column))[0]

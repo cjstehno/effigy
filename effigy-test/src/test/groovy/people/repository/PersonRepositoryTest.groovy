@@ -34,15 +34,7 @@ class PersonRepositoryTest {
         assert id == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
 
-        def result = retrieve(1)
+        def result = personRepository.retrieve(1)
         assert result == person
-    }
-
-    public Person retrieve(Long id) {
-        database.jdbcTemplate.queryForObject(
-            'select id,first_name,middle_name,last_name,date_of_birth,married from people where id=?',
-            Person.ROW_MAPPER,
-            id
-        )
     }
 }

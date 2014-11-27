@@ -6,7 +6,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 /**
- * Created by cjstehno on 11/27/2014.
+ * Spring RowMapper implementation used for mapping EffigyEntity data.
  */
 class EffigyEntityRowMapper<E> implements RowMapper<E> {
 

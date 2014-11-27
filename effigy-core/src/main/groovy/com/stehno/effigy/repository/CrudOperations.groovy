@@ -16,7 +16,7 @@ interface CrudOperations<E, K> {
      */
     K create(E entity)
 
-//    E retrieve(K entityId)
+    E retrieve(K entityId)
 
     // List<E> retrieveAll()
 
