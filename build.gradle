@@ -1,0 +1,28 @@
+subprojects {
+    version = '0.0.1'
+    group = 'com.stehno.effigy'
+
+    apply plugin:'groovy'
+	apply plugin:'maven-publish'
+
+    compileJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+    }
+
+    compileGroovy {
+        groovyOptions.optimizationOptions.indy = false
+    }
+
+    repositories {
+        jcenter()
+    }
+
+	dependencies {
+		compile 'org.codehaus.groovy:groovy-all:2.3.7'
+	}
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.2'
+}

@@ -1,0 +1,10 @@
+dependencies {
+    compile project(':effigy-core')
+    compile 'org.springframework:spring-context:4.1.2.RELEASE'
+    compile 'org.springframework:spring-jdbc:4.1.2.RELEASE'
+
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.mockito:mockito-all:1.9.5'
+    testCompile 'org.springframework:spring-test:4.1.2.RELEASE'
+	testCompile 'com.h2database:h2:1.4.178'
+}
