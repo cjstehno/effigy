@@ -1,6 +1,7 @@
 package com.stehno.effigy.transform
-import static com.stehno.effigy.transform.AstUtils.*
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
+
+import static com.stehno.effigy.transform.AstUtils.arrayX
+import static com.stehno.effigy.transform.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
@@ -13,6 +14,7 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import java.lang.reflect.Modifier
+
 /**
  * Injects the code for the repository entity create method.
  */
@@ -32,20 +34,24 @@ class CreateMethodInjector {
                     })
                 ))),
 
-                declS(varX('paramValues'), arrayX(OBJECT_TYPE, model.findProperties(false).collect { pi ->
-                    if (pi.enumeration) {
-                        codeX('entity.${name}?.name()', name: pi.propertyName)
-                    } else {
-                        propX(varX('entity'), constX(pi.propertyName))
-                    }
-                })),
+                codeS(
+                    '''
+                        def paramValues = [$values] as Object[]
+                        jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
+                        entity.${idName} = keys.key
+                        return keys.key
+                    ''',
 
-                declS(varX('psc'), callX(varX('factory'), 'newPreparedStatementCreator', args(varX('paramValues')))),
+                    values: model.findProperties(false).collect { pi ->
+                        if (pi.enumeration) {
+                            "entity.${pi.propertyName}?.name()"
+                        } else {
+                            "entity.${pi.propertyName}"
+                        }
+                    }.join(','),
 
-                stmt(callX(varX('jdbcTemplate'), 'update', args(varX('psc'), varX('keys')))),
-
-                codeS('entity.${name} = keys.key', name:model.identifier.propertyName),
-                codeS('return keys.key')
+                    idName: model.identifier.propertyName
+                )
             )
 
             repositoryClassNode.addMethod(new MethodNode(

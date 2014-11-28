@@ -41,17 +41,21 @@ class EntityModel {
 
     List<Integer> findSqlTypes(boolean includeId=true) {
         findProperties(includeId).collect {
-            switch (it.type.nameWithoutPackage) {
-                case 'String': return Types.VARCHAR
-                case 'Date': return Types.TIMESTAMP
-                case 'Boolean':
-                case 'boolean':
-                    return Types.BOOLEAN
-                case 'Integer': return Types.INTEGER
-                case 'Long':
-                case 'long':
-                    return Types.BIGINT
-                default: return Types.JAVA_OBJECT
+            if( it.type.enum ){
+                return Types.VARCHAR
+            } else {
+                switch (it.type.nameWithoutPackage) {
+                    case 'String': return Types.VARCHAR
+                    case 'Date': return Types.TIMESTAMP
+                    case 'Boolean':
+                    case 'boolean':
+                        return Types.BOOLEAN
+                    case 'Integer': return Types.INTEGER
+                    case 'Long':
+                    case 'long':
+                        return Types.BIGINT
+                    default: return Types.JAVA_OBJECT
+                }
             }
         }
     }

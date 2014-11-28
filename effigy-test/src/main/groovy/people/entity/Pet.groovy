@@ -14,7 +14,7 @@ class Pet {
     @Id Long id
 
     String name
-    String animal // fIXME: needs enum support
+    Animal animal
 }
 
 enum Animal {

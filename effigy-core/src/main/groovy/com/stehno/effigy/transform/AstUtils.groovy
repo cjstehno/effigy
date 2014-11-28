@@ -26,10 +26,6 @@ class AstUtils {
         code(bindings, text)[0] as Statement
     }
 
-    static Expression codeX(Map bindings=[:], String text){
-        code(bindings, text)[0] as Expression
-    }
-
     static ArrayExpression arrayX(ClassNode type, List<Expression> expressions){
         new ArrayExpression(type, expressions)
     }
