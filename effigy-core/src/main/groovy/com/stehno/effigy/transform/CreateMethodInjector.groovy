@@ -1,139 +1,64 @@
 package com.stehno.effigy.transform
+import static com.stehno.effigy.transform.AstUtils.*
+import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
+import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import java.lang.reflect.Modifier
-
 /**
  * Injects the code for the repository entity create method.
  */
 class CreateMethodInjector {
 
     static void injectCreateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        def nodes = new AstBuilder().buildFromSpec {
-            block {
-                if( model.versioner ){
-                    expression {
-                        methodCall {
-                            variable('entity')
-                            constant("set${model.versioner.propertyName.capitalize()}" as String)
-                            argumentList {
-                                constant(0)
-                            }
-                        }
-                    }
-                }
+        try {
+            def statement = block(
+                declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
-                expression {
-                    declaration {
-                        variable('keys')
-                        token('=')
-                        constructorCall(GeneratedKeyHolder) {
-                            argumentList {}
-                        }
-                    }
-                }
+                model.versioner ? codeS('entity.$name = 0', name: model.versioner.propertyName) : new EmptyStatement(),
 
-                expression {
-                    declaration {
-                        variable('factory')
-                        token('=')
-                        constructorCall(PreparedStatementCreatorFactory) {
-                            argumentList {
-                                constant("insert into ${model.table} (${model.findProperties(false).collect { it.columnName }.join(',')}) values (${model.findProperties(false).collect { '?' }.join(',')})" as String)
-                                array(int.class) {
-                                    model.findSqlTypes(false).each { typ ->
-                                        constant(typ)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
+                    constX("insert into ${model.table} (${model.findProperties(false).collect { it.columnName }.join(',')}) values (${model.findProperties(false).collect { '?' }.join(',')})" as String),
+                    arrayX(ClassHelper.int_TYPE, model.findSqlTypes(false).collect { typ ->
+                        constX(typ)
+                    })
+                ))),
 
-                expression {
-                    declaration {
-                        variable('paramValues')
-                        token('=')
-                        array(Object) {
-                            model.findProperties(false).each { pi ->
-                                if( pi.enumeration ){
-                                    // entity.propertyName.name()
-                                    // FIXME: needs enum field support - maybe a custom conversion handler to allow others?
-//                                    methodCall {
-//                                        variable 'entity'
-//                                    }
-                                } else {
-                                    property {
-                                        variable('entity')
-                                        constant(pi.propertyName)
-                                    }
-                                }
-                            }
-                        }
+                declS(varX('paramValues'), arrayX(OBJECT_TYPE, model.findProperties(false).collect { pi ->
+                    if (pi.enumeration) {
+                        codeX('entity.${name}?.name()', name: pi.propertyName)
+                    } else {
+                        propX(varX('entity'), constX(pi.propertyName))
                     }
-                }
+                })),
 
-                expression {
-                    declaration {
-                        variable('psc')
-                        token('=')
-                        methodCall {
-                            variable 'factory'
-                            constant 'newPreparedStatementCreator'
-                            argumentList {
-                                variable('paramValues')
-                            }
-                        }
-                    }
-                }
+                declS(varX('psc'), callX(varX('factory'), 'newPreparedStatementCreator', args(varX('paramValues')))),
 
-                expression {
-                    methodCall {
-                        variable('jdbcTemplate')
-                        constant('update')
-                        argumentList {
-                            variable('psc')
-                            variable('keys')
-                        }
-                    }
-                }
+                stmt(callX(varX('jdbcTemplate'), 'update', args(varX('psc'), varX('keys')))),
 
-                expression {
-                    methodCall {
-                        variable('entity')
-                        constant("set${model.identifier.propertyName.capitalize()}" as String)
-                        argumentList {
-                            property {
-                                variable('keys')
-                                constant('key')
-                            }
-                        }
-                    }
-                }
+                codeS('entity.${name} = keys.key', name:model.identifier.propertyName),
+                codeS('return keys.key')
+            )
 
-                returnStatement {
-                    property {
-                        variable('keys')
-                        constant('key')
-                    }
-                }
-            }
+            repositoryClassNode.addMethod(new MethodNode(
+                'create',
+                Modifier.PUBLIC,
+                model.identifier.type,
+                [new Parameter(model.type, 'entity')] as Parameter[],
+                null,
+                statement
+            ))
+
+        } catch (ex) {
+            ex.printStackTrace()
         }
-
-        repositoryClassNode.addMethod(new MethodNode(
-            'create',
-            Modifier.PUBLIC,
-            model.identifier.type,
-            [new Parameter(model.type, 'entity')] as Parameter[],
-            null,
-            nodes[0] as Statement
-        ))
     }
 }
