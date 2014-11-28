@@ -1,7 +1,6 @@
 package com.stehno.effigy.transform
 
 import groovy.text.GStringTemplateEngine
-import groovy.text.TemplateEngine
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -17,8 +16,6 @@ import java.lang.reflect.Modifier
  */
 class UpdateMethodInjector {
 
-    private static final TemplateEngine templateEngine = new GStringTemplateEngine()
-
     static void injectUpdateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
         try {
             def columnUpdates = []
@@ -29,28 +26,23 @@ class UpdateMethodInjector {
                 vars << "entity.${p.propertyName}"
             }
 
-            String entityVersionUpdate = ''
-            String versionCriteria = ''
-            String versionParam = ''
-            if( model.versioner){
-                entityVersionUpdate = """
-                    def currentVersion = entity.${model.versioner.propertyName} ?: 0
-                    entity.${model.versioner.propertyName} = currentVersion + 1
-                """
-                versionCriteria = "and ${model.versioner.columnName}=?"
-                versionParam = ",currentVersion"
-            }
+            def code = new GStringTemplateEngine().createTemplate('''
+                <% if(model.versioner){ %>
+                def currentVersion = entity.${model.versioner.propertyName} ?: 0
+                entity.${model.versioner.propertyName} = currentVersion + 1
+                <% } %>
 
-            def nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, true, """
-                $entityVersionUpdate
                 jdbcTemplate.update(
-                    'update people set ${columnUpdates.join(',')} where ${model.identifier.columnName}=? $versionCriteria',
+                    'update people set ${columnUpdates.join(',')} where ${model.identifier.columnName}=? <% if(model.versioner){ %>and ${model.versioner.columnName}=?<% } %>',
                     ${vars.join(',')},
-                    entity.${model.identifier.propertyName}$versionParam
+                    entity.${model.identifier.propertyName}
+                    <% if(model.versioner){ %>
+                        ,currentVersion
+                    <% } %>
                 )
-            """)
+            ''').make([model:model, vars:vars, columnUpdates:columnUpdates]) as String
 
-            println "There are ${nodes.size()} nodes"
+            def nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, true, code)
 
             repositoryClassNode.addMethod(new MethodNode(
                 'update',
