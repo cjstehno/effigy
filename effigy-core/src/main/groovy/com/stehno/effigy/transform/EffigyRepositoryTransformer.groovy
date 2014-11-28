@@ -2,7 +2,11 @@ package com.stehno.effigy.transform
 import static EntityModel.extractEntityInfo
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
+import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteAllMethod
+import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteMethod
+import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveAllMethod
 import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveMethod
+import static com.stehno.effigy.transform.UpdateMethodInjector.injectUpdateMethod
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
@@ -47,6 +51,10 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         if( implementsCrud ){
             injectCreateMethod repositoryClassNode, entityInfo
             injectRetrieveMethod repositoryClassNode, entityInfo
+            injectRetrieveAllMethod repositoryClassNode, entityInfo
+            injectUpdateMethod repositoryClassNode, entityInfo
+            injectDeleteMethod repositoryClassNode, entityInfo
+            injectDeleteAllMethod repositoryClassNode, entityInfo
         }
     }
 

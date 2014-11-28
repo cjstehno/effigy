@@ -21,6 +21,10 @@ subprojects {
 	dependencies {
 		compile 'org.codehaus.groovy:groovy-all:2.3.7'
 	}
+
+    test {
+        jvmArgs '-Xverify:none'
+    }
 }
 
 task wrapper(type: Wrapper) {

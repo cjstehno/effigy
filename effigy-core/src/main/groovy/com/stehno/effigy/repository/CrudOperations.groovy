@@ -5,7 +5,6 @@ package com.stehno.effigy.repository
  * your IDE happy - it is not required by the framework, the methods will exist either way.
  */
 interface CrudOperations<E, K> {
-    // TODO: maybe just remove this and remove the abstract modifier from the repo impl, and just let groovy do its thing
 
     /**
      * Persists the new entity in the database. The ID value will be returned and also updated on the
@@ -18,10 +17,18 @@ interface CrudOperations<E, K> {
 
     E retrieve(K entityId)
 
-    // List<E> retrieveAll()
+    List<E> retrieveAll()
 
-    // void update(E entity)
+    void update(E entity)
 
-    // boolean delete(K entityId)
-    // boolean deleteAll()
+    /**
+     * Deletes the entity with the given id. If no entity exists with the given id, no action will be taken. A value of true or false
+     * will be returned based on whether or not an entity was actually deleted.
+     *
+     * @param entityId the entity id
+     * @return a value of true if an entity was actually deleted
+     */
+    boolean delete(K entityId)
+
+    boolean deleteAll()
 }

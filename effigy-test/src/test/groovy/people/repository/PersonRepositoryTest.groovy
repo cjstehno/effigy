@@ -21,7 +21,7 @@ class PersonRepositoryTest {
     }
 
     @Test void create() {
-        Person person = new Person(
+        Person personA = new Person(
             firstName: 'John',
             middleName: 'Q',
             lastName: 'Public',
@@ -29,12 +29,66 @@ class PersonRepositoryTest {
             married: false
         )
 
-        def id = personRepository.create(person)
+        def id = personRepository.create(personA)
 
         assert id == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
 
         def result = personRepository.retrieve(1)
-        assert result == person
+        assert result == personA
+
+        Person personB = new Person(
+            firstName: 'Abe',
+            middleName: 'A',
+            lastName: 'Ableman',
+            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
+            married: true
+        )
+
+        def idB = personRepository.create(personB)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
+
+        def people = personRepository.retrieveAll()
+        assert people.size() == 2
+
+        people.each { p->
+            println p
+        }
+
+        assert !personRepository.delete(100)
+
+        assert personRepository.delete(1)
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+
+        assert personRepository.deleteAll()
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+    }
+
+    @Test void update() {
+        Person personA = new Person(
+            firstName: 'John',
+            middleName: 'Q',
+            lastName: 'Public',
+            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
+            married: false
+        )
+
+        def id = personRepository.create(personA)
+
+        assert personA == personRepository.retrieve(id)
+
+        Person personB = new Person(
+            id: id,
+            firstName: 'Able',
+            middleName: 'A',
+            lastName: 'Ableman',
+            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
+            married: true
+        )
+
+        personRepository.update(personB)
+
+        assert personB == personRepository.retrieve(id)
     }
 }

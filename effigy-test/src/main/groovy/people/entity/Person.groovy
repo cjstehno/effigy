@@ -12,6 +12,8 @@ import groovy.transform.ToString
 @EffigyEntity(table='people') @EqualsAndHashCode @ToString(includeNames = true)
 class Person {
 
+    // FIXME: support optimistic versioning
+
     @Id Long id
     String firstName
     String middleName
