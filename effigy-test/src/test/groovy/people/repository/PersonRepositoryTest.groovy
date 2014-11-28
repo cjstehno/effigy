@@ -12,6 +12,21 @@ class PersonRepositoryTest {
 
     @Rule public DatabaseEnvironment database = new DatabaseEnvironment()
 
+    private static final Map PERSON_A = [
+        firstName: 'John',
+        middleName: 'Q',
+        lastName: 'Public',
+        birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
+        married: false
+    ]
+    private static final Map PERSON_B = [
+        firstName: 'Abe',
+        middleName: 'A',
+        lastName: 'Ableman',
+        birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
+        married: true
+    ]
+
     private PersonRepository personRepository
 
     @Before void before() {
@@ -21,13 +36,7 @@ class PersonRepositoryTest {
     }
 
     @Test void create() {
-        Person personA = new Person(
-            firstName: 'John',
-            middleName: 'Q',
-            lastName: 'Public',
-            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married: false
-        )
+        Person personA = new Person(PERSON_A)
 
         def id = personRepository.create(personA)
 
@@ -37,13 +46,7 @@ class PersonRepositoryTest {
         def result = personRepository.retrieve(1)
         assert result == personA
 
-        Person personB = new Person(
-            firstName: 'Abe',
-            middleName: 'A',
-            lastName: 'Ableman',
-            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married: true
-        )
+        Person personB = new Person(PERSON_B)
 
         def idB = personRepository.create(personB)
 
@@ -66,26 +69,13 @@ class PersonRepositoryTest {
     }
 
     @Test void update() {
-        Person personA = new Person(
-            firstName: 'John',
-            middleName: 'Q',
-            lastName: 'Public',
-            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married: false
-        )
+        Person personA = new Person(PERSON_A)
 
         def id = personRepository.create(personA)
 
         assert personA == personRepository.retrieve(id)
 
-        Person personB = new Person(
-            id: id,
-            firstName: 'Able',
-            middleName: 'A',
-            lastName: 'Ableman',
-            birthDate: Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married: true
-        )
+        Person personB = new Person(PERSON_B + [id:id])
 
         personRepository.update(personB)
 

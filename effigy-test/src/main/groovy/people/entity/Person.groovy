@@ -3,6 +3,7 @@ package people.entity
 import com.stehno.effigy.annotation.Column
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
+import com.stehno.effigy.annotation.Version
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
@@ -12,9 +13,9 @@ import groovy.transform.ToString
 @EffigyEntity(table='people') @EqualsAndHashCode @ToString(includeNames = true)
 class Person {
 
-    // FIXME: support optimistic versioning
-
     @Id Long id
+    @Version Long version
+
     String firstName
     String middleName
     String lastName

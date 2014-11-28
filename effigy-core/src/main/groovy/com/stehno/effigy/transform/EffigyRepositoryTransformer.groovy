@@ -49,6 +49,7 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         injectRowMapper(entityClassNode, entityInfo)
 
         if( implementsCrud ){
+            // TODO: might want to pull all crud injectors into a single class (?)
             injectCreateMethod repositoryClassNode, entityInfo
             injectRetrieveMethod repositoryClassNode, entityInfo
             injectRetrieveAllMethod repositoryClassNode, entityInfo

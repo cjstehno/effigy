@@ -10,6 +10,7 @@ import org.codehaus.groovy.ast.ClassNode
 class EntityPropertyModel {
 
     boolean identifier
+    boolean versioner
     String propertyName
     ClassNode type
     String columnName

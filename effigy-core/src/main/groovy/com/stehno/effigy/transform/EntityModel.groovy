@@ -5,6 +5,7 @@ import static com.stehno.effigy.transform.AnnotationUtils.extractString
 import com.stehno.effigy.annotation.Column
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
+import com.stehno.effigy.annotation.Version
 import groovy.transform.Memoized
 import groovy.transform.ToString
 import org.codehaus.groovy.ast.AnnotationNode
@@ -27,6 +28,11 @@ class EntityModel {
     @Memoized
     EntityPropertyModel getIdentifier(){
         entityProperties.find { it.identifier }
+    }
+
+    @Memoized
+    EntityPropertyModel getVersioner(){
+        entityProperties.find { it.versioner }
     }
 
     List<EntityPropertyModel> findProperties(boolean includeId=true) {
@@ -80,9 +86,11 @@ class EntityModel {
             }
 
             def idAnnot = field.getAnnotations(new ClassNode(Id))[0]
+            def versionAnnot = field.getAnnotations(new ClassNode(Version))[0]
 
             entityInfo.entityProperties << new EntityPropertyModel(
                 identifier: idAnnot != null,
+                versioner: versionAnnot != null,
                 columnName: fieldName,
                 propertyName: field.name,
                 type: field.type

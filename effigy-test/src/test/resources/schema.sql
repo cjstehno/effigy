@@ -1,5 +1,6 @@
 CREATE TABLE people (
   id            BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  version       BIGINT                NOT NULL,
   first_name    VARCHAR(25)           NOT NULL,
   middle_name   VARCHAR(25),
   last_name     VARCHAR(25)           NOT NULL,

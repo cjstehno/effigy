@@ -15,9 +15,21 @@ import java.lang.reflect.Modifier
  */
 class CreateMethodInjector {
 
-    static void injectCreateMethod( final ClassNode repositoryClassNode, final EntityModel entityInfo ){
+    static void injectCreateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
         def nodes = new AstBuilder().buildFromSpec {
             block {
+                if( model.versioner ){
+                    expression {
+                        methodCall {
+                            variable('entity')
+                            constant("set${model.versioner.propertyName.capitalize()}" as String)
+                            argumentList {
+                                constant(0)
+                            }
+                        }
+                    }
+                }
+
                 expression {
                     declaration {
                         variable('keys')
@@ -34,9 +46,9 @@ class CreateMethodInjector {
                         token('=')
                         constructorCall(PreparedStatementCreatorFactory) {
                             argumentList {
-                                constant("insert into ${entityInfo.table} (${entityInfo.findProperties(false).collect {it.columnName}.join(',')}) values (${entityInfo.findProperties(false).collect {'?'}.join(',')})" as String)
+                                constant("insert into ${model.table} (${model.findProperties(false).collect { it.columnName }.join(',')}) values (${model.findProperties(false).collect { '?' }.join(',')})" as String)
                                 array(int.class) {
-                                    entityInfo.findSqlTypes(false).each { typ ->
+                                    model.findSqlTypes(false).each { typ ->
                                         constant(typ)
                                     }
                                 }
@@ -50,7 +62,7 @@ class CreateMethodInjector {
                         variable('paramValues')
                         token('=')
                         array(Object) {
-                            entityInfo.findProperties(false).each { pi ->
+                            model.findProperties(false).each { pi ->
                                 property {
                                     variable('entity')
                                     constant(pi.propertyName)
@@ -88,7 +100,7 @@ class CreateMethodInjector {
                 expression {
                     methodCall {
                         variable('entity')
-                        constant("set${entityInfo.identifier.propertyName.capitalize()}" as String)
+                        constant("set${model.identifier.propertyName.capitalize()}" as String)
                         argumentList {
                             property {
                                 variable('keys')
@@ -110,8 +122,8 @@ class CreateMethodInjector {
         repositoryClassNode.addMethod(new MethodNode(
             'create',
             Modifier.PUBLIC,
-            entityInfo.identifier.type,
-            [new Parameter(entityInfo.type, 'entity')] as Parameter[],
+            model.identifier.type,
+            [new Parameter(model.type, 'entity')] as Parameter[],
             null,
             nodes[0] as Statement
         ))
