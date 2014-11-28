@@ -11,6 +11,7 @@ class EntityPropertyModel {
 
     boolean identifier
     boolean versioner
+    boolean enumeration
     String propertyName
     ClassNode type
     String columnName

@@ -63,9 +63,17 @@ class CreateMethodInjector {
                         token('=')
                         array(Object) {
                             model.findProperties(false).each { pi ->
-                                property {
-                                    variable('entity')
-                                    constant(pi.propertyName)
+                                if( pi.enumeration ){
+                                    // entity.propertyName.name()
+                                    // FIXME: needs enum field support - maybe a custom conversion handler to allow others?
+//                                    methodCall {
+//                                        variable 'entity'
+//                                    }
+                                } else {
+                                    property {
+                                        variable('entity')
+                                        constant(pi.propertyName)
+                                    }
                                 }
                             }
                         }

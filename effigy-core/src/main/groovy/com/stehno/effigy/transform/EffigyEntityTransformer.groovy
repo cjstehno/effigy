@@ -24,7 +24,7 @@ class EffigyEntityTransformer implements ASTTransformation {
             f.annotations.find { AnnotationNode a-> a.classNode.name == 'com.stehno.effigy.annotation.Version' }
         }
 
-        if( !(versionProperty.type in [Long_TYPE, long_TYPE]) ){
+        if( versionProperty && !(versionProperty.type in [Long_TYPE, long_TYPE]) ){
             throw new Exception('Currently the Version annotation may only be used on long or java.lang.Long fields.')
         }
     }

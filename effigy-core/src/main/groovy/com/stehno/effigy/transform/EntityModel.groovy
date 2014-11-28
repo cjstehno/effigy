@@ -91,6 +91,7 @@ class EntityModel {
             entityInfo.entityProperties << new EntityPropertyModel(
                 identifier: idAnnot != null,
                 versioner: versionAnnot != null,
+                enumeration: field.type.enum,
                 columnName: fieldName,
                 propertyName: field.name,
                 type: field.type
