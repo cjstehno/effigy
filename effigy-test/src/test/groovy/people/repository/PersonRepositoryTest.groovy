@@ -101,5 +101,9 @@ class PersonRepositoryTest {
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 1
+
+        Person retrieved = personRepository.retrieve(id)
+
+        assert retrieved.pets.size() == 1
     }
 }

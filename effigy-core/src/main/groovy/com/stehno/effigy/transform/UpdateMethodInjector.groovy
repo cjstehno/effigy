@@ -9,6 +9,7 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.stmt.Statement
 
 import java.lang.reflect.Modifier
+
 /**
  * Created by cjstehno on 11/28/2014.
  */
@@ -38,7 +39,16 @@ class UpdateMethodInjector {
                         ,currentVersion
                     <% } %>
                 )
-            ''', model: model, vars: vars, columnUpdates: columnUpdates)
+
+                $o2m
+            ''',
+                model: model,
+                vars: vars,
+                columnUpdates: columnUpdates,
+                o2m: model.findPropertiesByType(OneToManyPropertyModel).collect { OneToManyPropertyModel o2m ->
+                    "save${o2m.propertyName.capitalize()}(entity)"
+                }.join('\n')
+            )
 
             repositoryClassNode.addMethod(new MethodNode(
                 'update',

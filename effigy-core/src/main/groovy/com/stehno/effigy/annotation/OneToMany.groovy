@@ -24,6 +24,13 @@ import java.lang.annotation.Target
      */
     String table()
 
+    /**
+     * The id column name of the owning entity.
+     */
     String entityId()
+
+    /**
+     * The id column name of the associated entity.
+     */
     String associationId()
 }

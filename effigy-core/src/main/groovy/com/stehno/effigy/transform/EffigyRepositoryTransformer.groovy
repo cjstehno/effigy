@@ -75,15 +75,13 @@ class EffigyRepositoryTransformer implements ASTTransformation {
             ])
         )
 
-        entityClassNode.addField(
-            new FieldNode(
-                'ROW_MAPPER',
-                Modifier.STATIC | Modifier.PUBLIC,
-                makeClassSafe(RowMapper),
-                entityClassNode,
-                expression
-            )
-        )
+        entityClassNode.addField(new FieldNode(
+            'ROW_MAPPER',
+            Modifier.STATIC | Modifier.PUBLIC,
+            makeClassSafe(RowMapper),
+            entityClassNode,
+            expression
+        ))
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {

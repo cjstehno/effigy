@@ -1,4 +1,5 @@
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
 import static com.stehno.effigy.transform.AstUtils.*
 import static org.codehaus.groovy.ast.ClassHelper.make
@@ -12,6 +13,7 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import java.lang.reflect.Modifier
+
 /**
  * Injects the code for the repository entity create method.
  */
@@ -19,6 +21,10 @@ class CreateMethodInjector {
 
     static void injectCreateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
         try {
+            model.findPropertiesByType(OneToManyPropertyModel).each { OneToManyPropertyModel o2m ->
+                injectO2MSaveMethod(repositoryClassNode, model, o2m)
+            }
+
             def statement = block(
                 declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
@@ -37,7 +43,6 @@ class CreateMethodInjector {
                         jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
                         entity.${idName} = keys.key
 
-                        def ent = entity
                         $o2m
 
                         return keys.key
@@ -52,8 +57,8 @@ class CreateMethodInjector {
                     }.join(','),
 
                     idName: model.identifier.propertyName,
-                    o2m:model.findPropertiesByType(OneToManyPropertyModel).collect {OneToManyPropertyModel o2m->
-                        genO2M(o2m, model.identifier)
+                    o2m: model.findPropertiesByType(OneToManyPropertyModel).collect { OneToManyPropertyModel o2m ->
+                        "save${o2m.propertyName.capitalize()}(entity)"
                     }.join('\n')
                 ),
             )
@@ -72,39 +77,49 @@ class CreateMethodInjector {
         }
     }
 
-    // FIXME: need custom exception for O2M check
-
-    private static String genO2M(OneToManyPropertyModel model, IdentifierPropertyModel idModel){
-        string(
+    // TODO: this should probably be pulled into a common area since update uses the same method
+    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, EntityModel model, OneToManyPropertyModel o2m) {
+        def statement = codeS(
             '''
-                int ${name}_expects = entity.${name}.size()
-                int ${name}_count = 0
+                int expects = entity.${name}.size()
+                int count = 0
+                def ent = entity
                 entity.${name}.each { itm->
-                    ${name}_count += jdbcTemplate.update(
+                    jdbcTemplate.update('delete from $assocTable where $tableEntIdName=?', ent.${entityIdName})
+
+                    count += jdbcTemplate.update(
                         'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
                         ent.${entityIdName},
                         itm.${assocIdName}
                     )
                 }
 
-                if( ${name}_count != ${name}_expects ){
+                if( count != expects ){
                     entity.${entityIdName} = 0
-                    throw new Exception('Count did not match expected - update failed.')
+                    throw new RuntimeException('Insert count for $name (' + count + ') did not match expected count (' + expects + ') - save failed.')
                 }
-
             ''',
 
-            name: model.propertyName,
-            assocTable:model.table,
-            tableEntIdName:model.entityId,
-            tableAssocIdName:model.associationId,
-            entityIdName:idModel.propertyName,
-            assocIdName:findIdName(model.type)
+            name: o2m.propertyName,
+            assocTable: o2m.table,
+            tableEntIdName: o2m.entityId,
+            tableAssocIdName: o2m.associationId,
+            entityIdName: model.identifier.propertyName,
+            assocIdName: findIdName(o2m.type)
         )
+
+        repositoryClassNode.addMethod(new MethodNode(
+            "save${o2m.propertyName.capitalize()}",
+            Modifier.PROTECTED,
+            ClassHelper.VOID_TYPE,
+            [new Parameter(model.type, 'entity')] as Parameter[],
+            null,
+            statement
+        ))
     }
 
     // FIXME: this should be part of the model (?)
-    private static findIdName( ClassNode classNode ){
+    private static findIdName(ClassNode classNode) {
         GenericsType mappedType = classNode.genericsTypes.find { hasAnnotation(it.type, EffigyEntity) }
         mappedType.type.fields.find { hasAnnotation(it, Id) }.name
     }

@@ -1,5 +1,7 @@
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.trace
+
 import groovy.text.GStringTemplateEngine
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -14,7 +16,7 @@ import org.codehaus.groovy.control.CompilePhase
  */
 class AstUtils {
 
-    static List<ASTNode> code(Map bindings=[:], String text) {
+    static List<ASTNode> code(Map bindings = [:], String text) {
         new AstBuilder().buildFromString(
             CompilePhase.CANONICALIZATION,
             true,
@@ -22,19 +24,21 @@ class AstUtils {
         )
     }
 
-    static String string(Map bindings=[:], String text){
+    static String string(Map bindings = [:], String text) {
         String result = new GStringTemplateEngine().createTemplate(text).make(bindings) as String
-        println '--------------------------------'
-        println result
-        println '--------------------------------'
+
+        trace AstUtils, '-' * 50
+        trace AstUtils, result
+        trace AstUtils, '-' * 50
+
         result
     }
 
-    static Statement codeS(Map bindings=[:], String text){
+    static Statement codeS(Map bindings = [:], String text) {
         code(bindings, text)[0] as Statement
     }
 
-    static ArrayExpression arrayX(ClassNode type, List<Expression> expressions){
+    static ArrayExpression arrayX(ClassNode type, List<Expression> expressions) {
         new ArrayExpression(type, expressions)
     }
 }
