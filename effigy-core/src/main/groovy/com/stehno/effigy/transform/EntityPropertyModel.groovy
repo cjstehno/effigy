@@ -1,18 +1,53 @@
 package com.stehno.effigy.transform
 
+import groovy.transform.CompileStatic
 import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 11/27/2014.
+ * Used by the AST transforms to help manage the entity metadata.
  */
-@Immutable(knownImmutableClasses = [ClassNode])
-class EntityPropertyModel {
+@CompileStatic
+interface EntityPropertyModel {
 
-    boolean identifier
-    boolean versioner
-    boolean enumeration
+    String getPropertyName()
+    ClassNode getType()
+}
+
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class IdentifierPropertyModel implements EntityPropertyModel {
+
     String propertyName
     ClassNode type
     String columnName
+    int columnType
+}
+
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class VersionerPropertyModel implements EntityPropertyModel {
+
+    String propertyName
+    ClassNode type
+    String columnName
+    int columnType
+}
+
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class FieldPropertyModel implements EntityPropertyModel {
+
+    String propertyName
+    ClassNode type
+    String columnName
+    int columnType
+}
+
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class OneToManyPropertyModel implements EntityPropertyModel {
+
+    String propertyName
+    ClassNode type
+
+    String table
+    String entityId
+    String associationId
 }

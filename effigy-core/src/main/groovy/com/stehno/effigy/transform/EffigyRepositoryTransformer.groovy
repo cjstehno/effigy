@@ -1,5 +1,6 @@
 package com.stehno.effigy.transform
 import static EntityModel.extractEntityInfo
+import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
 import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteAllMethod
@@ -37,14 +38,13 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         ClassNode repositoryClassNode = nodes[1] as ClassNode
 
         boolean implementsCrud = repositoryClassNode.implementsInterface(new ClassNode(CrudOperations))
-        println "Implements crud: $implementsCrud"
+        info EffigyRepositoryTransformer, 'Implements CRUD: {}', implementsCrud
 
         injectJdbcTemplate repositoryClassNode
         removeAbstract repositoryClassNode
 
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
         EntityModel entityInfo = extractEntityInfo(entityClassNode)
-        println entityInfo
 
         injectRowMapper(entityClassNode, entityInfo)
 

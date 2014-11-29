@@ -31,10 +31,6 @@ class PetRepositoryTest {
     @Test void operations() {
         def petId = petRepository.create(new Pet(PET_A))
 
-//        new Sql(database.jdbcTemplate.dataSource).eachRow('select * from pets'){ row->
-//            println row
-//        }
-
         def petA = petRepository.retrieve(petId)
         println petA
     }

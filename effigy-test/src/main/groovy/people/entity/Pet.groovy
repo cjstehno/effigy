@@ -16,12 +16,3 @@ class Pet {
     String name
     Animal animal
 }
-
-enum Animal {
-
-    CAT,
-    DOG,
-    SNAKE,
-    BIRD,
-    RODENT
-}

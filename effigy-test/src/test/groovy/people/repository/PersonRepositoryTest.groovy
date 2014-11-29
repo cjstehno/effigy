@@ -6,7 +6,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
+import people.entity.Animal
 import people.entity.Person
+import people.entity.Pet
 
 class PersonRepositoryTest {
 
@@ -28,9 +30,13 @@ class PersonRepositoryTest {
     ]
 
     private PersonRepository personRepository
+    private PetRepository petRepository
 
     @Before void before() {
         personRepository = new EffigyPersonRepository(
+            jdbcTemplate: database.jdbcTemplate
+        )
+        petRepository = new EffigyPetRepository(
             jdbcTemplate: database.jdbcTemplate
         )
     }
@@ -80,5 +86,20 @@ class PersonRepositoryTest {
         personRepository.update(personB)
 
         assert personB == personRepository.retrieve(id)
+    }
+
+    @Test void createWithPet() {
+        def petId = petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT))
+        Pet pet = petRepository.retrieve(petId)
+
+        Person personA = new Person(PERSON_A)
+        personA.pets << pet
+
+        def id = personRepository.create(personA)
+        assert id
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 1
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 1
     }
 }
