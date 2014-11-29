@@ -1,6 +1,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.transform.AstUtils.code
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
@@ -54,7 +55,7 @@ class UpdateMethodInjector {
                 'update',
                 Modifier.PUBLIC,
                 ClassHelper.VOID_TYPE,
-                [new Parameter(model.type, 'entity')] as Parameter[],
+                [new Parameter(newClass(model.type), 'entity')] as Parameter[],
                 null,
                 nodes[0] as Statement
             ))

@@ -1,9 +1,11 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
-import static com.stehno.effigy.transform.AstUtils.*
+import static com.stehno.effigy.transform.AstUtils.arrayX
+import static com.stehno.effigy.transform.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
@@ -67,7 +69,7 @@ class CreateMethodInjector {
                 'create',
                 Modifier.PUBLIC,
                 model.identifier.type,
-                [new Parameter(model.type, 'entity')] as Parameter[],
+                [new Parameter(newClass(model.type), 'entity')] as Parameter[],
                 null,
                 statement
             ))
@@ -84,9 +86,10 @@ class CreateMethodInjector {
                 int expects = entity.${name}.size()
                 int count = 0
                 def ent = entity
-                entity.${name}.each { itm->
-                    jdbcTemplate.update('delete from $assocTable where $tableEntIdName=?', ent.${entityIdName})
 
+                jdbcTemplate.update('delete from $assocTable where $tableEntIdName=?', ent.${entityIdName})
+
+                entity.${name}.each { itm->
                     count += jdbcTemplate.update(
                         'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
                         ent.${entityIdName},
@@ -112,7 +115,7 @@ class CreateMethodInjector {
             "save${o2m.propertyName.capitalize()}",
             Modifier.PROTECTED,
             ClassHelper.VOID_TYPE,
-            [new Parameter(model.type, 'entity')] as Parameter[],
+            [new Parameter(newClass(model.type), 'entity')] as Parameter[],
             null,
             statement
         ))

@@ -1,6 +1,7 @@
 package com.stehno.effigy.transform
 
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
@@ -11,6 +12,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 
 import java.lang.reflect.Modifier
+
 /**
  * Created by cjstehno on 11/27/2014.
  */
@@ -39,7 +41,7 @@ class RetrieveMethodInjector {
         repositoryClassNode.addMethod(new MethodNode(
             'retrieve',
             Modifier.PUBLIC,
-            model.type,
+            newClass(model.type),
             [new Parameter(model.identifier.type, 'entityId')] as Parameter[],
             null,
             statement

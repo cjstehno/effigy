@@ -57,52 +57,55 @@ class EntityModel {
         entityProperties.findAll { propModelType.isAssignableFrom(it.class) }
     }
 
-    static EntityModel extractEntityInfo(final ClassNode entityClassNode) {
-        new EntityModel(
-            table: extractTableName(entityClassNode),
-            type: entityClassNode,
-            entityProperties: entityClassNode.fields.findAll { f -> !f.static }.collect { FieldNode field ->
-                EntityPropertyModel propertyModel
+    // TODO: this should probably move to the registry class (?)
+    static EntityModel registerEntityModel(final ClassNode entityClassNode) {
+        EntityModelRegistry.instance.register(
+            new EntityModel(
+                table: extractTableName(entityClassNode),
+                type: entityClassNode,
+                entityProperties: entityClassNode.fields.findAll { f -> !f.static }.collect { FieldNode field ->
+                    EntityPropertyModel propertyModel
 
-                if (hasAnnotation(field, Id)) {
-                    propertyModel = new IdentifierPropertyModel(
-                        columnName: extractFieldName(field),
-                        propertyName: field.name,
-                        type: field.type,
-                        columnType: findSqlType(field)
-                    )
+                    if (hasAnnotation(field, Id)) {
+                        propertyModel = new IdentifierPropertyModel(
+                            columnName: extractFieldName(field),
+                            propertyName: field.name,
+                            type: field.type,
+                            columnType: findSqlType(field)
+                        )
 
-                } else if (hasAnnotation(field, Version)) {
-                    propertyModel = new VersionerPropertyModel(
-                        columnName: extractFieldName(field),
-                        propertyName: field.name,
-                        type: field.type,
-                        columnType: findSqlType(field)
-                    )
+                    } else if (hasAnnotation(field, Version)) {
+                        propertyModel = new VersionerPropertyModel(
+                            columnName: extractFieldName(field),
+                            propertyName: field.name,
+                            type: field.type,
+                            columnType: findSqlType(field)
+                        )
 
-                } else if (hasAnnotation(field, OneToMany)) {
-                    propertyModel = new OneToManyPropertyModel(
-                        propertyName: field.name,
-                        type: field.type,
-                        table: extractString(field.getAnnotations(make(OneToMany))[0], 'table'),
-                        entityId: extractString(field.getAnnotations(make(OneToMany))[0], 'entityId'),
-                        associationId: extractString(field.getAnnotations(make(OneToMany))[0], 'associationId')
-                    )
+                    } else if (hasAnnotation(field, OneToMany)) {
+                        propertyModel = new OneToManyPropertyModel(
+                            propertyName: field.name,
+                            type: field.type,
+                            table: extractString(field.getAnnotations(make(OneToMany))[0], 'table'),
+                            entityId: extractString(field.getAnnotations(make(OneToMany))[0], 'entityId'),
+                            associationId: extractString(field.getAnnotations(make(OneToMany))[0], 'associationId')
+                        )
 
-                } else {
-                    propertyModel = new FieldPropertyModel(
-                        columnName: extractFieldName(field),
-                        propertyName: field.name,
-                        type: field.type,
-                        columnType: findSqlType(field)
-                    )
-                }
+                    } else {
+                        propertyModel = new FieldPropertyModel(
+                            columnName: extractFieldName(field),
+                            propertyName: field.name,
+                            type: field.type,
+                            columnType: findSqlType(field)
+                        )
+                    }
 
-                debug EntityModel, 'Extracted ({}.{}): {}', entityClassNode.nameWithoutPackage, field.name, propertyModel
+                    debug EntityModel, 'Extracted ({}.{}): {}', entityClassNode.nameWithoutPackage, field.name, propertyModel
 
-                return propertyModel
+                    return propertyModel
 
-            }.asImmutable()
+                }.asImmutable()
+            )
         )
     }
 

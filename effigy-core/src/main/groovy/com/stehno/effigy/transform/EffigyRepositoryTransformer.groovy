@@ -1,5 +1,5 @@
 package com.stehno.effigy.transform
-import static EntityModel.extractEntityInfo
+
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
@@ -8,22 +8,19 @@ import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteMetho
 import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveAllMethod
 import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveMethod
 import static com.stehno.effigy.transform.UpdateMethodInjector.injectUpdateMethod
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
-import com.stehno.effigy.jdbc.EffigyEntityRowMapper
 import com.stehno.effigy.repository.CrudOperations
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
-import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.core.RowMapper
 
 import java.lang.reflect.Modifier
 /**
@@ -44,44 +41,17 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         removeAbstract repositoryClassNode
 
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
-        EntityModel entityInfo = extractEntityInfo(entityClassNode)
-
-        injectRowMapper(entityClassNode, entityInfo)
+        EntityModel entityModel = EntityModelRegistry.instance.lookup(entityClassNode)
 
         if( implementsCrud ){
             // TODO: might want to pull all crud injectors into a single class (?)
-            injectCreateMethod repositoryClassNode, entityInfo
-            injectRetrieveMethod repositoryClassNode, entityInfo
-            injectRetrieveAllMethod repositoryClassNode, entityInfo
-            injectUpdateMethod repositoryClassNode, entityInfo
-            injectDeleteMethod repositoryClassNode, entityInfo
-            injectDeleteAllMethod repositoryClassNode, entityInfo
+            injectCreateMethod repositoryClassNode, entityModel
+            injectRetrieveMethod repositoryClassNode, entityModel
+            injectRetrieveAllMethod repositoryClassNode, entityModel
+            injectUpdateMethod repositoryClassNode, entityModel
+            injectDeleteMethod repositoryClassNode, entityModel
+            injectDeleteAllMethod repositoryClassNode, entityModel
         }
-    }
-
-    private static void injectRowMapper(ClassNode entityClassNode, EntityModel entityInfo) {
-        def mapEntries = entityInfo.findProperties().collect { p ->
-            new MapEntryExpression(
-                new ConstantExpression(p.propertyName),
-                new ConstantExpression(p.columnName)
-            )
-        }
-
-        Expression expression = new ConstructorCallExpression(
-            makeClassSafe(EffigyEntityRowMapper),
-            new ArgumentListExpression([
-                new ClassExpression(entityInfo.type),
-                new MapExpression(mapEntries)
-            ])
-        )
-
-        entityClassNode.addField(new FieldNode(
-            'ROW_MAPPER',
-            Modifier.STATIC | Modifier.PUBLIC,
-            makeClassSafe(RowMapper),
-            entityClassNode,
-            expression
-        ))
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
