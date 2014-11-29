@@ -1,6 +1,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
 import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteAllMethod
@@ -41,16 +42,24 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         removeAbstract repositoryClassNode
 
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
+        info EffigyRepositoryTransformer, 'Transforming repository for: {}', entityClassNode.name
+
         EntityModel entityModel = EntityModelRegistry.instance.lookup(entityClassNode)
+        trace EffigyRepositoryTransformer, 'Found entity model: {}', entityModel
 
         if( implementsCrud ){
             // TODO: might want to pull all crud injectors into a single class (?)
-            injectCreateMethod repositoryClassNode, entityModel
-            injectRetrieveMethod repositoryClassNode, entityModel
-            injectRetrieveAllMethod repositoryClassNode, entityModel
-            injectUpdateMethod repositoryClassNode, entityModel
-            injectDeleteMethod repositoryClassNode, entityModel
-            injectDeleteAllMethod repositoryClassNode, entityModel
+            try {
+                injectCreateMethod repositoryClassNode, entityModel
+                injectRetrieveMethod repositoryClassNode, entityModel
+                injectRetrieveAllMethod repositoryClassNode, entityModel
+                injectUpdateMethod repositoryClassNode, entityModel
+                injectDeleteMethod repositoryClassNode, entityModel
+                injectDeleteAllMethod repositoryClassNode, entityModel
+
+            } catch (ex){
+                ex.printStackTrace()
+            }
         }
     }
 

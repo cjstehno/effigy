@@ -1,5 +1,6 @@
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -16,6 +17,8 @@ import java.lang.reflect.Modifier
 class DeleteMethodInjector {
 
     static void injectDeleteMethod(final ClassNode repositoryClassNode, final EntityModel entityInfo) {
+        Logger.info DeleteMethodInjector, 'Injecting delete method into repository for {}', entityInfo.type.name
+
         try {
             def nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, true, """
                 return( jdbcTemplate.update(
@@ -38,6 +41,8 @@ class DeleteMethodInjector {
     }
 
     static void injectDeleteAllMethod(final ClassNode repositoryClassNode, final EntityModel entityInfo) {
+        Logger.info DeleteMethodInjector, 'Injecting deleteAll method into repository for {}', entityInfo.type.name
+
         try {
             def nodes = new AstBuilder().buildFromString(CompilePhase.CANONICALIZATION, true, """
                 return( jdbcTemplate.update(

@@ -6,24 +6,20 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 /**
- * Spring RowMapper implementation used for mapping EffigyEntity data.
+ * Used internally as a basis for the generated Effigy entity row mappers.
  */
-class EffigyEntityRowMapper<E> implements RowMapper<E> {
+abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
 
-    private final Map<String,String> mappings // property : column
-    private final Class<E> entityType
-
-    EffigyEntityRowMapper(final Class<E> entityType, final Map<String,String> mappings) {
-        this.entityType = entityType
-        this.mappings = mappings
-    }
+    String prefix = ''
 
     @Override
-    E mapRow(ResultSet rs, int rowNum) throws SQLException {
-        E entity = entityType.newInstance()
-        mappings.each { p,c ->
-            entity[p] = rs.getObject(c)
-        }
+    E mapRow(final ResultSet rs, final int rowNum) throws SQLException {
+        E entity = newEntity()
+        mapping(rs, entity)
         entity
     }
+
+    abstract protected E newEntity()
+
+    abstract protected void mapping( ResultSet rs, E entity )
 }

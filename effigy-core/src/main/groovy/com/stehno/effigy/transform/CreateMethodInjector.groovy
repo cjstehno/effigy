@@ -9,6 +9,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
@@ -22,6 +23,7 @@ import java.lang.reflect.Modifier
 class CreateMethodInjector {
 
     static void injectCreateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
+        Logger.info CreateMethodInjector, 'Injecting create method into repository for {}', model.type.name
         try {
             model.findPropertiesByType(OneToManyPropertyModel).each { OneToManyPropertyModel o2m ->
                 injectO2MSaveMethod(repositoryClassNode, model, o2m)

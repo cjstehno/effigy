@@ -67,10 +67,6 @@ class PersonRepositoryTest {
         def people = personRepository.retrieveAll()
         assert people.size() == 2
 
-        people.each { p ->
-            println p
-        }
-
         assert !personRepository.delete(100)
 
         assert personRepository.delete(1)
@@ -151,10 +147,10 @@ class AssociationRowMapper<T> implements ResultSetExtractor<T> {
         Person person = null
         while( rs.next() ){
             if( !person ){
-                person = Person.ROW_MAPPER.mapRow(rs, 0)
+                person = Person.rowMapper().mapRow(rs, 0)
             }
 
-            person.pets << Pet.ROW_MAPPER.mapRow(rs,0)
+            person.pets << Pet.rowMapper().mapRow(rs,0)
         }
         person
     }

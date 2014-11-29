@@ -3,6 +3,7 @@ package com.stehno.effigy.transform
 import static com.stehno.effigy.transform.AstUtils.code
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -17,6 +18,7 @@ import java.lang.reflect.Modifier
 class UpdateMethodInjector {
 
     static void injectUpdateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
+        Logger.info UpdateMethodInjector, 'Injecting update method into repository for {}', model.type.name
         try {
             def columnUpdates = []
             def vars = []
