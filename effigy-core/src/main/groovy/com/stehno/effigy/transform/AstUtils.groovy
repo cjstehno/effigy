@@ -18,8 +18,16 @@ class AstUtils {
         new AstBuilder().buildFromString(
             CompilePhase.CANONICALIZATION,
             true,
-            new GStringTemplateEngine().createTemplate(text).make(bindings) as String
+            string(bindings, text)
         )
+    }
+
+    static String string(Map bindings=[:], String text){
+        String result = new GStringTemplateEngine().createTemplate(text).make(bindings) as String
+        println '--------------------------------'
+        println result
+        println '--------------------------------'
+        result
     }
 
     static Statement codeS(Map bindings=[:], String text){

@@ -1,8 +1,6 @@
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
-import static com.stehno.effigy.transform.AstUtils.arrayX
-import static com.stehno.effigy.transform.AstUtils.codeS
+import static com.stehno.effigy.transform.AstUtils.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
@@ -10,7 +8,6 @@ import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
-import org.codehaus.groovy.ast.stmt.Statement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
@@ -39,6 +36,11 @@ class CreateMethodInjector {
                         def paramValues = [$values] as Object[]
                         jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
                         entity.${idName} = keys.key
+
+                        def ent = entity
+                        $o2m
+
+                        return keys.key
                     ''',
 
                     values: model.findProperties(false).collect { pi ->
@@ -49,15 +51,12 @@ class CreateMethodInjector {
                         }
                     }.join(','),
 
-                    idName: model.identifier.propertyName
+                    idName: model.identifier.propertyName,
+                    o2m:model.findPropertiesByType(OneToManyPropertyModel).collect {OneToManyPropertyModel o2m->
+                        genO2M(o2m, model.identifier)
+                    }.join('\n')
                 ),
             )
-
-            model.findPropertiesByType(OneToManyPropertyModel).each { OneToManyPropertyModel o2m->
-                statement.addStatement(generateOneToMany(o2m, model.identifier))
-            }
-
-            statement.addStatement(codeS('return keys.key'))
 
             repositoryClassNode.addMethod(new MethodNode(
                 'create',
@@ -73,16 +72,17 @@ class CreateMethodInjector {
         }
     }
 
-    // FIXME: make this a custom exception
-    private static Statement generateOneToMany(final OneToManyPropertyModel model, final IdentifierPropertyModel idProp){
-        codeS(
+    // FIXME: need custom exception for O2M check
+
+    private static String genO2M(OneToManyPropertyModel model, IdentifierPropertyModel idModel){
+        string(
             '''
                 int ${name}_expects = entity.${name}.size()
                 int ${name}_count = 0
                 entity.${name}.each { itm->
                     ${name}_count += jdbcTemplate.update(
                         'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
-                        entity.${entityIdName},
+                        ent.${entityIdName},
                         itm.${assocIdName}
                     )
                 }
@@ -91,13 +91,14 @@ class CreateMethodInjector {
                     entity.${entityIdName} = 0
                     throw new Exception('Count did not match expected - update failed.')
                 }
+
             ''',
 
             name: model.propertyName,
             assocTable:model.table,
             tableEntIdName:model.entityId,
             tableAssocIdName:model.associationId,
-            entityIdName:idProp.propertyName,
+            entityIdName:idModel.propertyName,
             assocIdName:findIdName(model.type)
         )
     }
