@@ -15,12 +15,12 @@
  */
 
 package com.stehno.effigy.transform
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.AstUtils.codeS
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
@@ -33,24 +33,47 @@ import org.codehaus.groovy.ast.stmt.Statement
 
 import java.lang.reflect.Modifier
 /**
- * Created by cjstehno on 11/27/2014.
+ * Code generators for the entity repository retrieval methods provided by the CrudOperations interface.
  */
 class RetrieveMethodInjector {
 
+    /**
+     * Injects the retrieve method into an entity repository class. This method is an implementation of the
+     * CrudOperations.retrieve(E entityId) method.
+     *
+     * @param repositoryClassNode
+     * @param model
+     */
     static void injectRetrieveMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', model.type.name
-        try {
-//            FieldNode mapperNode = model.type.fields.find { f -> f.static && f.name == 'ROW_MAPPER' }
+        info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', model.type.name
 
-            Statement statement = new ReturnStatement(new MethodCallExpression(
-                new VariableExpression('jdbcTemplate'),
-                'queryForObject',
-                new ArgumentListExpression([
-                    new ConstantExpression("select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?" as String),
-                    callX(classX(newClass(model.type)),'rowMapper'),
-                    new VariableExpression('entityId', model.identifier.type)
-                ])
-            ))
+        try {
+
+            Statement statement = block(
+                declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
+
+                codeS(
+                    '''
+                    jdbcTemplate.queryForObject(
+                        'select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?',
+                        mapper,
+                        entityId
+                    )
+                    ''',
+                    model: model
+                )
+
+            )
+
+//            Statement statement = new ReturnStatement(new MethodCallExpression(
+//                new VariableExpression('jdbcTemplate'),
+//                'queryForObject',
+//                new ArgumentListExpression([
+//                    new ConstantExpression("select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?" as String),
+//                    callX(classX(newClass(model.type)),'rowMapper'),
+//                    new VariableExpression('entityId', model.identifier.type)
+//                ])
+//            ))
 
             /*
             FIXME: add relations for O2M
@@ -67,16 +90,14 @@ class RetrieveMethodInjector {
                 null,
                 statement
             ))
-        } catch (ex){
+        } catch (ex) {
             ex.printStackTrace()
         }
     }
 
     static void injectRetrieveAllMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', model.type.name
+        info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', model.type.name
         try {
-//            FieldNode mapperNode = entityInfo.type.fields.find { f -> f.static && f.name == 'ROW_MAPPER' }
-
             def colNames = model.columnNames().join(',')
 
             Statement statement = new ReturnStatement(new MethodCallExpression(
@@ -84,7 +105,7 @@ class RetrieveMethodInjector {
                 'query',
                 new ArgumentListExpression([
                     new ConstantExpression("select $colNames from ${model.table}" as String),
-                    callX(classX(newClass(model.type)),'rowMapper'),
+                    callX(classX(newClass(model.type)), 'rowMapper'),
                 ])
             ))
 
@@ -97,7 +118,7 @@ class RetrieveMethodInjector {
                 statement
             ))
 
-        } catch (ex){
+        } catch (ex) {
             ex.printStackTrace()
         }
     }

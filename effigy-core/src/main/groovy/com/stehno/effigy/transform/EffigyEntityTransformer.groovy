@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.AstUtils.codeS
 import static com.stehno.effigy.transform.EntityModel.registerEntityModel
@@ -35,8 +36,9 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
+
 /**
- * Created by cjstehno on 11/26/2014.
+ * Handles the transformation of the Effigy Entity classes (annotated with the EffigyEntity annotation).
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class EffigyEntityTransformer implements ASTTransformation {
@@ -45,11 +47,11 @@ class EffigyEntityTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
-        FieldNode versionProperty = entityClassNode.fields.find { FieldNode f->
-            f.annotations.find { AnnotationNode a-> a.classNode.name == 'com.stehno.effigy.annotation.Version' }
+        FieldNode versionProperty = entityClassNode.fields.find { FieldNode f ->
+            f.annotations.find { AnnotationNode a -> a.classNode.name == 'com.stehno.effigy.annotation.Version' }
         }
 
-        if( versionProperty && !(versionProperty.type in [Long_TYPE, long_TYPE]) ){
+        if (versionProperty && !(versionProperty.type in [Long_TYPE, long_TYPE])) {
             throw new Exception('Currently the Version annotation may only be used on long or java.lang.Long fields.')
         }
 
@@ -60,19 +62,13 @@ class EffigyEntityTransformer implements ASTTransformation {
         injectRowMapperAccessor(entityClassNode, mapperClassNode, model)
     }
 
-    private static void injectRowMapperAccessor(ClassNode entityClassNode, ClassNode mapperClassNode, EntityModel model) {
-        entityClassNode.addMethod(new MethodNode(
-            'rowMapper',
-            Modifier.PUBLIC | Modifier.STATIC,
-            newClass(mapperClassNode),
-            [new Parameter(STRING_TYPE, 'prefix', constX(''))] as Parameter[],
-            [] as ClassNode[],
-            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX('prefix'), varX('prefix'))]))))
-        ))
-
-        info EffigyEntityTransformer, 'Injected row mapper helper method for {}', model.type
-    }
-
+    /**
+     * Creates a RowMapper implementation class for each annotated entity.
+     *
+     * @param model the entity model
+     * @param source the source unit
+     * @return the created RowMapper implementation class
+     */
     private static ClassNode buildRowMapper(EntityModel model, SourceUnit source) {
         ClassNode mapperClassNode = null
         try {
@@ -120,5 +116,28 @@ class EffigyEntityTransformer implements ASTTransformation {
             ex.printStackTrace()
         }
         mapperClassNode
+    }
+
+    /**
+     * Injects a helper method into the entity. This helper method allows for simple retrieval of the generated row mapper with
+     * optional prefix definition. The method signature is:
+     *
+     * public static rowMapper(String prefix='')
+     *
+     * @param entityClassNode
+     * @param mapperClassNode
+     * @param model
+     */
+    private static void injectRowMapperAccessor(ClassNode entityClassNode, ClassNode mapperClassNode, EntityModel model) {
+        entityClassNode.addMethod(new MethodNode(
+            'rowMapper',
+            Modifier.PUBLIC | Modifier.STATIC,
+            newClass(mapperClassNode),
+            [new Parameter(STRING_TYPE, 'prefix', constX(''))] as Parameter[],
+            [] as ClassNode[],
+            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX('prefix'), varX('prefix'))]))))
+        ))
+
+        info EffigyEntityTransformer, 'Injected row mapper helper method for {}', model.type
     }
 }

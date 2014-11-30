@@ -113,6 +113,13 @@ class PersonRepositoryTest {
         assert retrieved.pets.find { p-> p.name == 'Fester' }.animal == Animal.SNAKE
     }
 
+    /*
+        FIXME: need to move this into the retrieve injection method...
+        need to verify retrieve and update, then ensure that delete removes any managed references
+        flesh out documentation
+        testing?
+     */
+
     Person retrieveWithRelations(long id) {
         database.jdbcTemplate.query(
             '''
