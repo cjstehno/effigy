@@ -62,6 +62,7 @@ class OneToManyPropertyModel implements EntityPropertyModel {
 
     String propertyName
     ClassNode type
+    ClassNode associatedType
 
     String table
     String entityId

@@ -24,6 +24,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
+import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
@@ -33,6 +34,7 @@ import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
+import org.springframework.jdbc.core.RowMapper
 
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
@@ -47,6 +49,20 @@ class EffigyEntityTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
+        verifyVersionProperty(entityClassNode)
+
+        EntityModel model = registerEntityModel(entityClassNode)
+
+        ClassNode mapperClassNode = buildRowMapper(model, source)
+        injectRowMapperAccessor(entityClassNode, mapperClassNode, model)
+
+        if (model.hasAssociations()) {
+            ClassNode extractorClassNode = buildAssociationExtractor(model, source)
+            injectExtractorAccessor(entityClassNode, extractorClassNode, model)
+        }
+    }
+
+    private static void verifyVersionProperty(final ClassNode entityClassNode) {
         FieldNode versionProperty = entityClassNode.fields.find { FieldNode f ->
             f.annotations.find { AnnotationNode a -> a.classNode.name == 'com.stehno.effigy.annotation.Version' }
         }
@@ -54,12 +70,6 @@ class EffigyEntityTransformer implements ASTTransformation {
         if (versionProperty && !(versionProperty.type in [Long_TYPE, long_TYPE])) {
             throw new Exception('Currently the Version annotation may only be used on long or java.lang.Long fields.')
         }
-
-        EntityModel model = registerEntityModel(entityClassNode)
-
-        ClassNode mapperClassNode = buildRowMapper(model, source)
-
-        injectRowMapperAccessor(entityClassNode, mapperClassNode, model)
     }
 
     /**
@@ -92,16 +102,16 @@ class EffigyEntityTransformer implements ASTTransformation {
             mapperClassNode.addMethod(new MethodNode(
                 'mapping',
                 Modifier.PROTECTED,
-                VOID_TYPE,
-                [new Parameter(make(ResultSet), 'rs'), new Parameter(OBJECT_TYPE, 'entity')] as Parameter[],
+                newClass(model.type),
+                [param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
                 [] as ClassNode[],
                 block(
                     codeS(
                         '''
-                        def ent = entity
                         <% model.findProperties().each { p-> %>
-                            ent.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
+                            entity.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
                         <% } %>
+                        return ( entity.${model.identifier.propertyName} ? entity : null )
                         ''',
                         model: model
                     )
@@ -139,5 +149,94 @@ class EffigyEntityTransformer implements ASTTransformation {
         ))
 
         info EffigyEntityTransformer, 'Injected row mapper helper method for {}', model.type
+    }
+
+    /**
+     * Adds an implementation of the EffigyAssociationResultSetExtractor for the entity.
+     *
+     * @param model
+     * @param source
+     * @return
+     */
+    private static ClassNode buildAssociationExtractor(EntityModel model, SourceUnit source) {
+        ClassNode classNode = null
+        try {
+            classNode = new ClassNode(
+                "${model.type.packageName}.${model.type.nameWithoutPackage}AssociationExtractor",
+                Modifier.PUBLIC,
+                makeClassSafe(EffigyAssociationResultSetExtractor),
+                [] as ClassNode[],
+                [] as MixinNode[]
+            )
+
+            classNode.addMethod(new MethodNode(
+                'primaryRowMapper',
+                Modifier.PROTECTED,
+                makeClassSafe(RowMapper),
+                [] as Parameter[],
+                [] as ClassNode[],
+                new ReturnStatement(callX(classX(newClass(model.type)), 'rowMapper', args(constX("${model.table}_" as String))))
+            ))
+
+            model.findAssociationProperties().each { ap ->
+                classNode.addMethod(new MethodNode(
+                    "${ap.propertyName}RowMapper",
+                    Modifier.PROTECTED,
+                    makeClassSafe(RowMapper),
+                    [] as Parameter[],
+                    [] as ClassNode[],
+                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                ))
+            }
+
+            classNode.addMethod(new MethodNode(
+                'mapAssociations',
+                Modifier.PROTECTED,
+                VOID_TYPE,
+                [param(makeClassSafe(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
+                [] as ClassNode[],
+                codeS(
+                    '''
+                    <% model.findAssociationProperties().each { ap-> %>
+                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+                        if( ${ap.propertyName}Value ){
+                            entity.${ap.propertyName} << ${ap.propertyName}Value
+                        }
+                    <% } %>
+                    ''',
+                    model: model
+                )
+            ))
+
+            source.AST.addClass(classNode)
+
+        } catch (ex) {
+            ex.printStackTrace()
+        }
+        classNode
+    }
+
+    /**
+     * Provides a static accessor method for the ResultSetExtractor. The method signature will be:
+     *
+     * public static associationExtractor()
+     *
+     * @param entityClassNode
+     * @param extractorClassNode
+     * @param model
+     */
+    private static void injectExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode, EntityModel model) {
+        model.findAssociationProperties()
+
+        entityClassNode.addMethod(new MethodNode(
+            'associationExtractor',
+            Modifier.PUBLIC | Modifier.STATIC,
+            newClass(extractorClassNode),
+            [] as Parameter[],
+            [] as ClassNode[],
+            returnS(ctorX(newClass(extractorClassNode)))
+        ))
+
+        info EffigyEntityTransformer, 'Injected association extractor helper method for {}', model.type
     }
 }

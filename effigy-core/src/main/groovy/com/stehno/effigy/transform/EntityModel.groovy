@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
@@ -29,7 +28,6 @@ import groovy.transform.Memoized
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
-
 /**
  * General meta information used by the framework during compilation of entities.
  */
@@ -73,6 +71,14 @@ class EntityModel {
         entityProperties.findAll { propModelType.isAssignableFrom(it.class) }
     }
 
+    boolean hasAssociations(){
+        entityProperties.count { it instanceof OneToManyPropertyModel } // TODO: will be more here
+    }
+
+    List<EntityPropertyModel> findAssociationProperties(){
+        findPropertiesByType(OneToManyPropertyModel) // TODO: more will be added
+    }
+
     // TODO: this should probably move to the registry class (?)
     static EntityModel registerEntityModel(final ClassNode entityClassNode) {
         EntityModelRegistry.instance.register(
@@ -102,6 +108,7 @@ class EntityModel {
                         propertyModel = new OneToManyPropertyModel(
                             propertyName: field.name,
                             type: field.type,
+                            associatedType: field.type.genericsTypes.find { hasAnnotation(it.type, EffigyEntity) }.type,
                             table: extractString(field.getAnnotations(make(OneToMany))[0], 'table'),
                             entityId: extractString(field.getAnnotations(make(OneToMany))[0], 'entityId'),
                             associationId: extractString(field.getAnnotations(make(OneToMany))[0], 'associationId')

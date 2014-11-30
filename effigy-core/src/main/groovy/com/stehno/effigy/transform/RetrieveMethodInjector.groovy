@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.AstUtils.codeS
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -24,14 +25,10 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.ast.expr.ArgumentListExpression
-import org.codehaus.groovy.ast.expr.ConstantExpression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
-import org.codehaus.groovy.ast.expr.VariableExpression
-import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 
 import java.lang.reflect.Modifier
+
 /**
  * Code generators for the entity repository retrieval methods provided by the CrudOperations interface.
  */
@@ -48,66 +45,87 @@ class RetrieveMethodInjector {
         info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', model.type.name
 
         try {
-
-            Statement statement = block(
-                declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
-
-                codeS(
-                    '''
-                    jdbcTemplate.queryForObject(
-                        'select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?',
-                        mapper,
-                        entityId
-                    )
-                    ''',
-                    model: model
-                )
-
-            )
-
-//            Statement statement = new ReturnStatement(new MethodCallExpression(
-//                new VariableExpression('jdbcTemplate'),
-//                'queryForObject',
-//                new ArgumentListExpression([
-//                    new ConstantExpression("select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?" as String),
-//                    callX(classX(newClass(model.type)),'rowMapper'),
-//                    new VariableExpression('entityId', model.identifier.type)
-//                ])
-//            ))
-
-            /*
-            FIXME: add relations for O2M
-
-            need to bring in relations as join rather than separate sql call for each relation
-
-         */
-
             repositoryClassNode.addMethod(new MethodNode(
                 'retrieve',
                 Modifier.PUBLIC,
                 newClass(model.type),
                 [new Parameter(model.identifier.type, 'entityId')] as Parameter[],
                 null,
-                statement
+                model.hasAssociations() ? retrieveSingleWitRelations(model) : retrieveSingleWithoutRelations(model)
             ))
         } catch (ex) {
             ex.printStackTrace()
         }
     }
 
+    private static Statement retrieveSingleWithoutRelations(final EntityModel model) {
+        block(
+            declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
+
+            codeS(
+                '''
+                    jdbcTemplate.queryForObject(
+                        'select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?',
+                        mapper,
+                        entityId
+                    )
+                    ''',
+                model: model
+            )
+        )
+    }
+
+    private static Statement retrieveSingleWitRelations(final EntityModel model) {
+        String sql = 'select '
+
+        model.findProperties().each { p->
+            sql += "${model.table}.${p.columnName} as ${model.table}_${p.columnName},"
+        }
+
+        sql += model.findAssociationProperties().collect { ap->
+            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+
+            associatedModel.findProperties().collect { p->
+                "${associatedModel.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+            }.join(',')
+
+        }.join(',')
+
+        sql += " from ${model.table}"
+
+        model.findAssociationProperties().each { ap->
+            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+
+            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${model.table}.${model.identifier.columnName}"
+            sql += " LEFT OUTER JOIN ${associatedModel.table} on ${ap.table}.${ap.associationId}=${associatedModel.table}.${associatedModel.identifier.columnName}"
+        }
+
+        sql += " where ${model.table}.${model.identifier.columnName}=?"
+
+        block(
+            declS(varX('extractor'), callX(classX(newClass(model.type)), 'associationExtractor')),
+
+            codeS(
+                '''
+                    jdbcTemplate.query(
+                        '$sql',
+                        extractor,
+                        entityId
+                    )
+                    ''',
+                model: model,
+                sql:sql
+            )
+        )
+    }
+
     static void injectRetrieveAllMethod(final ClassNode repositoryClassNode, final EntityModel model) {
         info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', model.type.name
-        try {
-            def colNames = model.columnNames().join(',')
 
-            Statement statement = new ReturnStatement(new MethodCallExpression(
-                new VariableExpression('jdbcTemplate'),
-                'query',
-                new ArgumentListExpression([
-                    new ConstantExpression("select $colNames from ${model.table}" as String),
-                    callX(classX(newClass(model.type)), 'rowMapper'),
-                ])
-            ))
+        try {
+            Statement statement = retrieveAllWithoutRelations(model)
+
+            // FIXME: o2m
 
             repositoryClassNode.addMethod(new MethodNode(
                 'retrieveAll',
@@ -121,5 +139,21 @@ class RetrieveMethodInjector {
         } catch (ex) {
             ex.printStackTrace()
         }
+    }
+
+    private static Statement retrieveAllWithoutRelations(final EntityModel model) {
+        block(
+            declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
+
+            codeS(
+                '''
+                    jdbcTemplate.query(
+                        'select ${model.columnNames().join(',')} from ${model.table}',
+                        mapper
+                    )
+                ''',
+                model: model
+            )
+        )
     }
 }

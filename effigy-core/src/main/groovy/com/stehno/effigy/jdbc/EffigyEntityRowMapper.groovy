@@ -30,12 +30,10 @@ abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
 
     @Override
     E mapRow(final ResultSet rs, final int rowNum) throws SQLException {
-        E entity = newEntity()
-        mapping(rs, entity)
-        entity
+        mapping(rs, newEntity())
     }
 
     abstract protected E newEntity()
 
-    abstract protected void mapping( ResultSet rs, E entity )
+    abstract protected E mapping( ResultSet rs, E entity )
 }

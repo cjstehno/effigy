@@ -105,60 +105,10 @@ class PersonRepositoryTest {
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
 
-//        Person retrieved = personRepository.retrieve(id)
-        Person retrieved = retrieveWithRelations(id)
+        Person retrieved = personRepository.retrieve(id)
 
         assert retrieved.pets.size() == 2
         assert retrieved.pets.find { p-> p.name == 'Chester' }.animal == Animal.CAT
         assert retrieved.pets.find { p-> p.name == 'Fester' }.animal == Animal.SNAKE
-    }
-
-    /*
-        FIXME: need to move this into the retrieve injection method...
-        need to verify retrieve and update, then ensure that delete removes any managed references
-        flesh out documentation
-        testing?
-     */
-
-    Person retrieveWithRelations(long id) {
-        database.jdbcTemplate.query(
-            '''
-            select people.id as people_id,
-              people.version as people_version,
-              people.first_name as people_first_name,
-              people.middle_name as people_middle_name,
-              people.last_name as people_last_name,
-              people.date_of_birth as people_date_of_birth,
-              people.married as people_married,
-
-              pets.id as pets_id,
-              pets.name as pets_name,
-              pets.animal as pets_animal
-
-              from people
-                LEFT OUTER JOIN peoples_pets on people.id=peoples_pets.person_id
-                left OUTER join pets on pets.id=peoples_pets.pet_id
-              where people.id=?
-            ''',
-            new AssociationRowMapper<Person>(),
-            id
-        )
-    }
-}
-
-// FIXME: need prefixes on row mappers
-class AssociationRowMapper<T> implements ResultSetExtractor<T> {
-
-    @Override
-    T extractData(final ResultSet rs) throws SQLException, DataAccessException {
-        Person person = null
-        while( rs.next() ){
-            if( !person ){
-                person = Person.rowMapper().mapRow(rs, 0)
-            }
-
-            person.pets << Pet.rowMapper().mapRow(rs,0)
-        }
-        person
     }
 }
