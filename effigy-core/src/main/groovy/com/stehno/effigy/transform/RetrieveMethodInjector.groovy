@@ -76,32 +76,6 @@ class RetrieveMethodInjector {
     }
 
     private static Statement retrieveSingleWitRelations(final EntityModel model) {
-        String sql = 'select '
-
-        model.findProperties().each { p->
-            sql += "${model.table}.${p.columnName} as ${model.table}_${p.columnName},"
-        }
-
-        sql += model.findAssociationProperties().collect { ap->
-            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
-
-            associatedModel.findProperties().collect { p->
-                "${associatedModel.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
-            }.join(',')
-
-        }.join(',')
-
-        sql += " from ${model.table}"
-
-        model.findAssociationProperties().each { ap->
-            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
-
-            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${model.table}.${model.identifier.columnName}"
-            sql += " LEFT OUTER JOIN ${associatedModel.table} on ${ap.table}.${ap.associationId}=${associatedModel.table}.${associatedModel.identifier.columnName}"
-        }
-
-        sql += " where ${model.table}.${model.identifier.columnName}=?"
-
         block(
             declS(varX('extractor'), callX(classX(newClass(model.type)), 'associationExtractor')),
 
@@ -114,7 +88,7 @@ class RetrieveMethodInjector {
                     )
                     ''',
                 model: model,
-                sql:sql
+                sql: sqlWithRelations(model, true)
             )
         )
     }
@@ -123,22 +97,35 @@ class RetrieveMethodInjector {
         info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', model.type.name
 
         try {
-            Statement statement = retrieveAllWithoutRelations(model)
-
-            // FIXME: o2m
-
             repositoryClassNode.addMethod(new MethodNode(
                 'retrieveAll',
                 Modifier.PUBLIC,
                 makeClassSafe(List),
                 [] as Parameter[],
                 null,
-                statement
+                model.hasAssociations() ? retrieveAllWithRelations(model) : retrieveAllWithoutRelations(model)
             ))
 
         } catch (ex) {
             ex.printStackTrace()
         }
+    }
+
+    private static Statement retrieveAllWithRelations(final EntityModel model) {
+        block(
+            declS(varX('extractor'), callX(classX(newClass(model.type)), 'collectionAssociationExtractor')),
+
+            codeS(
+                '''
+                    jdbcTemplate.query(
+                        '$sql',
+                        extractor
+                    )
+                    ''',
+                model: model,
+                sql: sqlWithRelations(model)
+            )
+        )
     }
 
     private static Statement retrieveAllWithoutRelations(final EntityModel model) {
@@ -155,5 +142,37 @@ class RetrieveMethodInjector {
                 model: model
             )
         )
+    }
+
+    private static String sqlWithRelations(final EntityModel model, final boolean single = false) {
+        String sql = 'select '
+
+        model.findProperties().each { p ->
+            sql += "${model.table}.${p.columnName} as ${model.table}_${p.columnName},"
+        }
+
+        sql += model.findAssociationProperties().collect { ap ->
+            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+
+            associatedModel.findProperties().collect { p ->
+                "${associatedModel.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+            }.join(',')
+
+        }.join(',')
+
+        sql += " from ${model.table}"
+
+        model.findAssociationProperties().each { ap ->
+            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+
+            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${model.table}.${model.identifier.columnName}"
+            sql += " LEFT OUTER JOIN ${associatedModel.table} on ${ap.table}.${ap.associationId}=${associatedModel.table}.${associatedModel.identifier.columnName}"
+        }
+
+        if (single) {
+            sql += " where ${model.table}.${model.identifier.columnName}=?"
+        }
+
+        sql
     }
 }

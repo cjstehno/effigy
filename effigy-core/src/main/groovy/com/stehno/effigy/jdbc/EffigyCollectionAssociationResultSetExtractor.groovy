@@ -25,23 +25,30 @@ import java.sql.SQLException
 
 /**
  * Spring ResultSetExtractor used internally by the Effigy entity transformers to build extractors for handling
- * entity associations. This class is not really intended for use outside of the framework.
+ * entity collections associations. This class is not really intended for use outside of the framework.
  */
-abstract class EffigyAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
+abstract class EffigyCollectionAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
+
+    String entityIdentifier
 
     @Override
     T extractData(final ResultSet rs) throws SQLException, DataAccessException {
-        def entity = null
+        def entities = [:]
 
-        while( rs.next() ){
-            if( !entity ){
-                entity = primaryRowMapper().mapRow(rs, 0)
+        while (rs.next()) {
+            def entity = primaryRowMapper().mapRow(rs, 0)
+
+            if (entities.containsKey(entity[entityIdentifier])) {
+                mapAssociations(rs, entities[entity[entityIdentifier]])
+
+            } else {
+                entities[entity[entityIdentifier]] = entity
+                mapAssociations(rs, entity)
             }
 
-            mapAssociations(rs, entity)
         }
 
-        entity
+        entities.values() as List
     }
 
     /**

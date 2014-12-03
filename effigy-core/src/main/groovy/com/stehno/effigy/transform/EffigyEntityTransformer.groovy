@@ -25,6 +25,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
+import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
@@ -59,6 +60,9 @@ class EffigyEntityTransformer implements ASTTransformation {
         if (model.hasAssociations()) {
             ClassNode extractorClassNode = buildAssociationExtractor(model, source)
             injectExtractorAccessor(entityClassNode, extractorClassNode, model)
+
+            ClassNode collectionExtractorClassNode = buildCollectionAssociationExtractor(model, source)
+            injectCollectionExtractorAccessor(entityClassNode, collectionExtractorClassNode, model)
         }
     }
 
@@ -238,5 +242,96 @@ class EffigyEntityTransformer implements ASTTransformation {
         ))
 
         info EffigyEntityTransformer, 'Injected association extractor helper method for {}', model.type
+    }
+
+    /**
+     * Adds an implementation of the EffigyAssociationResultSetExtractor for the entity.
+     *
+     * @param model
+     * @param source
+     * @return
+     */
+    private static ClassNode buildCollectionAssociationExtractor(EntityModel model, SourceUnit source) {
+        ClassNode classNode = null
+        try {
+            classNode = new ClassNode(
+                "${model.type.packageName}.${model.type.nameWithoutPackage}CollectionAssociationExtractor",
+                Modifier.PUBLIC,
+                makeClassSafe(EffigyCollectionAssociationResultSetExtractor),
+                [] as ClassNode[],
+                [] as MixinNode[]
+            )
+
+            classNode.addMethod(new MethodNode(
+                'primaryRowMapper',
+                Modifier.PROTECTED,
+                makeClassSafe(RowMapper),
+                [] as Parameter[],
+                [] as ClassNode[],
+                new ReturnStatement(callX(classX(newClass(model.type)), 'rowMapper', args(constX("${model.table}_" as String))))
+            ))
+
+            model.findAssociationProperties().each { ap ->
+                classNode.addMethod(new MethodNode(
+                    "${ap.propertyName}RowMapper",
+                    Modifier.PROTECTED,
+                    makeClassSafe(RowMapper),
+                    [] as Parameter[],
+                    [] as ClassNode[],
+                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                ))
+            }
+
+            classNode.addMethod(new MethodNode(
+                'mapAssociations',
+                Modifier.PROTECTED,
+                VOID_TYPE,
+                [param(makeClassSafe(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
+                [] as ClassNode[],
+                codeS(
+                    '''
+                    <% model.findAssociationProperties().each { ap-> %>
+                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+                        if( ${ap.propertyName}Value ){
+                            entity.${ap.propertyName} << ${ap.propertyName}Value
+                        }
+                    <% } %>
+                    ''',
+                    model: model
+                )
+            ))
+
+            source.AST.addClass(classNode)
+
+        } catch (ex) {
+            ex.printStackTrace()
+        }
+        classNode
+    }
+
+    /**
+     * Provides a static accessor method for the ResultSetExtractor. The method signature will be:
+     *
+     * public static associationExtractor()
+     *
+     * @param entityClassNode
+     * @param extractorClassNode
+     * @param model
+     */
+    private static void injectCollectionExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode, EntityModel model) {
+        model.findAssociationProperties()
+
+        entityClassNode.addMethod(new MethodNode(
+            'collectionAssociationExtractor',
+            Modifier.PUBLIC | Modifier.STATIC,
+            newClass(extractorClassNode),
+            [] as Parameter[],
+            [] as ClassNode[],
+            returnS(ctorX(newClass(extractorClassNode), args(new MapExpression([
+                new MapEntryExpression(constX('entityIdentifier'), constX(model.identifier.propertyName))
+            ]))))
+        ))
+
+        info EffigyEntityTransformer, 'Injected collection association extractor helper method for {}', model.type
     }
 }

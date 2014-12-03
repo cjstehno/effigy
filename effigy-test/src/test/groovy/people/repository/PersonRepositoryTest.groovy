@@ -101,7 +101,9 @@ class PersonRepositoryTest {
         def id = personRepository.create(personA)
         assert id
 
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+        personRepository.create(new Person(PERSON_B))
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
 
@@ -110,5 +112,9 @@ class PersonRepositoryTest {
         assert retrieved.pets.size() == 2
         assert retrieved.pets.find { p-> p.name == 'Chester' }.animal == Animal.CAT
         assert retrieved.pets.find { p-> p.name == 'Fester' }.animal == Animal.SNAKE
+
+        personRepository.retrieveAll().each { p->
+            println p
+        }
     }
 }
