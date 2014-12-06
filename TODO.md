@@ -1,7 +1,6 @@
 
-* One2Many still needs some work
-** the retrieve queries need to ignore nulls
-** need to finish retrieveall
-** need to add support for o2m in deletes
+# Things to do
 
-* other associations
+* Implement other associations
+* Convert crud operation injection to be annotation-based so that you can pick and choose which you want
+

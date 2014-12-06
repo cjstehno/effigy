@@ -101,7 +101,7 @@ class PersonRepositoryTest {
         def id = personRepository.create(personA)
         assert id
 
-        personRepository.create(new Person(PERSON_B))
+        def idB = personRepository.create(new Person(PERSON_B))
 
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
@@ -116,5 +116,40 @@ class PersonRepositoryTest {
         personRepository.retrieveAll().each { p->
             println p
         }
+
+        // delete non-pet person
+        assert personRepository.delete(idB)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
+
+        assert personRepository.delete(id)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
+    }
+
+    @Test void deleteAll(){
+        Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
+        Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
+
+        Person personA = new Person(PERSON_A)
+        personA.pets << petA
+        personA.pets << petB
+
+        personRepository.create(personA)
+        personRepository.create(new Person(PERSON_B))
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
+
+        personRepository.deleteAll()
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
     }
 }
