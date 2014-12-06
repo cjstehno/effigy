@@ -15,10 +15,19 @@
  */
 
 package com.stehno.effigy.annotation
+
+import com.stehno.effigy.transform.VersionTransformer
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
+
+import java.lang.annotation.*
+
 /**
- * Created by cjstehno on 11/28/2014.
+ * Denotes an Effigy entity version field.
  */
-
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.SOURCE)
+@Documented
+@GroovyASTTransformationClass(classes = [VersionTransformer])
 @interface Version {
-
+    // nothing special here
 }

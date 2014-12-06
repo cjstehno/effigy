@@ -154,7 +154,7 @@ class RetrieveMethodInjector {
         }
 
         sql += model.findAssociationProperties().collect { ap ->
-            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+            def associatedModel = EntityModelRegistry.lookup(ap.associatedType)
 
             associatedModel.findProperties().collect { p ->
                 "${associatedModel.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
@@ -165,7 +165,7 @@ class RetrieveMethodInjector {
         sql += " from ${model.table}"
 
         model.findAssociationProperties().each { ap ->
-            def associatedModel = EntityModelRegistry.instance.lookup(ap.associatedType)
+            def associatedModel = EntityModelRegistry.lookup(ap.associatedType)
 
             sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${model.table}.${model.identifier.columnName}"
             sql += " LEFT OUTER JOIN ${associatedModel.table} on ${ap.table}.${ap.associationId}=${associatedModel.table}.${associatedModel.identifier.columnName}"

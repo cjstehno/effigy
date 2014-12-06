@@ -63,7 +63,7 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
         info EffigyRepositoryTransformer, 'Transforming repository for: {}', entityClassNode.name
 
-        EntityModel model = EntityModelRegistry.instance.lookup(entityClassNode)
+        EntityModel model = EntityModelRegistry.lookup(entityClassNode)
         trace EffigyRepositoryTransformer, 'Found entity model: {}', model
 
         if (implementsCrud) {

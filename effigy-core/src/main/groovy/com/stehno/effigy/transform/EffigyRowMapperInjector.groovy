@@ -51,7 +51,7 @@ class EffigyRowMapperInjector implements ASTTransformation {
 
         info EffigyRowMapperInjector, 'Creating RowMapper for: {}', entityClassNode.name
 
-        def model = EntityModelRegistry.instance.lookup(entityClassNode)
+        def model = EntityModelRegistry.lookup(entityClassNode)
 
         ClassNode mapperClassNode = buildRowMapper(model, source)
         injectRowMapperAccessor(entityClassNode, mapperClassNode, model)

@@ -51,7 +51,7 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = extractClass(nodes[0] as AnnotationNode, 'forEntity')
-        def model = EntityModelRegistry.instance.lookup(entityClassNode)
+        def model = EntityModelRegistry.lookup(entityClassNode)
 
         if (model.hasAssociations()) {
             info EffigyResultSetExtractorInjector, 'Creating ResultSetExtractor for: {}', entityClassNode.name

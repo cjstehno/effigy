@@ -15,12 +15,14 @@
  */
 
 package com.stehno.effigy.annotation
+
 import com.stehno.effigy.transform.EffigyRepositoryTransformer
 import com.stehno.effigy.transform.EffigyResultSetExtractorInjector
 import com.stehno.effigy.transform.EffigyRowMapperInjector
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
+
 /**
  * Annotation used to denote a repository managed by the Effigy API.
  */

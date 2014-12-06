@@ -31,7 +31,7 @@ class EntityModelRegistry {
         model
     }
 
-    EntityModel lookup(ClassNode entityType) {
-        entityModels[entityType]
+    static EntityModel lookup(ClassNode entityType) {
+        EntityModelRegistry.instance.entityModels[entityType]
     }
 }

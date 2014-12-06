@@ -16,14 +16,11 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.registerEntityModel
-import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.long_TYPE
 
 import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
@@ -37,20 +34,10 @@ class EffigyEntityTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        ClassNode entityClassNode = nodes[1] as ClassNode
+        def entityClassNode = nodes[1] as ClassNode
 
-        verifyVersionProperty(entityClassNode)
+        debug EffigyEntityTransformer, 'Visiting Entity: {}', entityClassNode.name
 
         registerEntityModel entityClassNode
-    }
-
-    private static void verifyVersionProperty(final ClassNode entityClassNode) {
-        FieldNode versionProperty = entityClassNode.fields.find { FieldNode f ->
-            f.annotations.find { AnnotationNode a -> a.classNode.name == 'com.stehno.effigy.annotation.Version' }
-        }
-
-        if (versionProperty && !(versionProperty.type in [Long_TYPE, long_TYPE])) {
-            throw new Exception('Currently the Version annotation may only be used on long or java.lang.Long fields.')
-        }
     }
 }
