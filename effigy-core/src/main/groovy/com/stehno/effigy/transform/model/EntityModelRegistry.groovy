@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform
+package com.stehno.effigy.transform.model
 
 import org.codehaus.groovy.ast.ClassNode
 

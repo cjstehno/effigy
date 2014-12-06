@@ -113,9 +113,8 @@ class PersonRepositoryTest {
         assert retrieved.pets.find { p-> p.name == 'Chester' }.animal == Animal.CAT
         assert retrieved.pets.find { p-> p.name == 'Fester' }.animal == Animal.SNAKE
 
-        personRepository.retrieveAll().each { p->
-            println p
-        }
+        def people = personRepository.retrieveAll()
+        assert people.size() == 2
 
         // delete non-pet person
         assert personRepository.delete(idB)

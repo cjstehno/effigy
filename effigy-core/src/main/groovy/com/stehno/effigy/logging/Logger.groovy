@@ -29,7 +29,7 @@ class Logger {
 
     // TODO: turn this down to WARN once dev settles down
     static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'INFO').toUpperCase())
+        level = Level.valueOf(System.getProperty('effigy.logging', 'DEBUG').toUpperCase())
     }
 
     static void info(Class clazz, String msg, Object... args) {

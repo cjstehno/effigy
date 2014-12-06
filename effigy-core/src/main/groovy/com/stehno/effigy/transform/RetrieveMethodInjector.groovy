@@ -17,11 +17,13 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.AstUtils.codeS
+import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
+import com.stehno.effigy.transform.model.EntityModel
+import com.stehno.effigy.transform.model.EntityModelRegistry
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter

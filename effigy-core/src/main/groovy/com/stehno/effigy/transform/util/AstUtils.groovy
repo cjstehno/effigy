@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform
+package com.stehno.effigy.transform.util
 
 import static com.stehno.effigy.logging.Logger.trace
 

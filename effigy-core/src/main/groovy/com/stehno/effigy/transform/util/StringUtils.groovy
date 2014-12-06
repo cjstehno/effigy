@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform
+package com.stehno.effigy.transform.util
 
 /**
  * Created by cjstehno on 11/26/2014.

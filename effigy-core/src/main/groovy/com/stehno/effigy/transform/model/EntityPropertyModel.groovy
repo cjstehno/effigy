@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform
+package com.stehno.effigy.transform.model
 
 import groovy.transform.CompileStatic
 import groovy.transform.Immutable

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform
+package com.stehno.effigy.transform.model
 import static com.stehno.effigy.logging.Logger.debug
-import static com.stehno.effigy.transform.AnnotationUtils.extractString
-import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
-import static com.stehno.effigy.transform.StringUtils.camelCaseToUnderscore
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
+import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 import static java.sql.Types.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 

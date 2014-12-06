@@ -16,9 +16,10 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.transform.AstUtils.codeS
+import static com.stehno.effigy.transform.util.AstUtils.codeS
 
 import com.stehno.effigy.logging.Logger
+import com.stehno.effigy.transform.model.EntityModel
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode

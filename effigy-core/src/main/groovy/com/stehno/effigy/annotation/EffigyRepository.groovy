@@ -15,23 +15,23 @@
  */
 
 package com.stehno.effigy.annotation
-
 import com.stehno.effigy.transform.EffigyRepositoryTransformer
+import com.stehno.effigy.transform.EffigyResultSetExtractorInjector
+import com.stehno.effigy.transform.EffigyRowMapperInjector
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
-import java.lang.annotation.Documented
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
-
+import java.lang.annotation.*
 /**
- * Created by cjstehno on 11/26/2014.
+ * Annotation used to denote a repository managed by the Effigy API.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes=[EffigyRepositoryTransformer])
+@GroovyASTTransformationClass(classes = [
+    EffigyRepositoryTransformer,
+    EffigyResultSetExtractorInjector,
+    EffigyRowMapperInjector
+])
 @interface EffigyRepository {
 
     /**

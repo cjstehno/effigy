@@ -16,9 +16,9 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.transform.AnnotationUtils.hasAnnotation
-import static com.stehno.effigy.transform.AstUtils.arrayX
-import static com.stehno.effigy.transform.AstUtils.codeS
+import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
+import static com.stehno.effigy.transform.util.AstUtils.arrayX
+import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
@@ -26,6 +26,8 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.logging.Logger
+import com.stehno.effigy.transform.model.EntityModel
+import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
