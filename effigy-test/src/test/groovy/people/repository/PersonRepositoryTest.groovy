@@ -1,20 +1,13 @@
 package people.repository
 
-import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.springframework.dao.DataAccessException
-import org.springframework.jdbc.core.ResultSetExtractor
-import org.springframework.jdbc.core.RowMapper
 import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
 import people.entity.Animal
 import people.entity.Person
 import people.entity.Pet
-
-import java.sql.ResultSet
-import java.sql.SQLException
 
 class PersonRepositoryTest {
 
@@ -128,6 +121,36 @@ class PersonRepositoryTest {
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
+    }
+
+    @Test void createWithPetAndUpdate() {
+        Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
+        Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
+
+        Person personA = new Person(PERSON_A)
+        personA.pets << petA
+        personA.pets << petB
+
+        def id = personRepository.create(personA)
+
+        Person retrieved = personRepository.retrieve(id)
+
+        assert retrieved.pets.size() == 2
+        assert retrieved.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
+        assert retrieved.pets.find { p -> p.name == 'Fester' }.animal == Animal.SNAKE
+
+        retrieved.lastName = 'Jones'
+        retrieved.married = true
+        retrieved.pets.remove(petB)
+
+        personRepository.update(retrieved)
+
+        def updated = personRepository.retrieve(id)
+        assert updated.married
+        assert updated.lastName == 'Jones'
+
+        assert updated.pets.size() == 1
+        assert updated.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
     }
 
     @Test void deleteAll(){

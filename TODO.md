@@ -8,8 +8,6 @@
     @RetrieveSupport, @CreateSupport, @UpdateSupport, @DeleteSupport
     provide interfaces for each to allow flexibility
 
-* Test update with associations
-
 * implement @Ignored (ignored field) - or Transient
 
 * support onetoone - entity
