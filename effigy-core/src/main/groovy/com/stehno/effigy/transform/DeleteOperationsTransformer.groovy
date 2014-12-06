@@ -16,24 +16,47 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static org.codehaus.groovy.ast.ClassHelper.make
 
-import com.stehno.effigy.logging.Logger
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
+import com.stehno.effigy.annotation.EffigyRepository
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
 /**
- * Created by cjstehno on 11/27/2014.
+ * Created by cjstehno on 12/6/2014.
  */
-class DeleteMethodInjector {
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+class DeleteOperationsTransformer implements ASTTransformation {
 
-    static void injectDeleteMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
-        Logger.info DeleteMethodInjector, 'Injecting delete method into repository for {}', entityNode.name
+    @Override
+    void visit(ASTNode[] nodes, SourceUnit source) {
+        ClassNode repositoryNode = nodes[1] as ClassNode
+
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        if (repositoryAnnot) {
+            ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
+            info DeleteOperationsTransformer, 'Adding delete operations to repository ({})', repositoryNode.name
+
+            injectDeleteMethod repositoryNode, entityNode
+            injectDeleteAllMethod repositoryNode, entityNode
+
+        } else {
+            warn DeleteOperationsTransformer, 'DeleteOperations can only be applied to classes annotated with @EffigyRepository - ignored.'
+        }
+    }
+
+    private static void injectDeleteMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        info DeleteOperationsTransformer, 'Injecting delete method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
@@ -67,8 +90,8 @@ class DeleteMethodInjector {
         }
     }
 
-    static void injectDeleteAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
-        Logger.info DeleteMethodInjector, 'Injecting deleteAll method into repository for {}', entityNode.name
+    private static void injectDeleteAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        info DeleteOperationsTransformer, 'Injecting deleteAll method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(

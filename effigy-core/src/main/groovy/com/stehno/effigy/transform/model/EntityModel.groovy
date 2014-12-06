@@ -117,6 +117,18 @@ class EntityModel {
         }
     }
 
+    static String columnNames(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { it.columnName }.join(',')
+    }
+
+    static String columnPlaceholders(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { '?' }.join(',')
+    }
+
+    static List<Integer> columnTypes(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { it.columnType }
+    }
+
     private static boolean annotatedWith(AnnotatedNode node, Class annotClass) {
         node.getAnnotations(make(annotClass))
     }

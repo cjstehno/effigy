@@ -3,10 +3,9 @@
 
 * support for embedded components as fields
 
-* Convert crud operation injection to be annotation-based so that you can pick and choose which you want
-@CrudSupport
-    @RetrieveSupport, @CreateSupport, @UpdateSupport, @DeleteSupport
-    provide interfaces for each to allow flexibility
+- decouple the create/update method injection code
+
+- add count/exists methods, and maybe a findOne that does not throw exception if not found
 
 * implement @Ignored (ignored field) - or Transient
 

@@ -17,24 +17,48 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
+import com.stehno.effigy.annotation.EffigyRepository
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
 /**
- * Code generators for the entity repository retrieval methods provided by the CrudOperations interface.
+ * Created by cjstehno on 12/6/2014.
  */
-class RetrieveMethodInjector {
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+class RetrieveOperationsTransformer implements ASTTransformation {
+
+    @Override
+    void visit(ASTNode[] nodes, SourceUnit source) {
+        ClassNode repositoryNode = nodes[1] as ClassNode
+
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        if (repositoryAnnot) {
+            ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
+            info RetrieveOperationsTransformer, 'Adding retrieve operations to repository ({})', repositoryNode.name
+
+            injectRetrieveMethod repositoryNode, entityNode
+            injectRetrieveAllMethod repositoryNode, entityNode
+
+        } else {
+            warn CreateOperationsTransformer, 'RetrieveOperations can only be applied to classes annotated with @EffigyRepository - ignored.'
+        }
+    }
 
     /**
      * Injects the retrieve method into an entity repository class. This method is an implementation of the
@@ -44,7 +68,7 @@ class RetrieveMethodInjector {
      * @param model
      */
     static void injectRetrieveMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
-        info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', entityNode.name
+        info RetrieveOperationsTransformer, 'Injecting retrieve method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
@@ -74,7 +98,7 @@ class RetrieveMethodInjector {
                     ''',
                 table: entityTable(entityNode),
                 identifier: identifier(entityNode),
-                columnNames: CreateMethodInjector.columnNames(entityNode)
+                columnNames: columnNames(entityNode)
             )
         )
     }
@@ -97,7 +121,7 @@ class RetrieveMethodInjector {
     }
 
     static void injectRetrieveAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
-        info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', entityNode.name
+        info RetrieveOperationsTransformer, 'Injecting retrieve All method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
@@ -142,7 +166,7 @@ class RetrieveMethodInjector {
                     )
                 ''',
                 table: entityTable(entityNode),
-                columnNames: CreateMethodInjector.columnNames(entityNode)
+                columnNames: columnNames(entityNode)
             )
         )
     }

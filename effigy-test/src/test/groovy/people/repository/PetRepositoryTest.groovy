@@ -1,9 +1,9 @@
 package people.repository
 
-import groovy.sql.Sql
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
 import people.entity.Animal
 import people.entity.Pet
@@ -32,6 +32,11 @@ class PetRepositoryTest {
         def petId = petRepository.create(new Pet(PET_A))
 
         def petA = petRepository.retrieve(petId)
-        println petA
+        assert petA.name == 'Wolfie'
+        assert petA.animal == Animal.DOG
+
+        assert petRepository.delete(petId)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 0
     }
 }

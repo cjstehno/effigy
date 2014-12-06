@@ -17,15 +17,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
-import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteAllMethod
-import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteMethod
-import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveAllMethod
-import static com.stehno.effigy.transform.RetrieveMethodInjector.injectRetrieveMethod
-import static com.stehno.effigy.transform.UpdateMethodInjector.injectUpdateMethod
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 
-import com.stehno.effigy.repository.CrudOperations
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -48,36 +40,16 @@ class EffigyRepositoryTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        AnnotationNode effigyAnnotNode = nodes[0] as AnnotationNode
-        ClassNode repositoryClassNode = nodes[1] as ClassNode
+        ClassNode repositoryNode = nodes[1] as ClassNode
 
-        boolean implementsCrud = repositoryClassNode.implementsInterface(new ClassNode(CrudOperations))
-        info EffigyRepositoryTransformer, 'Implements CRUD: {}', implementsCrud
-
-        injectJdbcTemplate repositoryClassNode
-        removeAbstract repositoryClassNode
-
-        ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
-        info EffigyRepositoryTransformer, 'Transforming repository for: {}', entityClassNode.name
-
-        if (implementsCrud) {
-            try {
-                injectCreateMethod repositoryClassNode, entityClassNode
-                injectRetrieveMethod repositoryClassNode, entityClassNode
-                injectRetrieveAllMethod repositoryClassNode, entityClassNode
-                injectUpdateMethod repositoryClassNode, entityClassNode
-                injectDeleteMethod repositoryClassNode, entityClassNode
-                injectDeleteAllMethod repositoryClassNode, entityClassNode
-
-            } catch (ex) {
-                ex.printStackTrace()
-            }
-        }
+        removeAbstract repositoryNode
+        injectJdbcTemplate repositoryNode
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
         if (Modifier.isAbstract(repositoryClassNode.modifiers)) {
             repositoryClassNode.modifiers = Modifier.PUBLIC
+            info EffigyRepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
     }
 
@@ -89,5 +61,7 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         jdbcTemplateFieldNode.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
 
         repositoryClassNode.addField(jdbcTemplateFieldNode)
+
+        info EffigyRepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryClassNode.name
     }
 }

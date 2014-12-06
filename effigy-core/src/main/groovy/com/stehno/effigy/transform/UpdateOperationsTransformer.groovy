@@ -16,29 +16,51 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.code
+import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.logging.Logger
+import com.stehno.effigy.annotation.EffigyRepository
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
 /**
- * Created by cjstehno on 11/28/2014.
+ * Created by cjstehno on 12/6/2014.
  */
-class UpdateMethodInjector {
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+class UpdateOperationsTransformer implements ASTTransformation {
+
+    @Override
+    void visit(ASTNode[] nodes, SourceUnit source) {
+        ClassNode repositoryNode = nodes[1] as ClassNode
+
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        if (repositoryAnnot) {
+            ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
+            info UpdateOperationsTransformer, 'Adding update operations to repository ({})', repositoryNode.name
+
+            injectUpdateMethod repositoryNode, entityNode
+
+        } else {
+            warn UpdateOperationsTransformer, 'UpdateOperations can only be applied to classes annotated with @EffigyRepository - ignored.'
+        }
+    }
 
     // FIXME: this depends on teh create method being injected - need to decouple the saveENTITY calls so that update/create can exist separately
 
-    static void injectUpdateMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
-        Logger.info UpdateMethodInjector, 'Injecting update method into repository for {}', entityNode.name
+    private static void injectUpdateMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        info UpdateOperationsTransformer, 'Injecting update method into repository for {}', entityNode.name
         try {
             def columnUpdates = []
             def vars = []

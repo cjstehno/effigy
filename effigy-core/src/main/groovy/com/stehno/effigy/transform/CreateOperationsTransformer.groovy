@@ -16,7 +16,10 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static com.stehno.effigy.transform.util.AstUtils.arrayX
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -26,23 +29,44 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.EffigyEntity
+import com.stehno.effigy.annotation.EffigyRepository
 import com.stehno.effigy.annotation.Id
-import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import java.lang.reflect.Modifier
 
 /**
- * Injects the code for the repository entity create method.
+ * Created by cjstehno on 12/6/2014.
  */
-class CreateMethodInjector {
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+class CreateOperationsTransformer implements ASTTransformation {
 
-    static void injectCreateMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
-        Logger.info CreateMethodInjector, 'Injecting create method into repository for {}', entityNode.name
+    @Override
+    void visit(ASTNode[] nodes, SourceUnit source) {
+        ClassNode repositoryNode = nodes[1] as ClassNode
+
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        if (repositoryAnnot) {
+            ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
+            info CreateOperationsTransformer, 'Adding create operations to repository ({})', repositoryNode.name
+
+            injectCreateMethod repositoryNode, entityNode
+
+        } else {
+            warn CreateOperationsTransformer, 'CreateOperations can only be applied to classes annotated with @EffigyRepository - ignored.'
+        }
+    }
+
+    private static void injectCreateMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
+        info CreateOperationsTransformer, 'Injecting create method into repository for {}', entityNode.name
         try {
             oneToManyAssociations(entityNode).each { OneToManyPropertyModel o2m ->
                 injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
@@ -100,18 +124,6 @@ class CreateMethodInjector {
         } catch (ex) {
             ex.printStackTrace()
         }
-    }
-
-    static String columnNames(ClassNode entityNode, boolean includeId = true) {
-        entityProperties(entityNode, includeId).collect { it.columnName }.join(',')
-    }
-
-    static String columnPlaceholders(ClassNode entityNode, boolean includeId = true) {
-        entityProperties(entityNode, includeId).collect { '?' }.join(',')
-    }
-
-    static List<Integer> columnTypes(ClassNode entityNode, boolean includeId = true) {
-        entityProperties(entityNode, includeId).collect { it.columnType }
     }
 
     // TODO: this should probably be pulled into a common area since update uses the same method
