@@ -16,10 +16,10 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.transform.model.EntityModelUtils.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 
 import com.stehno.effigy.logging.Logger
-import com.stehno.effigy.transform.model.EntityModel
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -32,31 +32,34 @@ import java.lang.reflect.Modifier
  */
 class DeleteMethodInjector {
 
-    static void injectDeleteMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info DeleteMethodInjector, 'Injecting delete method into repository for {}', model.type.name
+    static void injectDeleteMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        Logger.info DeleteMethodInjector, 'Injecting delete method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
                 'delete',
                 Modifier.PUBLIC,
                 ClassHelper.boolean_TYPE,
-                [new Parameter(model.identifier.type, 'entityId')] as Parameter[],
+                [new Parameter(identifier(entityNode).type, 'entityId')] as Parameter[],
                 null,
                 codeS(
                     '''
                     <%
-                    if(model.hasAssociations()){
-                        model.findAssociationProperties().each { ap-> %>
+                    if(hasAssoc){
+                        assocProps.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.entityId}=?', entityId)
                     <%  }
                     } %>
 
                     return( jdbcTemplate.update(
-                        'delete from ${model.table} where ${model.identifier.columnName}=?',
+                        'delete from ${table} where ${identifier.columnName}=?',
                         entityId
                     ) == 1)
                     ''',
-                    model: model
+                    table: entityTable(entityNode),
+                    identifier: identifier(entityNode),
+                    hasAssoc: hasAssociatedEntities(entityNode),
+                    assocProps: oneToManyAssociations(entityNode)
                 )
             ))
         } catch (ex) {
@@ -64,8 +67,8 @@ class DeleteMethodInjector {
         }
     }
 
-    static void injectDeleteAllMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info DeleteMethodInjector, 'Injecting deleteAll method into repository for {}', model.type.name
+    static void injectDeleteAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        Logger.info DeleteMethodInjector, 'Injecting deleteAll method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
@@ -77,15 +80,17 @@ class DeleteMethodInjector {
                 codeS(
                     '''
                     <%
-                    if(model.hasAssociations()){
-                        model.findAssociationProperties().each { ap-> %>
+                    if(hasAssoc){
+                        assocProps.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.table}')
                     <%  }
                     } %>
 
-                    return( jdbcTemplate.update('delete from ${model.table}') >= 1 )
+                    return( jdbcTemplate.update('delete from ${table}') >= 1 )
                     ''',
-                    model: model
+                    table: entityTable(entityNode),
+                    hasAssoc: hasAssociatedEntities(entityNode),
+                    assocProps: oneToManyAssociations(entityNode)
                 )
             ))
         } catch (ex) {

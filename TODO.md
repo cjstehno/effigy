@@ -8,7 +8,7 @@
 and we dont want other model properties to be modified by column annot or other applied annots
 * consider a more layered approach to updating the model properties
 
-
+TEst update with associations
 
 
     // @Ignored boolean active - TODO: add support for transient/ignored properties

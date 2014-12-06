@@ -16,13 +16,11 @@
 
 package com.stehno.effigy.transform.util
 
-import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
-import static org.codehaus.groovy.ast.ClassHelper.make
-
-import com.stehno.effigy.annotation.Column
-import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.AnnotatedNode
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.ClassExpression
-
 /**
  * Created by cjstehno on 11/26/2014.
  */
@@ -42,15 +40,6 @@ class AnnotationUtils {
     }
 
     // TODO: this does not really belong here, but ok for now
-    static String extractFieldName(final FieldNode field) {
-        AnnotationNode fieldColumnAnnot = field.getAnnotations(make(Column))[0]
-        if (fieldColumnAnnot) {
-            return extractString(fieldColumnAnnot, 'value')
-
-        } else {
-            return camelCaseToUnderscore(field.name)
-        }
-    }
 
     /**
      * Determines whether or not the AnnotatedNode is annotated with at least one of the given annotations.

@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.model.EntityModelUtils.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
@@ -27,8 +28,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
-import com.stehno.effigy.transform.model.EntityModel
-import com.stehno.effigy.transform.model.EntityModelRegistry
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -46,21 +45,20 @@ import java.sql.ResultSet
  * Transformer used for processing the EffigyRepository annotation - creates a ResultSetExtractor instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyResultSetExtractorInjector implements ASTTransformation {
+class EffigyResultSetExtractorTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = extractClass(nodes[0] as AnnotationNode, 'forEntity')
-        def model = EntityModelRegistry.lookup(entityClassNode)
 
-        if (model.hasAssociations()) {
-            info EffigyResultSetExtractorInjector, 'Creating ResultSetExtractor for: {}', entityClassNode.name
+        if (hasAssociatedEntities(entityClassNode)) {
+            info EffigyResultSetExtractorTransformer, 'Creating ResultSetExtractor for: {}', entityClassNode.name
 
-            ClassNode extractorClassNode = buildAssociationExtractor(model, source)
-            injectExtractorAccessor(entityClassNode, extractorClassNode, model)
+            ClassNode extractorClassNode = buildAssociationExtractor(entityClassNode, source)
+            injectExtractorAccessor(entityClassNode, extractorClassNode)
 
-            ClassNode collectionExtractorClassNode = buildCollectionAssociationExtractor(model, source)
-            injectCollectionExtractorAccessor(entityClassNode, collectionExtractorClassNode, model)
+            ClassNode collectionExtractorClassNode = buildCollectionAssociationExtractor(entityClassNode, source)
+            injectCollectionExtractorAccessor(entityClassNode, collectionExtractorClassNode)
         }
     }
 
@@ -71,11 +69,11 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
      * @param source
      * @return
      */
-    private static ClassNode buildAssociationExtractor(EntityModel model, SourceUnit source) {
+    private static ClassNode buildAssociationExtractor(ClassNode entityNode, SourceUnit source) {
         ClassNode classNode = null
         try {
             classNode = new ClassNode(
-                "${model.type.packageName}.${model.type.nameWithoutPackage}AssociationExtractor",
+                "${entityNode.packageName}.${entityNode.nameWithoutPackage}AssociationExtractor",
                 Modifier.PUBLIC,
                 makeClassSafe(EffigyAssociationResultSetExtractor),
                 [] as ClassNode[],
@@ -88,10 +86,10 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
                 makeClassSafe(RowMapper),
                 [] as Parameter[],
                 [] as ClassNode[],
-                new ReturnStatement(callX(classX(newClass(model.type)), 'rowMapper', args(constX("${model.table}_" as String))))
+                new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
-            model.findAssociationProperties().each { ap ->
+            oneToManyAssociations(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -110,14 +108,14 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
                 [] as ClassNode[],
                 codeS(
                     '''
-                    <% model.findAssociationProperties().each { ap-> %>
+                    <% oneToManys.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
                             entity.${ap.propertyName} << ${ap.propertyName}Value
                         }
                     <% } %>
                     ''',
-                    model: model
+                    oneToManys: oneToManyAssociations(entityNode)
                 )
             ))
 
@@ -138,9 +136,7 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
      * @param extractorClassNode
      * @param model
      */
-    private static void injectExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode, EntityModel model) {
-        model.findAssociationProperties()
-
+    private static void injectExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode) {
         entityClassNode.addMethod(new MethodNode(
             'associationExtractor',
             Modifier.PUBLIC | Modifier.STATIC,
@@ -150,7 +146,7 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        info EffigyEntityTransformer, 'Injected association extractor helper method for {}', model.type
+        info EffigyEntityTransformer, 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -160,11 +156,11 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
      * @param source
      * @return
      */
-    private static ClassNode buildCollectionAssociationExtractor(EntityModel model, SourceUnit source) {
+    private static ClassNode buildCollectionAssociationExtractor(ClassNode entityNode, SourceUnit source) {
         ClassNode classNode = null
         try {
             classNode = new ClassNode(
-                "${model.type.packageName}.${model.type.nameWithoutPackage}CollectionAssociationExtractor",
+                "${entityNode.packageName}.${entityNode.nameWithoutPackage}CollectionAssociationExtractor",
                 Modifier.PUBLIC,
                 makeClassSafe(EffigyCollectionAssociationResultSetExtractor),
                 [] as ClassNode[],
@@ -177,10 +173,10 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
                 makeClassSafe(RowMapper),
                 [] as Parameter[],
                 [] as ClassNode[],
-                new ReturnStatement(callX(classX(newClass(model.type)), 'rowMapper', args(constX("${model.table}_" as String))))
+                new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
-            model.findAssociationProperties().each { ap ->
+            oneToManyAssociations(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -199,14 +195,14 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
                 [] as ClassNode[],
                 codeS(
                     '''
-                    <% model.findAssociationProperties().each { ap-> %>
+                    <% oneToManys.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
                             entity.${ap.propertyName} << ${ap.propertyName}Value
                         }
                     <% } %>
                     ''',
-                    model: model
+                    oneToManys: oneToManyAssociations(entityNode)
                 )
             ))
 
@@ -227,9 +223,7 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
      * @param extractorClassNode
      * @param model
      */
-    private static void injectCollectionExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode, EntityModel model) {
-        model.findAssociationProperties()
-
+    private static void injectCollectionExtractorAccessor(ClassNode entityClassNode, ClassNode extractorClassNode) {
         entityClassNode.addMethod(new MethodNode(
             'collectionAssociationExtractor',
             Modifier.PUBLIC | Modifier.STATIC,
@@ -237,10 +231,10 @@ class EffigyResultSetExtractorInjector implements ASTTransformation {
             [] as Parameter[],
             [] as ClassNode[],
             returnS(ctorX(newClass(extractorClassNode), args(new MapExpression([
-                new MapEntryExpression(constX('entityIdentifier'), constX(model.identifier.propertyName))
+                new MapEntryExpression(constX('entityIdentifier'), constX(identifier(entityClassNode).propertyName))
             ]))))
         ))
 
-        info EffigyEntityTransformer, 'Injected collection association extractor helper method for {}', model.type
+        info EffigyEntityTransformer, 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

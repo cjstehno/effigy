@@ -16,18 +16,13 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.OneToManyTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
-
 /**
  * ... association of one entity to many associated entities..
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [OneToManyTransformer])
 @interface OneToMany {
 
     /**

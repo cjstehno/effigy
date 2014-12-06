@@ -17,13 +17,13 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.model.EntityModelUtils.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.transform.model.EntityModel
-import com.stehno.effigy.transform.model.EntityModelRegistry
+import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
@@ -43,43 +43,45 @@ class RetrieveMethodInjector {
      * @param repositoryClassNode
      * @param model
      */
-    static void injectRetrieveMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', model.type.name
+    static void injectRetrieveMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
+        info RetrieveMethodInjector, 'Injecting retrieve method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
                 'retrieve',
                 Modifier.PUBLIC,
-                newClass(model.type),
-                [new Parameter(model.identifier.type, 'entityId')] as Parameter[],
+                newClass(entityNode),
+                [new Parameter(identifier(entityNode).type, 'entityId')] as Parameter[],
                 null,
-                model.hasAssociations() ? retrieveSingleWitRelations(model) : retrieveSingleWithoutRelations(model)
+                hasAssociatedEntities(entityNode) ? retrieveSingleWitRelations(entityNode) : retrieveSingleWithoutRelations(entityNode)
             ))
         } catch (ex) {
             ex.printStackTrace()
         }
     }
 
-    private static Statement retrieveSingleWithoutRelations(final EntityModel model) {
+    private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
+            declS(varX('mapper'), callX(classX(newClass(entityNode)), 'rowMapper')),
 
             codeS(
                 '''
                     jdbcTemplate.queryForObject(
-                        'select ${model.columnNames().join(',')} from ${model.table} where ${model.identifier.columnName}=?',
+                        'select ${columnNames} from ${table} where ${identifier.columnName}=?',
                         mapper,
                         entityId
                     )
                     ''',
-                model: model
+                table: entityTable(entityNode),
+                identifier: identifier(entityNode),
+                columnNames: CreateMethodInjector.columnNames(entityNode)
             )
         )
     }
 
-    private static Statement retrieveSingleWitRelations(final EntityModel model) {
+    private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
-            declS(varX('extractor'), callX(classX(newClass(model.type)), 'associationExtractor')),
+            declS(varX('extractor'), callX(classX(newClass(entityNode)), 'associationExtractor')),
 
             codeS(
                 '''
@@ -89,14 +91,13 @@ class RetrieveMethodInjector {
                         entityId
                     )
                     ''',
-                model: model,
-                sql: sqlWithRelations(model, true)
+                sql: sqlWithRelations(entityNode, true)
             )
         )
     }
 
-    static void injectRetrieveAllMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', model.type.name
+    static void injectRetrieveAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        info RetrieveMethodInjector, 'Injecting retrieve All method into repository for {}', entityNode.name
 
         try {
             repositoryClassNode.addMethod(new MethodNode(
@@ -105,7 +106,7 @@ class RetrieveMethodInjector {
                 makeClassSafe(List),
                 [] as Parameter[],
                 null,
-                model.hasAssociations() ? retrieveAllWithRelations(model) : retrieveAllWithoutRelations(model)
+                hasAssociatedEntities(entityNode) ? retrieveAllWithRelations(entityNode) : retrieveAllWithoutRelations(entityNode)
             ))
 
         } catch (ex) {
@@ -113,9 +114,9 @@ class RetrieveMethodInjector {
         }
     }
 
-    private static Statement retrieveAllWithRelations(final EntityModel model) {
+    private static Statement retrieveAllWithRelations(ClassNode entityNode) {
         block(
-            declS(varX('extractor'), callX(classX(newClass(model.type)), 'collectionAssociationExtractor')),
+            declS(varX('extractor'), callX(classX(newClass(entityNode)), 'collectionAssociationExtractor')),
 
             codeS(
                 '''
@@ -124,55 +125,59 @@ class RetrieveMethodInjector {
                         extractor
                     )
                     ''',
-                model: model,
-                sql: sqlWithRelations(model)
+                sql: sqlWithRelations(entityNode)
             )
         )
     }
 
-    private static Statement retrieveAllWithoutRelations(final EntityModel model) {
+    private static Statement retrieveAllWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX('mapper'), callX(classX(newClass(model.type)), 'rowMapper')),
+            declS(varX('mapper'), callX(classX(newClass(entityNode)), 'rowMapper')),
 
             codeS(
                 '''
                     jdbcTemplate.query(
-                        'select ${model.columnNames().join(',')} from ${model.table}',
+                        'select ${columnNames} from ${table}',
                         mapper
                     )
                 ''',
-                model: model
+                table: entityTable(entityNode),
+                columnNames: CreateMethodInjector.columnNames(entityNode)
             )
         )
     }
 
-    private static String sqlWithRelations(final EntityModel model, final boolean single = false) {
+    private static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
         String sql = 'select '
 
-        model.findProperties().each { p ->
-            sql += "${model.table}.${p.columnName} as ${model.table}_${p.columnName},"
+        String entityTableName = entityTable(entityNode)
+        def entityIdentifier = identifier(entityNode)
+
+        entityProperties(entityNode).each { p ->
+            sql += "${entityTableName}.${p.columnName} as ${entityTableName}_${p.columnName},"
         }
 
-        sql += model.findAssociationProperties().collect { ap ->
-            def associatedModel = EntityModelRegistry.lookup(ap.associatedType)
+        sql += oneToManyAssociations(entityNode).collect { ap ->
+            String associatedTable = entityTable(ap.associatedType)
 
-            associatedModel.findProperties().collect { p ->
-                "${associatedModel.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+            entityProperties(ap.associatedType).collect { p ->
+                "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
             }.join(',')
 
         }.join(',')
 
-        sql += " from ${model.table}"
+        sql += " from ${entityTableName}"
 
-        model.findAssociationProperties().each { ap ->
-            def associatedModel = EntityModelRegistry.lookup(ap.associatedType)
+        oneToManyAssociations(entityNode).each { ap ->
+            String associatedTable = entityTable(ap.associatedType)
+            IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
 
-            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${model.table}.${model.identifier.columnName}"
-            sql += " LEFT OUTER JOIN ${associatedModel.table} on ${ap.table}.${ap.associationId}=${associatedModel.table}.${associatedModel.identifier.columnName}"
+            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${entityTableName}.${entityIdentifier.columnName}"
+            sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.table}.${ap.associationId}=${associatedTable}.${associatedIdentifier.columnName}"
         }
 
         if (single) {
-            sql += " where ${model.table}.${model.identifier.columnName}=?"
+            sql += " where ${entityTableName}.${entityIdentifier.columnName}=?"
         }
 
         sql

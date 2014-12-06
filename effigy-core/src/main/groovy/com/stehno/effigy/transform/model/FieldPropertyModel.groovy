@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.annotation
+package com.stehno.effigy.transform.model
 
-import java.lang.annotation.*
+import groovy.transform.CompileStatic
+import groovy.transform.Immutable
+import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Denotes an Effigy entity version field.
+ * Created by cjstehno on 12/6/2014.
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.SOURCE)
-@Documented
-@interface Version {
-    // nothing special here
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class FieldPropertyModel implements EntityPropertyModel {
+
+    String propertyName
+    ClassNode type
+    String columnName
+    int columnType
 }

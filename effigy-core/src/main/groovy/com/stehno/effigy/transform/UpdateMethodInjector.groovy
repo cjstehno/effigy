@@ -16,11 +16,11 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.transform.model.EntityModelUtils.*
 import static com.stehno.effigy.transform.util.AstUtils.code
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.logging.Logger
-import com.stehno.effigy.transform.model.EntityModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
@@ -35,38 +35,41 @@ import java.lang.reflect.Modifier
  */
 class UpdateMethodInjector {
 
-    static void injectUpdateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info UpdateMethodInjector, 'Injecting update method into repository for {}', model.type.name
+    // FIXME: this depends on teh create method being injected - need to decouple the saveENTITY calls so that update/create can exist separately
+
+    static void injectUpdateMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+        Logger.info UpdateMethodInjector, 'Injecting update method into repository for {}', entityNode.name
         try {
             def columnUpdates = []
             def vars = []
 
-            model.findProperties(false).each { p ->
+            entityProperties(entityNode, false).each { p ->
                 columnUpdates << "${p.columnName}=?"
                 vars << "entity.${p.propertyName}"
             }
 
             def nodes = code('''
-                <% if(model.versioner){ %>
-                def currentVersion = entity.${model.versioner.propertyName} ?: 0
-                entity.${model.versioner.propertyName} = currentVersion + 1
+                <% if(versioner){ %>
+                def currentVersion = entity.${versioner.propertyName} ?: 0
+                entity.${versioner.propertyName} = currentVersion + 1
                 <% } %>
 
                 jdbcTemplate.update(
-                    'update people set ${columnUpdates.join(',')} where ${model.identifier.columnName}=? <% if(model.versioner){ %>and ${model.versioner.columnName}=?<% } %>',
+                    'update people set ${columnUpdates.join(',')} where ${identifier.columnName}=? <% if(versioner){ %>and ${versioner.columnName}=?<% } %>',
                     ${vars.join(',')},
-                    entity.${model.identifier.propertyName}
-                    <% if(model.versioner){ %>
+                    entity.${identifier.propertyName}
+                    <% if(versioner){ %>
                         ,currentVersion
                     <% } %>
                 )
 
                 $o2m
             ''',
-                model: model,
                 vars: vars,
+                versioner: versioner(entityNode),
+                identifier: identifier(entityNode),
                 columnUpdates: columnUpdates,
-                o2m: model.findPropertiesByType(OneToManyPropertyModel).collect { OneToManyPropertyModel o2m ->
+                o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}(entity)"
                 }.join('\n')
             )
@@ -75,7 +78,7 @@ class UpdateMethodInjector {
                 'update',
                 Modifier.PUBLIC,
                 ClassHelper.VOID_TYPE,
-                [new Parameter(newClass(model.type), 'entity')] as Parameter[],
+                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
                 null,
                 nodes[0] as Statement
             ))

@@ -17,7 +17,6 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.CreateMethodInjector.injectCreateMethod
 import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteAllMethod
 import static com.stehno.effigy.transform.DeleteMethodInjector.injectDeleteMethod
@@ -27,8 +26,6 @@ import static com.stehno.effigy.transform.UpdateMethodInjector.injectUpdateMetho
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 
 import com.stehno.effigy.repository.CrudOperations
-import com.stehno.effigy.transform.model.EntityModel
-import com.stehno.effigy.transform.model.EntityModelRegistry
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -63,17 +60,14 @@ class EffigyRepositoryTransformer implements ASTTransformation {
         ClassNode entityClassNode = extractClass(effigyAnnotNode, 'forEntity')
         info EffigyRepositoryTransformer, 'Transforming repository for: {}', entityClassNode.name
 
-        EntityModel model = EntityModelRegistry.lookup(entityClassNode)
-        trace EffigyRepositoryTransformer, 'Found entity model: {}', model
-
         if (implementsCrud) {
             try {
-                injectCreateMethod repositoryClassNode, model
-                injectRetrieveMethod repositoryClassNode, model
-                injectRetrieveAllMethod repositoryClassNode, model
-                injectUpdateMethod repositoryClassNode, model
-                injectDeleteMethod repositoryClassNode, model
-                injectDeleteAllMethod repositoryClassNode, model
+                injectCreateMethod repositoryClassNode, entityClassNode
+                injectRetrieveMethod repositoryClassNode, entityClassNode
+                injectRetrieveAllMethod repositoryClassNode, entityClassNode
+                injectUpdateMethod repositoryClassNode, entityClassNode
+                injectDeleteMethod repositoryClassNode, entityClassNode
+                injectDeleteAllMethod repositoryClassNode, entityClassNode
 
             } catch (ex) {
                 ex.printStackTrace()

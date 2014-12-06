@@ -16,22 +16,18 @@
 
 package com.stehno.effigy.transform.model
 
+import groovy.transform.CompileStatic
+import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 11/29/2014.
+ * Created by cjstehno on 12/6/2014.
  */
-@Singleton
-class EntityModelRegistry {
+@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+class VersionerPropertyModel implements EntityPropertyModel {
 
-    private final Map<ClassNode, EntityModel> entityModels = [:]
-
-    EntityModel register(EntityModel model) {
-        entityModels[model.type] = model
-        model
-    }
-
-    static EntityModel lookup(ClassNode entityType) {
-        EntityModelRegistry.instance.entityModels[entityType]
-    }
+    String propertyName
+    ClassNode type
+    String columnName
+    int columnType
 }

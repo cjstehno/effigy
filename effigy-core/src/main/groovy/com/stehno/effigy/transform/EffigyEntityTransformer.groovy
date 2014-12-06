@@ -17,7 +17,6 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.debug
-import static com.stehno.effigy.transform.model.EntityModel.registerEntityModel
 
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -38,6 +37,6 @@ class EffigyEntityTransformer implements ASTTransformation {
 
         debug EffigyEntityTransformer, 'Visiting Entity: {}', entityClassNode.name
 
-        registerEntityModel entityClassNode
+        // FIXME: this does not do anything
     }
 }

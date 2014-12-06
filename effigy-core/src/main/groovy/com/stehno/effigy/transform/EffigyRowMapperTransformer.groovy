@@ -17,6 +17,8 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.model.EntityModelUtils.entityProperties
+import static com.stehno.effigy.transform.model.EntityModelUtils.identifier
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -25,8 +27,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
-import com.stehno.effigy.transform.model.EntityModel
-import com.stehno.effigy.transform.model.EntityModelRegistry
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -43,18 +43,16 @@ import java.sql.ResultSet
  * Transformer used for processing the EffigyRepository annotation - creates a RowMapper instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyRowMapperInjector implements ASTTransformation {
+class EffigyRowMapperTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = extractClass(nodes[0] as AnnotationNode, 'forEntity')
 
-        info EffigyRowMapperInjector, 'Creating RowMapper for: {}', entityClassNode.name
+        info EffigyRowMapperTransformer, 'Creating RowMapper for: {}', entityClassNode.name
 
-        def model = EntityModelRegistry.lookup(entityClassNode)
-
-        ClassNode mapperClassNode = buildRowMapper(model, source)
-        injectRowMapperAccessor(entityClassNode, mapperClassNode, model)
+        ClassNode mapperClassNode = buildRowMapper(entityClassNode, source)
+        injectRowMapperAccessor(entityClassNode, mapperClassNode)
     }
 
     /**
@@ -64,11 +62,11 @@ class EffigyRowMapperInjector implements ASTTransformation {
      * @param source the source unit
      * @return the created RowMapper implementation class
      */
-    private static ClassNode buildRowMapper(EntityModel model, SourceUnit source) {
+    private static ClassNode buildRowMapper(ClassNode entityNode, SourceUnit source) {
         ClassNode mapperClassNode = null
         try {
             mapperClassNode = new ClassNode(
-                "${model.type.packageName}.${model.type.nameWithoutPackage}RowMapper",
+                "${entityNode.packageName}.${entityNode.nameWithoutPackage}RowMapper",
                 Modifier.PUBLIC,
                 makeClassSafe(EffigyEntityRowMapper),
                 [] as ClassNode[],
@@ -78,34 +76,35 @@ class EffigyRowMapperInjector implements ASTTransformation {
             mapperClassNode.addMethod(new MethodNode(
                 'newEntity',
                 Modifier.PROTECTED,
-                newClass(model.type),
+                newClass(entityNode),
                 [] as Parameter[],
                 [] as ClassNode[],
-                new ReturnStatement(ctorX(newClass(model.type)))
+                new ReturnStatement(ctorX(newClass(entityNode)))
             ))
 
             mapperClassNode.addMethod(new MethodNode(
                 'mapping',
                 Modifier.PROTECTED,
-                newClass(model.type),
+                newClass(entityNode),
                 [param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
                 [] as ClassNode[],
                 block(
                     codeS(
                         '''
-                        <% model.findProperties().each { p-> %>
+                        <% props.each { p-> %>
                             entity.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
                         <% } %>
-                        return ( entity.${model.identifier.propertyName} ? entity : null )
+                        return ( entity.${identifier.propertyName} ? entity : null )
                         ''',
-                        model: model
+                        props: entityProperties(entityNode),
+                        identifier: identifier(entityNode)
                     )
                 )
             ))
 
             source.AST.addClass(mapperClassNode)
 
-            info EffigyEntityTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, model.type
+            info EffigyRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
 
         } catch (ex) {
             ex.printStackTrace()
@@ -123,7 +122,7 @@ class EffigyRowMapperInjector implements ASTTransformation {
      * @param mapperClassNode
      * @param model
      */
-    private static void injectRowMapperAccessor(ClassNode entityClassNode, ClassNode mapperClassNode, EntityModel model) {
+    private static void injectRowMapperAccessor(ClassNode entityClassNode, ClassNode mapperClassNode) {
         entityClassNode.addMethod(new MethodNode(
             'rowMapper',
             Modifier.PUBLIC | Modifier.STATIC,
@@ -133,6 +132,6 @@ class EffigyRowMapperInjector implements ASTTransformation {
             returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX('prefix'), varX('prefix'))]))))
         ))
 
-        info EffigyEntityTransformer, 'Injected row mapper helper method for {}', model.type
+        info EffigyRowMapperTransformer, 'Injected row mapper helper method for {}', entityClassNode
     }
 }

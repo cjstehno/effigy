@@ -16,9 +16,11 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.transform.model.EntityModelUtils.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static com.stehno.effigy.transform.util.AstUtils.arrayX
 import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
@@ -26,7 +28,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.logging.Logger
-import com.stehno.effigy.transform.model.EntityModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
@@ -40,21 +41,23 @@ import java.lang.reflect.Modifier
  */
 class CreateMethodInjector {
 
-    static void injectCreateMethod(final ClassNode repositoryClassNode, final EntityModel model) {
-        Logger.info CreateMethodInjector, 'Injecting create method into repository for {}', model.type.name
+    static void injectCreateMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
+        Logger.info CreateMethodInjector, 'Injecting create method into repository for {}', entityNode.name
         try {
-            model.findPropertiesByType(OneToManyPropertyModel).each { OneToManyPropertyModel o2m ->
-                injectO2MSaveMethod(repositoryClassNode, model, o2m)
+            oneToManyAssociations(entityNode).each { OneToManyPropertyModel o2m ->
+                injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
             }
+
+            def versioner = versioner(entityNode)
 
             def statement = block(
                 declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
-                model.versioner ? codeS('entity.$name = 0', name: model.versioner.propertyName) : new EmptyStatement(),
+                versioner ? codeS('entity.$name = 0', name: versioner.propertyName) : new EmptyStatement(),
 
                 declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
-                    constX("insert into ${model.table} (${model.columnNames(false).join(',')}) values (${model.columnPlaceholders(false).join(',')})" as String),
-                    arrayX(ClassHelper.int_TYPE, model.columnTypes(false).collect { typ ->
+                    constX("insert into ${entityTable(entityNode)} (${columnNames(entityNode, false)}) values (${columnPlaceholders(entityNode, false)})" as String),
+                    arrayX(int_TYPE, columnTypes(entityNode, false).collect { typ ->
                         constX(typ)
                     })
                 ))),
@@ -70,7 +73,7 @@ class CreateMethodInjector {
                         return keys.key
                     ''',
 
-                    values: model.findProperties(false).collect { pi ->
+                    values: entityProperties(entityNode, false).collect { pi ->
                         if (pi.type.enum) {
                             "entity.${pi.propertyName}?.name()"
                         } else {
@@ -78,8 +81,8 @@ class CreateMethodInjector {
                         }
                     }.join(','),
 
-                    idName: model.identifier.propertyName,
-                    o2m: model.findPropertiesByType(OneToManyPropertyModel).collect { OneToManyPropertyModel o2m ->
+                    idName: identifier(entityNode).propertyName,
+                    o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
                     }.join('\n')
                 ),
@@ -88,8 +91,8 @@ class CreateMethodInjector {
             repositoryClassNode.addMethod(new MethodNode(
                 'create',
                 Modifier.PUBLIC,
-                model.identifier.type,
-                [new Parameter(newClass(model.type), 'entity')] as Parameter[],
+                identifier(entityNode).type,
+                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
                 null,
                 statement
             ))
@@ -99,8 +102,20 @@ class CreateMethodInjector {
         }
     }
 
+    static String columnNames(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { it.columnName }.join(',')
+    }
+
+    static String columnPlaceholders(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { '?' }.join(',')
+    }
+
+    static List<Integer> columnTypes(ClassNode entityNode, boolean includeId = true) {
+        entityProperties(entityNode, includeId).collect { it.columnType }
+    }
+
     // TODO: this should probably be pulled into a common area since update uses the same method
-    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, EntityModel model, OneToManyPropertyModel o2m) {
+    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, ClassNode entityNode, OneToManyPropertyModel o2m) {
         def statement = codeS(
             '''
                 int expects = entity.${name}.size()
@@ -127,7 +142,7 @@ class CreateMethodInjector {
             assocTable: o2m.table,
             tableEntIdName: o2m.entityId,
             tableAssocIdName: o2m.associationId,
-            entityIdName: model.identifier.propertyName,
+            entityIdName: identifier(entityNode).propertyName,
             assocIdName: findIdName(o2m.type)
         )
 
@@ -135,7 +150,7 @@ class CreateMethodInjector {
             "save${o2m.propertyName.capitalize()}",
             Modifier.PROTECTED,
             ClassHelper.VOID_TYPE,
-            [new Parameter(newClass(model.type), 'entity')] as Parameter[],
+            [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
             null,
             statement
         ))

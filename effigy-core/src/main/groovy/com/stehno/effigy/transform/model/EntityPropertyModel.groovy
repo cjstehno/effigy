@@ -17,7 +17,6 @@
 package com.stehno.effigy.transform.model
 
 import groovy.transform.CompileStatic
-import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
@@ -27,44 +26,6 @@ import org.codehaus.groovy.ast.ClassNode
 interface EntityPropertyModel {
 
     String getPropertyName()
+
     ClassNode getType()
-}
-
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class IdentifierPropertyModel implements EntityPropertyModel {
-
-    String propertyName
-    ClassNode type
-    String columnName
-    int columnType
-}
-
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class VersionerPropertyModel implements EntityPropertyModel {
-
-    String propertyName
-    ClassNode type
-    String columnName
-    int columnType
-}
-
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class FieldPropertyModel implements EntityPropertyModel {
-
-    String propertyName
-    ClassNode type
-    String columnName
-    int columnType
-}
-
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class OneToManyPropertyModel implements EntityPropertyModel {
-
-    String propertyName
-    ClassNode type
-    ClassNode associatedType
-
-    String table
-    String entityId
-    String associationId
 }

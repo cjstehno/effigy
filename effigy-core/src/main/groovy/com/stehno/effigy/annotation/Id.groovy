@@ -16,9 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.IdTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -27,7 +24,6 @@ import java.lang.annotation.*
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [IdTransformer])
 @interface Id {
     // nothing to see here, move along...
 }
