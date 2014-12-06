@@ -16,14 +16,10 @@
 
 package com.stehno.effigy.annotation
 
-import java.lang.annotation.Documented
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
+import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 11/26/2014.
+ * Annotation used to provide additional information related to the database column represented by the annotated property.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
@@ -31,7 +27,8 @@ import java.lang.annotation.Target
 @interface Column {
 
     /**
-     * The name of the column in the database.
+     * The name of the column in the database. If this annotation is not used, the underscored version of the property name will be used as the
+     * column name in the database.
      */
     String value()
 }

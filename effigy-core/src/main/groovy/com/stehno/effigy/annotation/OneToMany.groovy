@@ -17,8 +17,9 @@
 package com.stehno.effigy.annotation
 
 import java.lang.annotation.*
+
 /**
- * ... association of one entity to many associated entities..
+ * Annotation used to denote that a collection property (Collection implementation) has a relationship of one entity to many associated entities.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)

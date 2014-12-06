@@ -22,7 +22,9 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Annotation used to inject Update operations into a repository. The repository class must also be annotated with the @EffigyRepository annotation.
+ *
+ * This annotation injects the CrudOperations.update(entity) method.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

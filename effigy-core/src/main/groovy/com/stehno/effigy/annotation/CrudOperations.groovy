@@ -25,7 +25,10 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Annotation used to inject the Create, Retrieve, Update and Delete operations into a repository. The repository class must also be annotated with
+ * the @EffigyRepository annotation.
+ *
+ * This annotation injects all of the methods from the CrudOperations interface into a repository.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

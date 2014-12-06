@@ -19,7 +19,7 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Denotes an Effigy entity version field.
+ * Denotes an Effigy entity version field. The annotated field must be a Long object or long primitive type.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)

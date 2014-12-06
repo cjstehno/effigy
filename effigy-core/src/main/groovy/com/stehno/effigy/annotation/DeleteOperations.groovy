@@ -22,7 +22,9 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Annotation used to inject Delete operations into a repository. The repository class must also be annotated with the @EffigyRepository annotation.
+ *
+ * This annotation injects the CrudOperations.delete(entityId) and CrudOperations.deleteAll() methods.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

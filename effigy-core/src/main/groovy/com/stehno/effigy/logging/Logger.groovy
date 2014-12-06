@@ -17,7 +17,7 @@
 package com.stehno.effigy.logging
 
 /**
- * Created by cjstehno on 11/29/2014.
+ * Static logging mechanism for logging during AST transformation activity.
  */
 class Logger {
 
