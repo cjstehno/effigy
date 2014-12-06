@@ -18,14 +18,12 @@ package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.logging.Logger.warn
+import static com.stehno.effigy.transform.model.EntityModelRegistry.lookup
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractFieldName
 import static com.stehno.effigy.transform.util.TransformUtils.findSqlType
 import static com.stehno.effigy.transform.util.TransformUtils.isEffigyEntity
-import static org.codehaus.groovy.ast.ClassHelper.Long_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.long_TYPE
 
-import com.stehno.effigy.transform.model.EntityModelRegistry
-import com.stehno.effigy.transform.model.VersionerPropertyModel
+import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
@@ -35,36 +33,28 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 /**
- * Transformer used by the Version annotation.
+ * Transformation support for the Effigy Id annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class VersionTransformer implements ASTTransformation {
+class IdTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        FieldNode versionFieldNode = nodes[1] as FieldNode
-        ClassNode entityClassNode = versionFieldNode.owner
+        FieldNode idFieldNode = nodes[1] as FieldNode
+        ClassNode entityClassNode = idFieldNode.owner
 
         if (isEffigyEntity(entityClassNode)) {
-            debug VersionTransformer, 'Visiting Field: {}.{}', entityClassNode.name, versionFieldNode.name
+            debug IdTransformer, 'Visiting Field: {}.{}', entityClassNode.name, idFieldNode.name
 
-            verifyVersionProperty versionFieldNode
-
-            EntityModelRegistry.lookup(entityClassNode).replaceProperty(new VersionerPropertyModel(
-                columnName: extractFieldName(versionFieldNode),
-                propertyName: versionFieldNode.name,
-                type: versionFieldNode.type,
-                columnType: findSqlType(versionFieldNode)
+            lookup(entityClassNode).replaceProperty(new IdentifierPropertyModel(
+                columnName: extractFieldName(idFieldNode),
+                propertyName: idFieldNode.name,
+                type: idFieldNode.type,
+                columnType: findSqlType(idFieldNode)
             ))
 
         } else {
-            warn VersionTransformer, 'Annotated version field is not contained within an entity annotated with EffigyEntity - ignored.'
-        }
-    }
-
-    private static void verifyVersionProperty(final FieldNode fieldNode) {
-        if (!(fieldNode.type in [Long_TYPE, long_TYPE])) {
-            throw new Exception('Currently the Version annotation may only be used on long or java.lang.Long fields.')
+            warn IdTransformer, 'Annotated id field is not contained within an entity annotated with EffigyEntity - ignored.'
         }
     }
 }

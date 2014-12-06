@@ -15,11 +15,12 @@
  */
 
 package com.stehno.effigy.transform.util
-
 import static java.sql.Types.*
+import static org.codehaus.groovy.ast.ClassHelper.make
 
+import com.stehno.effigy.annotation.EffigyEntity
+import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
-
 /**
  * Created by cjstehno on 12/6/2014.
  */
@@ -42,5 +43,15 @@ class TransformUtils {
                 return BIGINT
             default: return JAVA_OBJECT
         }
+    }
+
+    /**
+     * Determines whether or not the specified ClassNode is annotated with the EffigyEntity annotation.
+     *
+     * @param node the class node being tested
+     * @return true , if the class is annotated with EffigyEntity
+     */
+    static boolean isEffigyEntity(final ClassNode node) {
+        node.getAnnotations(make(EffigyEntity))
     }
 }

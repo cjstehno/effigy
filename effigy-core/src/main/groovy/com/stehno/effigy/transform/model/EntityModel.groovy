@@ -22,7 +22,6 @@ import static com.stehno.effigy.transform.util.TransformUtils.findSqlType
 import static org.codehaus.groovy.ast.ClassHelper.make
 
 import com.stehno.effigy.annotation.EffigyEntity
-import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.annotation.OneToMany
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -86,15 +85,7 @@ class EntityModel {
         entityClassNode.fields.findAll { f -> !f.static }.each { FieldNode field ->
             EntityPropertyModel propertyModel
 
-            if (hasAnnotation(field, Id)) {
-                propertyModel = new IdentifierPropertyModel(
-                    columnName: extractFieldName(field),
-                    propertyName: field.name,
-                    type: field.type,
-                    columnType: findSqlType(field)
-                )
-
-            } else if (hasAnnotation(field, OneToMany)) {
+            if (hasAnnotation(field, OneToMany)) {
                 propertyModel = new OneToManyPropertyModel(
                     propertyName: field.name,
                     type: field.type,

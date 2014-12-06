@@ -16,18 +16,18 @@
 
 package com.stehno.effigy.annotation
 
-import java.lang.annotation.Documented
-import java.lang.annotation.ElementType
-import java.lang.annotation.Retention
-import java.lang.annotation.RetentionPolicy
-import java.lang.annotation.Target
+import com.stehno.effigy.transform.IdTransformer
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
+
+import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 11/26/2014.
+ * Denotes an Effigy entity identifier field.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
+@GroovyASTTransformationClass(classes = [IdTransformer])
 @interface Id {
-
+    // nothing to see here, move along...
 }
