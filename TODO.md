@@ -8,4 +8,16 @@
 and we dont want other model properties to be modified by column annot or other applied annots
 * consider a more layered approach to updating the model properties
 
-* need to support default names for O2M association annotation
+
+
+
+    // @Ignored boolean active - TODO: add support for transient/ignored properties
+
+    // TODO: support for component object
+    // Occupation occupation (title, salary)
+
+    /* FIXME: support
+        onetoone - entity
+        manytoone - entity (is this even valid for how my mapper works?)
+        manytomany - collection, set, list, map
+     */

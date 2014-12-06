@@ -17,12 +17,9 @@
 package com.stehno.effigy.transform.model
 import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractFieldName
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.TransformUtils.extractTableName
 import static com.stehno.effigy.transform.util.TransformUtils.findSqlType
-import static org.codehaus.groovy.ast.ClassHelper.make
 
-import com.stehno.effigy.annotation.EffigyEntity
-import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 /**
@@ -100,11 +97,6 @@ class EntityModel {
                 entityProperties: map
             )
         )
-    }
-
-    private static String extractTableName(final ClassNode entityClassNode) {
-        AnnotationNode effigyAnnotNode = entityClassNode.getAnnotations(make(EffigyEntity))[0]
-        extractString(effigyAnnotNode, 'table') ?: (entityClassNode.nameWithoutPackage.toLowerCase() + 's')
     }
 
     /**

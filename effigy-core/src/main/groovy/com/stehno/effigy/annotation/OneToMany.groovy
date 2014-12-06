@@ -31,19 +31,20 @@ import java.lang.annotation.*
 @interface OneToMany {
 
     /**
-     * Name of the association table...
-     *
-     * @return
+     * Name of the association table. If not explicitly specified, the table name will be the name of the
+     * entity table and the name of the entity association property separated by an underscore.
      */
-    String table()
+    String table() default ''
 
     /**
-     * The id column name of the owning entity.
+     * The id column name of the owning entity. If not explicitly specified, the entity id field name will
+     * be the entity table name with the suffix '_id' appended to it.
      */
-    String entityId()
+    String entityId() default ''
 
     /**
-     * The id column name of the associated entity.
+     * The id column name of the associated entity. If not explicitly specified, the association id field name will
+     * be the associated entity table name with the suffix '_id' appended to it.
      */
-    String associationId()
+    String associationId() default ''
 }

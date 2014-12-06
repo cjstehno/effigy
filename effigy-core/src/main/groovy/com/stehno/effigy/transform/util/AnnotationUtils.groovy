@@ -36,13 +36,9 @@ class AnnotationUtils {
         return pair.value.type;
     }
 
-    public static String extractString(AnnotationNode annotation, String key) {
-        def pair = annotation.members.find { pair -> pair.key == key; };
-        if (pair) {
-            return pair.value.value;
-        } else {
-            return null;
-        }
+    public static String extractString(AnnotationNode annotation, String key, String defvalue = null) {
+        def pair = annotation.members.find { pair -> pair.key == key }
+        return pair ? pair.value.value : defvalue
     }
 
     // TODO: this does not really belong here, but ok for now

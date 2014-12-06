@@ -20,6 +20,7 @@ import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModelRegistry.lookup
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.TransformUtils.extractTableName
 import static com.stehno.effigy.transform.util.TransformUtils.isEffigyEntity
 
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
@@ -47,14 +48,21 @@ class OneToManyTransformer implements ASTTransformation {
         if (isEffigyEntity(entityClassNode)) {
             debug OneToManyTransformer, 'Visiting Field: {}.{}', entityClassNode.name, o2MFieldNode.name
 
-            String table = extractString(annotationNode, 'table')
-            String entityId = extractString(annotationNode, 'entityId')
-            String associationId = extractString(annotationNode, 'associationId')
+            def model = lookup(entityClassNode)
+
+            def associatedType = o2MFieldNode.type.genericsTypes.find { isEffigyEntity(it.type) }.type
+
+            // The associated entity might not be processed yet
+            String assocTableName = extractTableName(associatedType)
+
+            String table = extractString(annotationNode, 'table', "${model.table}_${o2MFieldNode.name}")
+            String entityId = extractString(annotationNode, 'entityId', "${model.table}_id")
+            String associationId = extractString(annotationNode, 'associationId', "${assocTableName}_id")
 
             lookup(entityClassNode).replaceProperty(new OneToManyPropertyModel(
                 propertyName: o2MFieldNode.name,
                 type: o2MFieldNode.type,
-                associatedType: o2MFieldNode.type.genericsTypes.find { isEffigyEntity(it.type) }.type,
+                associatedType: associatedType,
                 table: table,
                 entityId: entityId,
                 associationId: associationId

@@ -15,10 +15,13 @@
  */
 
 package com.stehno.effigy.transform.util
+
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static java.sql.Types.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 
 import com.stehno.effigy.annotation.EffigyEntity
+import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 /**
@@ -53,5 +56,10 @@ class TransformUtils {
      */
     static boolean isEffigyEntity(final ClassNode node) {
         node.getAnnotations(make(EffigyEntity))
+    }
+
+    static String extractTableName(final ClassNode entityClassNode) {
+        AnnotationNode effigyAnnotNode = entityClassNode.getAnnotations(make(EffigyEntity))[0]
+        extractString(effigyAnnotNode, 'table', entityClassNode.nameWithoutPackage.toLowerCase() + 's')
     }
 }
