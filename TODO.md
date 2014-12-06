@@ -1,23 +1,21 @@
 
 # Things to do
 
-* Implement other associations
+* support for embedded components as fields
+
 * Convert crud operation injection to be annotation-based so that you can pick and choose which you want
+@CrudSupport
+    @RetrieveSupport, @CreateSupport, @UpdateSupport, @DeleteSupport
+    provide interfaces for each to allow flexibility
 
-* convert the Column annotation to its own transformation - need to be careful since the property names need to be maintained
-and we dont want other model properties to be modified by column annot or other applied annots
-* consider a more layered approach to updating the model properties
+* Test update with associations
 
-TEst update with associations
+* implement @Ignored (ignored field) - or Transient
 
+* support onetoone - entity
+* support manytomany
+* support maps as asociation containers
 
-    // @Ignored boolean active - TODO: add support for transient/ignored properties
+* support for finders
 
-    // TODO: support for component object
-    // Occupation occupation (title, salary)
-
-    /* FIXME: support
-        onetoone - entity
-        manytoone - entity (is this even valid for how my mapper works?)
-        manytomany - collection, set, list, map
-     */
+* test in real project scenarios

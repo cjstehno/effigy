@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.transform.model.EntityModelUtils.*
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 
 import com.stehno.effigy.logging.Logger

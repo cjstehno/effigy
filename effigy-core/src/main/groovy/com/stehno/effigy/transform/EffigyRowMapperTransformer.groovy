@@ -15,11 +15,9 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.model.EntityModelUtils.entityProperties
-import static com.stehno.effigy.transform.model.EntityModelUtils.identifier
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.model.EntityModel.entityProperties
+import static com.stehno.effigy.transform.model.EntityModel.identifier
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -40,14 +38,14 @@ import java.lang.reflect.Modifier
 import java.sql.ResultSet
 
 /**
- * Transformer used for processing the EffigyRepository annotation - creates a RowMapper instance for the entity.
+ * Transformer used for creating a RowMapper instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class EffigyRowMapperTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        ClassNode entityClassNode = extractClass(nodes[0] as AnnotationNode, 'forEntity')
+        ClassNode entityClassNode = nodes[1] as ClassNode
 
         info EffigyRowMapperTransformer, 'Creating RowMapper for: {}', entityClassNode.name
 

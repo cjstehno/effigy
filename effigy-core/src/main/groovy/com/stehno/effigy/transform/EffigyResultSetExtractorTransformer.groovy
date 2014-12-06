@@ -17,8 +17,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.model.EntityModelUtils.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
@@ -42,14 +41,14 @@ import java.lang.reflect.Modifier
 import java.sql.ResultSet
 
 /**
- * Transformer used for processing the EffigyRepository annotation - creates a ResultSetExtractor instance for the entity.
+ * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class EffigyResultSetExtractorTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        ClassNode entityClassNode = extractClass(nodes[0] as AnnotationNode, 'forEntity')
+        ClassNode entityClassNode = nodes[1] as ClassNode
 
         if (hasAssociatedEntities(entityClassNode)) {
             info EffigyResultSetExtractorTransformer, 'Creating ResultSetExtractor for: {}', entityClassNode.name

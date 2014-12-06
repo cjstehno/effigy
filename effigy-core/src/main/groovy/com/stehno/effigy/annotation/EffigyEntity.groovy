@@ -17,16 +17,23 @@
 package com.stehno.effigy.annotation
 
 import com.stehno.effigy.transform.EffigyEntityTransformer
+import com.stehno.effigy.transform.EffigyResultSetExtractorTransformer
+import com.stehno.effigy.transform.EffigyRowMapperTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
+
 /**
- * Created by cjstehno on 11/26/2014.
+ * Annotation used to denote an Effigy entity object.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes=[EffigyEntityTransformer])
+@GroovyASTTransformationClass(classes = [
+    EffigyEntityTransformer,
+    EffigyResultSetExtractorTransformer,
+    EffigyRowMapperTransformer
+])
 @interface EffigyEntity {
 
     /**

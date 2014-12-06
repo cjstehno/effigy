@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform.model
 
-import static com.stehno.effigy.transform.model.EntityModelUtils.*
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static org.codehaus.groovy.ast.ClassHelper.make
 
@@ -27,9 +27,9 @@ import org.codehaus.groovy.ast.*
 import java.sql.Types
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Utility functions for working with the Effigy entity model.
  */
-class EntityModelUtils {
+class EntityModel {
 
     static IdentifierPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
