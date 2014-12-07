@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -27,6 +28,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -69,10 +71,10 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
      * @return
      */
     private static ClassNode buildAssociationExtractor(ClassNode entityNode, SourceUnit source) {
-        ClassNode classNode = null
+        String extractorName = "${entityNode.packageName}.${entityNode.nameWithoutPackage}AssociationExtractor"
         try {
-            classNode = new ClassNode(
-                "${entityNode.packageName}.${entityNode.nameWithoutPackage}AssociationExtractor",
+            ClassNode classNode = new ClassNode(
+                extractorName,
                 Modifier.PUBLIC,
                 makeClassSafe(EffigyAssociationResultSetExtractor),
                 [] as ClassNode[],
@@ -120,10 +122,12 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
 
             source.AST.addClass(classNode)
 
+            return classNode
+
         } catch (ex) {
-            ex.printStackTrace()
+            Logger.error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            throw ex
         }
-        classNode
     }
 
     /**
@@ -156,10 +160,10 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
      * @return
      */
     private static ClassNode buildCollectionAssociationExtractor(ClassNode entityNode, SourceUnit source) {
-        ClassNode classNode = null
+        def extractorName = "${entityNode.packageName}.${entityNode.nameWithoutPackage}CollectionAssociationExtractor"
         try {
-            classNode = new ClassNode(
-                "${entityNode.packageName}.${entityNode.nameWithoutPackage}CollectionAssociationExtractor",
+            ClassNode classNode = new ClassNode(
+                extractorName,
                 Modifier.PUBLIC,
                 makeClassSafe(EffigyCollectionAssociationResultSetExtractor),
                 [] as ClassNode[],
@@ -207,10 +211,12 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
 
             source.AST.addClass(classNode)
 
+            return classNode
+
         } catch (ex) {
-            ex.printStackTrace()
+            error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            throw ex
         }
-        classNode
     }
 
     /**

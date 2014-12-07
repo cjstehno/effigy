@@ -5,6 +5,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
+import people.entity.Address
 import people.entity.Animal
 import people.entity.Person
 import people.entity.Pet
@@ -173,5 +174,42 @@ class PersonRepositoryTest {
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
+    }
+
+    @Test void createWithAddress() {
+        Person personA = new Person(PERSON_A)
+        personA.home = new Address('2121 Redbird Lane', 'Apartment 2', 'Glenview', 'OH', '84134')
+
+        def id = personRepository.create(personA)
+        assert id
+
+        def retrieved = personRepository.retrieve(id)
+
+        assert retrieved.firstName == 'John'
+        assert retrieved.middleName == 'Q'
+        assert retrieved.lastName == 'Public'
+        assert !retrieved.married
+        assert retrieved.home.line1 == '2121 Redbird Lane'
+        assert retrieved.home.line2 == 'Apartment 2'
+        assert retrieved.home.city == 'Glenview'
+        assert retrieved.home.state == 'OH'
+        assert retrieved.home.zip == '84134'
+
+        retrieved.married = true
+        retrieved.home = new Address('2121 Redbird Lane', 'Apartment 4', 'Cleavland', 'OH', '84134')
+
+        personRepository.update(retrieved)
+
+        retrieved = personRepository.retrieve(id)
+
+        assert retrieved.firstName == 'John'
+        assert retrieved.middleName == 'Q'
+        assert retrieved.lastName == 'Public'
+        assert retrieved.married
+        assert retrieved.home.line1 == '2121 Redbird Lane'
+        assert retrieved.home.line2 == 'Apartment 4'
+        assert retrieved.home.city == 'Cleavland'
+        assert retrieved.home.state == 'OH'
+        assert retrieved.home.zip == '84134'
     }
 }

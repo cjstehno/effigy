@@ -22,14 +22,14 @@ package com.stehno.effigy.logging
 class Logger {
 
     static enum Level {
-        OFF, WARN, INFO, DEBUG, TRACE, ALL
+        OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL
     }
 
     private static Level level
 
     // TODO: turn this down to WARN once dev settles down
     static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'DEBUG').toUpperCase())
+        level = Level.valueOf(System.getProperty('effigy.logging', 'TRACE').toUpperCase())
     }
 
     static void info(Class clazz, String msg, Object... args) {
@@ -62,6 +62,14 @@ class Logger {
 
     static void warn(Class clazz, String msg, Closure closure) {
         logClos Level.WARN, clazz, msg, closure
+    }
+
+    static void error(Class clazz, String msg, Object... args) {
+        log Level.ERROR, clazz, msg, args
+    }
+
+    static void error(Class clazz, String msg, Closure closure) {
+        logClos Level.ERROR, clazz, msg, closure
     }
 
     private static void log(Level lvl, Class clazz, String msg, Object... args) {

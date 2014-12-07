@@ -16,8 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.warn
+import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
@@ -31,6 +30,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import com.stehno.effigy.annotation.EffigyEntity
 import com.stehno.effigy.annotation.EffigyRepository
 import com.stehno.effigy.annotation.Id
+import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
@@ -44,7 +44,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import java.lang.reflect.Modifier
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Transformer used to process the @CreateOperations annotation - injects CRUD create methods.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class CreateOperationsTransformer implements ASTTransformation {
@@ -74,6 +74,22 @@ class CreateOperationsTransformer implements ASTTransformation {
 
             def versioner = versioner(entityNode)
 
+            def values = []
+            entityProperties(entityNode, false).each { pi ->
+                if (pi instanceof EmbeddedPropertyModel) {
+                    pi.fieldNames.each { fn ->
+                        values << "entity.${pi.propertyName}?.${fn}"
+                    }
+
+                } else {
+                    if (pi.type.enum) {
+                        values << "entity.${pi.propertyName}?.name()"
+                    } else {
+                        values << "entity.${pi.propertyName}"
+                    }
+                }
+            }
+
             def statement = block(
                 declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
@@ -96,15 +112,7 @@ class CreateOperationsTransformer implements ASTTransformation {
 
                         return keys.key
                     ''',
-
-                    values: entityProperties(entityNode, false).collect { pi ->
-                        if (pi.type.enum) {
-                            "entity.${pi.propertyName}?.name()"
-                        } else {
-                            "entity.${pi.propertyName}"
-                        }
-                    }.join(','),
-
+                    values: values.join(','),
                     idName: identifier(entityNode).propertyName,
                     o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
@@ -122,7 +130,8 @@ class CreateOperationsTransformer implements ASTTransformation {
             ))
 
         } catch (ex) {
-            ex.printStackTrace()
+            error CreateOperationsTransformer, 'Unable to inject create operations for entity ({}): ', entityNode.name, ex.message
+            throw ex
         }
     }
 

@@ -5,7 +5,12 @@ CREATE TABLE people (
   middle_name   VARCHAR(25),
   last_name     VARCHAR(25)           NOT NULL,
   date_of_birth TIMESTAMP             NOT NULL,
-  married       BOOL                  NOT NULL
+  married    BOOL NOT NULL,
+  home_line1 VARCHAR(30),
+  home_line2 VARCHAR(30),
+  home_city  VARCHAR(20),
+  home_state VARCHAR(2),
+  home_zip   VARCHAR(10)
 );
 
 CREATE TABLE pets (
@@ -14,8 +19,8 @@ CREATE TABLE pets (
   animal VARCHAR(10)           NOT NULL
 );
 
-create table peoples_pets (
-  person_id BIGINT REFERENCES people(id),
-  pet_id BIGINT REFERENCES pets(id),
+CREATE TABLE peoples_pets (
+  person_id BIGINT REFERENCES people (id),
+  pet_id    BIGINT REFERENCES pets (id),
   UNIQUE (person_id, pet_id)
 );

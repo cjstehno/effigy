@@ -1,9 +1,10 @@
 
 # Things to do
 
-* support for embedded components as fields
+* support for onetoone components as fields
 
-- decouple the create/update method injection code
+- use PreparedStatementSetters for param setting?
+! decouple the create/update method injection code
 
 - add count/exists methods, and maybe a findOne that does not throw exception if not found
 
@@ -16,3 +17,14 @@
 * support for finders
 
 * test in real project scenarios
+
+
+onetoone
+    create
+    retrieve
+    update
+    delete
+    mapper
+    extractor
+
+@OneToOne Address home

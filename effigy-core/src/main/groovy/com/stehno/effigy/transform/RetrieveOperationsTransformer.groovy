@@ -16,8 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.warn
+import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -27,6 +26,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
@@ -80,7 +80,8 @@ class RetrieveOperationsTransformer implements ASTTransformation {
                 hasAssociatedEntities(entityNode) ? retrieveSingleWitRelations(entityNode) : retrieveSingleWithoutRelations(entityNode)
             ))
         } catch (ex) {
-            ex.printStackTrace()
+            error RetrieveOperationsTransformer, 'Unable to inject retrieve methods into repository ({}): {}', repositoryClassNode.name, ex.message
+            throw ex
         }
     }
 
@@ -134,7 +135,8 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             ))
 
         } catch (ex) {
-            ex.printStackTrace()
+            error RetrieveOperationsTransformer, 'Unable to inject retrieveAll method into repository ({}): {}', repositoryClassNode.name, ex.message
+            throw ex
         }
     }
 
@@ -178,14 +180,26 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         def entityIdentifier = identifier(entityNode)
 
         entityProperties(entityNode).each { p ->
-            sql += "${entityTableName}.${p.columnName} as ${entityTableName}_${p.columnName},"
+            if (p instanceof EmbeddedPropertyModel) {
+                p.columnNames.each { cn ->
+                    sql += "${entityTableName}.${cn} as ${entityTableName}_${cn},"
+                }
+            } else {
+                sql += "${entityTableName}.${p.columnName} as ${entityTableName}_${p.columnName},"
+            }
         }
 
         sql += oneToManyAssociations(entityNode).collect { ap ->
             String associatedTable = entityTable(ap.associatedType)
 
             entityProperties(ap.associatedType).collect { p ->
-                "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+                if (p instanceof EmbeddedPropertyModel) {
+                    p.columnNames.each { cn ->
+                        "${associatedTable}.${cn} as ${ap.propertyName}_${cn}"
+                    }
+                } else {
+                    "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+                }
             }.join(',')
 
         }.join(',')

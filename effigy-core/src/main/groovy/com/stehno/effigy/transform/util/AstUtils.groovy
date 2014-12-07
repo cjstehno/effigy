@@ -17,15 +17,17 @@
 package com.stehno.effigy.transform.util
 
 import static com.stehno.effigy.logging.Logger.trace
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 import groovy.text.GStringTemplateEngine
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.ast.expr.ArrayExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
+
+import java.lang.reflect.Modifier
 
 /**
  * Created by cjstehno on 11/28/2014.
@@ -56,5 +58,21 @@ class AstUtils {
 
     static ArrayExpression arrayX(ClassNode type, List<Expression> expressions) {
         new ArrayExpression(type, expressions)
+    }
+
+    static ClassNode classN(String name, Class returnType) {
+        new ClassNode(
+            name,
+            Modifier.PUBLIC,
+            makeClassSafe(returnType),
+            [] as ClassNode[],
+            [] as MixinNode[]
+        )
+    }
+
+    static MethodNode methodN(
+        int mod, String name, ClassNode returnType, Statement body, Parameter[] params = [] as Parameter[], ClassNode[] exceptions = [] as ClassNode[]
+    ) {
+        new MethodNode(name, mod, returnType, params, exceptions, body)
     }
 }

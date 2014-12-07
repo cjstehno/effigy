@@ -16,8 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.warn
+import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.code
@@ -25,7 +24,9 @@ import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
+import com.stehno.effigy.transform.model.VersionerPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
@@ -62,12 +63,17 @@ class UpdateOperationsTransformer implements ASTTransformation {
     private static void injectUpdateMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
         info UpdateOperationsTransformer, 'Injecting update method into repository for {}', entityNode.name
         try {
-            def columnUpdates = []
+
             def vars = []
 
             entityProperties(entityNode, false).each { p ->
-                columnUpdates << "${p.columnName}=?"
-                vars << "entity.${p.propertyName}"
+                if (p instanceof EmbeddedPropertyModel) {
+                    p.fieldNames.each { pf ->
+                        vars << "entity.${p.propertyName}?.$pf"
+                    }
+                } else {
+                    vars << "entity.${p.propertyName}"
+                }
             }
 
             def nodes = code('''
@@ -77,7 +83,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 <% } %>
 
                 jdbcTemplate.update(
-                    'update people set ${columnUpdates.join(',')} where ${identifier.columnName}=? <% if(versioner){ %>and ${versioner.columnName}=?<% } %>',
+                    '$sql',
                     ${vars.join(',')},
                     entity.${identifier.propertyName}
                     <% if(versioner){ %>
@@ -88,9 +94,10 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 $o2m
             ''',
                 vars: vars,
+                sql: sql(entityNode),
+                table: entityTable(entityNode),
                 versioner: versioner(entityNode),
                 identifier: identifier(entityNode),
-                columnUpdates: columnUpdates,
                 o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}(entity)"
                 }.join('\n')
@@ -105,7 +112,32 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 nodes[0] as Statement
             ))
         } catch (ex) {
-            ex.printStackTrace()
+            error UpdateOperationsTransformer, 'Unable to inject update methods for entity ({}): {}', entityNode.name, ex.message
+            throw ex
         }
+    }
+
+    private static String sql(ClassNode entityNode) {
+        String table = entityTable(entityNode)
+
+        def columns = []
+        entityProperties(entityNode, false).each { p ->
+            if (p instanceof EmbeddedPropertyModel) {
+                p.columnNames.each { cn ->
+                    columns << "$cn = ?"
+                }
+            } else {
+                columns << "${p.columnName}=?"
+            }
+        }
+
+        String columnUpdates = columns.join(',')
+
+        String identifier = identifier(entityNode).columnName
+
+        VersionerPropertyModel versionProperty = versioner(entityNode)
+        String versionCriteria = versionProperty ? "and ${versionProperty.columnName} = ?" : ''
+
+        "update $table set $columnUpdates where $identifier = ? $versionCriteria"
     }
 }
