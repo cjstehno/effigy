@@ -32,4 +32,10 @@ import java.lang.annotation.*
      * suffixed with an 's'.
      */
     String value() default ''
+
+    /**
+     * The column name of the field used to identify the owning entity in the associated table. If not specified, the default will be the table name
+     * of the owning entity suffixed with '_id'.
+     */
+    String entityId() default ''
 }

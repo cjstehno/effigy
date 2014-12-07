@@ -24,3 +24,12 @@ CREATE TABLE peoples_pets (
   pet_id    BIGINT REFERENCES pets (id),
   UNIQUE (person_id, pet_id)
 );
+
+CREATE TABLE employers (
+  people_id BIGINT REFERENCES people (id),
+  line1     VARCHAR(30),
+  line2     VARCHAR(30),
+  city      VARCHAR(20),
+  state     VARCHAR(2),
+  zip       VARCHAR(10)
+)

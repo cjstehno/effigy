@@ -21,6 +21,8 @@ class Person {
 
     @Embedded Address home
 
+    @OneToOne('employers') Address work
+
     // this will not be resolved as a field
     boolean isOver21() {
         new Date().year - birthDate.year >= 21

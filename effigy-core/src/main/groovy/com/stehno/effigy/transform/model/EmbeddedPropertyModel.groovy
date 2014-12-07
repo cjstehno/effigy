@@ -16,14 +16,13 @@
 
 package com.stehno.effigy.transform.model
 
-import groovy.transform.CompileStatic
 import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
  * Entity property model representing an Embedded component.
  */
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
+@Immutable(knownImmutableClasses = [ClassNode])
 class EmbeddedPropertyModel implements EntityPropertyModel {
 
     String propertyName
@@ -34,7 +33,7 @@ class EmbeddedPropertyModel implements EntityPropertyModel {
 
     List collectSubProperties(Closure closure) {
         def list = []
-        fieldNames.eachWithIndex { String fn, int i ->
+        fieldNames.eachWithIndex { fn, i ->
             list << closure(fn, columnNames[i], columnTypes[i])
         }
         list

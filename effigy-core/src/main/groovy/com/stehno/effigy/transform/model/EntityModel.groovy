@@ -31,6 +31,8 @@ import java.sql.Types
  */
 class EntityModel {
 
+    // FIXME: need to add OneToOne support to the finders and then work through the CRUD inejctors
+
     static IdentifierPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
 
