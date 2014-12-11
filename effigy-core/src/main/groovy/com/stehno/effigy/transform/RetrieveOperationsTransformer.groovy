@@ -38,7 +38,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import java.lang.reflect.Modifier
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Transform used to inject the Retrieve CRUD operations.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RetrieveOperationsTransformer implements ASTTransformation {
@@ -204,6 +204,16 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
         }.join(',')
 
+        String o2oFields = oneToOneAssociations(entityNode).collect { ap ->
+            entityProperties(ap.type).collect { p ->
+                "${ap.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+            }.join(',')
+        }.join(',')
+
+        if (o2oFields) {
+            sql += ",$o2oFields"
+        }
+
         sql += " from ${entityTableName}"
 
         oneToManyAssociations(entityNode).each { ap ->
@@ -212,6 +222,10 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
             sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${entityTableName}.${entityIdentifier.columnName}"
             sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.table}.${ap.associationId}=${associatedTable}.${associatedIdentifier.columnName}"
+        }
+
+        oneToOneAssociations(entityNode).each { ap ->
+            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.identifierColumn}=${entityTableName}.${entityIdentifier.columnName}"
         }
 
         if (single) {

@@ -58,7 +58,7 @@ class EntityModel {
     // does not include relationship fields
     static List<EntityPropertyModel> entityProperties(ClassNode entityNode, boolean includeId = true) {
         entityNode.fields.findAll { f ->
-            !f.static && !f.name.startsWith('$') && !annotatedWith(f, OneToMany) && (includeId ? true : !annotatedWith(f, Id))
+            !f.static && !f.name.startsWith('$') && !isAssociation(f) && (includeId ? true : !annotatedWith(f, Id))
         }.collect { f ->
             if (annotatedWith(f, Id)) {
                 new IdentifierPropertyModel(
@@ -90,37 +90,18 @@ class EntityModel {
         }
     }
 
-    private static EntityPropertyModel extractEmbeddedProperty(FieldNode f) {
-        String prefix = extractString(f.getAnnotations(make(Embedded))[0], 'value', f.name)
-
-        def fldNames = []
-        def colNames = []
-        def colTypes = []
-
-        f.type.fields.each { embfld ->
-            if (!embfld.static && !embfld.name.startsWith('$')) {
-                fldNames << embfld.name
-                colNames << "${prefix}_${extractFieldName(embfld)}"
-                colTypes << sqlType(embfld)
-            }
-        }
-
-        new EmbeddedPropertyModel(
-            propertyName: f.name,
-            type: f.type,
-            fieldNames: fldNames.asImmutable(),
-            columnNames: colNames.asImmutable(),
-            columnTypes: colTypes.asImmutable()
-        )
-    }
-
+    // FIXME: the way I use this needs to change - prob need to check for association type or make separate methods
     static boolean hasAssociatedEntities(ClassNode entityNode) {
-        entityNode.fields.find { f -> annotatedWith(f, OneToMany) }
+        entityNode.fields.find { f -> isAssociation(f) }
     }
 
     static String entityTable(ClassNode entityNode) {
         AnnotationNode effigyAnnotNode = entityNode.getAnnotations(make(EffigyEntity))[0]
-        extractString(effigyAnnotNode, 'table', entityNode.nameWithoutPackage.toLowerCase() + 's')
+        if (effigyAnnotNode) {
+            return extractString(effigyAnnotNode, 'table', entityNode.nameWithoutPackage.toLowerCase() + 's')
+        } else {
+            return entityNode.nameWithoutPackage.toLowerCase() + 's'
+        }
     }
 
     static List<EmbeddedPropertyModel> embeddedEntityProperties(ClassNode entityNode) {
@@ -148,6 +129,22 @@ class EntityModel {
                 table: table,
                 entityId: entityId,
                 associationId: associationId
+            )
+        }
+    }
+
+    static List<OneToOnePropertyModel> oneToOneAssociations(final ClassNode entityNode) {
+        entityNode.fields.findAll { f -> annotatedWith(f, OneToOne) }.collect { o2of ->
+            def annotationNode = o2of.getAnnotations(make(OneToOne))[0]
+
+            String table = extractString(annotationNode, 'value', "${o2of.name}s")
+            String identifierName = extractString(annotationNode, 'entityId', "${entityTable(entityNode)}_id")
+
+            new OneToOnePropertyModel(
+                propertyName: o2of.name,
+                type: o2of.type,
+                table: table,
+                identifierColumn: identifierName
             )
         }
     }
@@ -229,5 +226,33 @@ class EntityModel {
      */
     static boolean isEffigyEntity(final ClassNode node) {
         node.getAnnotations(make(EffigyEntity))
+    }
+
+    private static boolean isAssociation(FieldNode fieldNode) {
+        annotatedWith(fieldNode, OneToMany) || annotatedWith(fieldNode, OneToOne)
+    }
+
+    private static EntityPropertyModel extractEmbeddedProperty(FieldNode f) {
+        String prefix = extractString(f.getAnnotations(make(Embedded))[0], 'value', f.name)
+
+        def fldNames = []
+        def colNames = []
+        def colTypes = []
+
+        f.type.fields.each { embfld ->
+            if (!embfld.static && !embfld.name.startsWith('$')) {
+                fldNames << embfld.name
+                colNames << "${prefix}_${extractFieldName(embfld)}"
+                colTypes << sqlType(embfld)
+            }
+        }
+
+        new EmbeddedPropertyModel(
+            propertyName: f.name,
+            type: f.type,
+            fieldNames: fldNames.asImmutable(),
+            columnNames: colNames.asImmutable(),
+            columnTypes: colTypes.asImmutable()
+        )
     }
 }

@@ -2,15 +2,16 @@
 # Things to do
 
 * support for onetoone components as fields
+    - finish impl
+    - add new tests
+! decouple the create/update method injection code for associations
 
-- use PreparedStatementSetters for param setting?
-! decouple the create/update method injection code
+! unit tests for row mappers and extractors
 
 - add count/exists methods, and maybe a findOne that does not throw exception if not found
 
 * implement @Ignored (ignored field) - or Transient
 
-* support onetoone - entity
 * support manytomany
 * support maps as asociation containers
 
@@ -20,11 +21,11 @@
 
 
 onetoone
-    create
-    retrieve
+x    create
+x    retrieve
     update
-    delete
-    mapper
-    extractor
+x    delete
+x    mapper
+x    extractor
 
 @OneToOne Address home

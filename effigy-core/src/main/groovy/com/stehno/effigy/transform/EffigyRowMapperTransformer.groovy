@@ -15,11 +15,9 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.model.EntityModel.entityProperties
-import static com.stehno.effigy.transform.model.EntityModel.identifier
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -28,7 +26,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
-import com.stehno.effigy.transform.model.EntityModel
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
@@ -40,6 +37,7 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
+
 /**
  * Transformer used for creating a RowMapper instance for the entity.
  */
@@ -70,7 +68,7 @@ class EffigyRowMapperTransformer implements ASTTransformation {
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'newEntity', newClass(entityNode), returnS(ctorX(newClass(entityNode)))))
 
-            EntityModel.embeddedEntityProperties(entityNode).each { emb ->
+            embeddedEntityProperties(entityNode).each { emb ->
                 mapperClassNode.addMethod(methodN(
                     PROTECTED,
                     "new${emb.propertyName.capitalize()}",

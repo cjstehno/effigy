@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
@@ -28,7 +27,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
-import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -41,7 +39,6 @@ import org.springframework.jdbc.core.RowMapper
 
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
-
 /**
  * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
@@ -101,6 +98,17 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                 ))
             }
 
+            oneToOneAssociations(entityNode).each { ap ->
+                classNode.addMethod(new MethodNode(
+                    "${ap.propertyName}RowMapper",
+                    Modifier.PROTECTED,
+                    makeClassSafe(RowMapper),
+                    [] as Parameter[],
+                    [] as ClassNode[],
+                    new ReturnStatement(callX(classX(newClass(ap.type)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                ))
+            }
+
             classNode.addMethod(new MethodNode(
                 'mapAssociations',
                 Modifier.PROTECTED,
@@ -115,8 +123,15 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                             entity.${ap.propertyName} << ${ap.propertyName}Value
                         }
                     <% } %>
+                    <% oneToOnes.each { ap-> %>
+                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+                        if( ${ap.propertyName}Value ){
+                            entity.${ap.propertyName} = ${ap.propertyName}Value
+                        }
+                    <% } %>
                     ''',
-                    oneToManys: oneToManyAssociations(entityNode)
+                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToOnes: oneToOneAssociations(entityNode)
                 )
             ))
 
@@ -125,7 +140,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            Logger.error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
@@ -190,6 +205,17 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                 ))
             }
 
+            oneToOneAssociations(entityNode).each { ap ->
+                classNode.addMethod(new MethodNode(
+                    "${ap.propertyName}RowMapper",
+                    Modifier.PROTECTED,
+                    makeClassSafe(RowMapper),
+                    [] as Parameter[],
+                    [] as ClassNode[],
+                    new ReturnStatement(callX(classX(newClass(ap.type)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                ))
+            }
+
             classNode.addMethod(new MethodNode(
                 'mapAssociations',
                 Modifier.PROTECTED,
@@ -204,8 +230,15 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                             entity.${ap.propertyName} << ${ap.propertyName}Value
                         }
                     <% } %>
+                    <% oneToOnes.each { ap-> %>
+                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+                        if( ${ap.propertyName}Value ){
+                            entity.${ap.propertyName} = ${ap.propertyName}Value
+                        }
+                    <% } %>
                     ''',
-                    oneToManys: oneToManyAssociations(entityNode)
+                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToOnes: oneToOneAssociations(entityNode)
                 )
             ))
 

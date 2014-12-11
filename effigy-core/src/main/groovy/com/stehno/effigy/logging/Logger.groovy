@@ -75,7 +75,7 @@ class Logger {
     private static void log(Level lvl, Class clazz, String msg, Object... args) {
         if (level.ordinal() >= lvl.ordinal()) {
             args.each { arg ->
-                msg = msg.replaceFirst(/\{\}/, arg as String)
+                msg = msg.replace('{}', arg as String)
             }
             println "[${lvl.name()}:${clazz.simpleName}] $msg"
         }
@@ -84,7 +84,7 @@ class Logger {
     private static void logClos(Level lvl, Class clazz, String msg, Closure closure) {
         if (level.ordinal() >= lvl.ordinal()) {
             closure().each { arg ->
-                msg = msg.replaceFirst(/\{\}/, arg as String)
+                msg = msg.replace('{}', arg as String)
             }
             println "[${lvl.name()}:${clazz.simpleName}] $msg"
         }

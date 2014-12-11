@@ -22,8 +22,7 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static com.stehno.effigy.transform.util.AstUtils.arrayX
 import static com.stehno.effigy.transform.util.AstUtils.codeS
-import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
@@ -32,6 +31,7 @@ import com.stehno.effigy.annotation.EffigyRepository
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
+import com.stehno.effigy.transform.model.OneToOnePropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.codehaus.groovy.control.CompilePhase
@@ -56,6 +56,7 @@ class CreateOperationsTransformer implements ASTTransformation {
         AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
+
             info CreateOperationsTransformer, 'Adding create operations to repository ({})', repositoryNode.name
 
             injectCreateMethod repositoryNode, entityNode
@@ -70,6 +71,10 @@ class CreateOperationsTransformer implements ASTTransformation {
         try {
             oneToManyAssociations(entityNode).each { OneToManyPropertyModel o2m ->
                 injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
+            }
+
+            oneToOneAssociations(entityNode).each { ap ->
+                injectO2OSaveMethod repositoryClassNode, entityNode, ap
             }
 
             def versioner = versioner(entityNode)
@@ -109,6 +114,7 @@ class CreateOperationsTransformer implements ASTTransformation {
                         entity.${idName} = keys.key
 
                         $o2m
+                        $o2o
 
                         return keys.key
                     ''',
@@ -116,6 +122,9 @@ class CreateOperationsTransformer implements ASTTransformation {
                     idName: identifier(entityNode).propertyName,
                     o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
+                    }.join('\n'),
+                    o2o: oneToOneAssociations(entityNode).collect { OneToOnePropertyModel ap ->
+                        "save${ap.propertyName.capitalize()}(entity.${identifier(entityNode).propertyName},entity.${ap.propertyName})"
                     }.join('\n')
                 ),
             )
@@ -133,6 +142,37 @@ class CreateOperationsTransformer implements ASTTransformation {
             error CreateOperationsTransformer, 'Unable to inject create operations for entity ({}): ', entityNode.name, ex.message
             throw ex
         }
+    }
+
+    private static void injectO2OSaveMethod(ClassNode repositoryNode, ClassNode entityNode, OneToOnePropertyModel o2op) {
+        def statement = codeS(
+            '''
+                if( !id || !entity ) return
+
+                int count = jdbcTemplate.update(
+                    'insert into $assocTable ($assocColumns) values ($assocPlaceholders)',
+                    $assocValues
+                )
+
+                if( count != 1 ){
+                    throw new RuntimeException('Insert count for $name (' + count + ') did not match expected count (1) - save failed.')
+                }
+            ''',
+            name: o2op.propertyName,
+            assocTable: o2op.table,
+            assocColumns: "${o2op.identifierColumn},${columnNames(o2op.type)}",
+            assocPlaceholders: "?,${columnPlaceholders(o2op.type)}",
+            assocValues: (["id"] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(',')
+        )
+
+        repositoryNode.addMethod(new MethodNode(
+            "save${o2op.propertyName.capitalize()}",
+            Modifier.PROTECTED,
+            ClassHelper.VOID_TYPE,
+            [param(OBJECT_TYPE, 'id'), param(newClass(entityNode), 'entity')] as Parameter[],
+            null,
+            statement
+        ))
     }
 
     // TODO: this should probably be pulled into a common area since update uses the same method

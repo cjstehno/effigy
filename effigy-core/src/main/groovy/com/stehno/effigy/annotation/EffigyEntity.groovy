@@ -19,6 +19,7 @@ package com.stehno.effigy.annotation
 import com.stehno.effigy.transform.EffigyEntityTransformer
 import com.stehno.effigy.transform.EffigyResultSetExtractorTransformer
 import com.stehno.effigy.transform.EffigyRowMapperTransformer
+import com.stehno.effigy.transform.OneToOneAssociationRowMapperTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
@@ -32,6 +33,7 @@ import java.lang.annotation.*
 @GroovyASTTransformationClass(classes = [
     EffigyEntityTransformer,
     EffigyResultSetExtractorTransformer,
+    OneToOneAssociationRowMapperTransformer,
     EffigyRowMapperTransformer
 ])
 @interface EffigyEntity {

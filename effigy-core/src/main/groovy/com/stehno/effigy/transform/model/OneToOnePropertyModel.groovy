@@ -16,21 +16,18 @@
 
 package com.stehno.effigy.transform.model
 
-import groovy.transform.CompileStatic
 import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Entity property model object for OneToMany associations.
+ * Entity property model for one-to-one associations.
  */
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class OneToManyPropertyModel implements EntityPropertyModel {
+@Immutable(knownImmutableClasses = [ClassNode])
+class OneToOnePropertyModel implements EntityPropertyModel {
 
     String propertyName
     ClassNode type
-    ClassNode associatedType
 
     String table
-    String entityId
-    String associationId
+    String identifierColumn
 }

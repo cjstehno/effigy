@@ -69,8 +69,11 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     '''
                     <%
                     if(hasAssoc){
-                        assocProps.each { ap-> %>
+                        oneToManys.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.entityId}=?', entityId)
+                    <%  }
+                        oneToOnes.each { ap-> %>
+                            jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.identifierColumn}=?', entityId)
                     <%  }
                     } %>
 
@@ -82,7 +85,8 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     table: entityTable(entityNode),
                     identifier: identifier(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
-                    assocProps: oneToManyAssociations(entityNode)
+                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToOnes: oneToOneAssociations(entityNode)
                 )
             ))
         } catch (ex) {
@@ -104,7 +108,10 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     '''
                     <%
                     if(hasAssoc){
-                        assocProps.each { ap-> %>
+                        oneToManys.each { ap-> %>
+                            jdbcTemplate.update('delete from ${ap.table}')
+                    <%  }
+                        oneToOnes.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.table}')
                     <%  }
                     } %>
@@ -113,7 +120,8 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     ''',
                     table: entityTable(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
-                    assocProps: oneToManyAssociations(entityNode)
+                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToOnes: oneToOneAssociations(entityNode)
                 )
             ))
         } catch (ex) {
