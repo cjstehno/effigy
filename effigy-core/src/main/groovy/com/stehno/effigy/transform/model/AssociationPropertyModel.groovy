@@ -21,16 +21,16 @@ import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Entity property model object for OneToMany associations.
+ * Entity property model object for associations.
  */
 @Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class OneToManyPropertyModel implements EntityPropertyModel {
+class AssociationPropertyModel implements EntityPropertyModel {
 
     String propertyName
     ClassNode type
     ClassNode associatedType
 
-    String table
-    String entityId
-    String associationId
+    String joinTable
+    String entityColumn
+    String assocColumn
 }

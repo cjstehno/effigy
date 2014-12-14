@@ -189,7 +189,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             }
         }
 
-        sql += oneToManyAssociations(entityNode).collect { ap ->
+        sql += associations(entityNode).collect { ap ->
             String associatedTable = entityTable(ap.associatedType)
 
             entityProperties(ap.associatedType).collect { p ->
@@ -216,12 +216,12 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
         sql += " from ${entityTableName}"
 
-        oneToManyAssociations(entityNode).each { ap ->
+        associations(entityNode).each { ap ->
             String associatedTable = entityTable(ap.associatedType)
             IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
 
-            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.entityId}=${entityTableName}.${entityIdentifier.columnName}"
-            sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.table}.${ap.associationId}=${associatedTable}.${associatedIdentifier.columnName}"
+            sql += " LEFT OUTER JOIN ${ap.joinTable} on ${ap.joinTable}.${ap.entityColumn}=${entityTableName}.${entityIdentifier.columnName}"
+            sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.joinTable}.${ap.assocColumn}=${associatedTable}.${associatedIdentifier.columnName}"
         }
 
         components(entityNode).each { ap ->

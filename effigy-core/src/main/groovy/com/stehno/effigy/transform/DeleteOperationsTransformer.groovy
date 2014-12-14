@@ -69,7 +69,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     <%
                     if(hasAssoc){
                         oneToManys.each { ap-> %>
-                            jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.entityId}=?', entityId)
+                            jdbcTemplate.update('delete from ${ap.joinTable} where ${ap.joinTable}.${ap.entityColumn}=?', entityId)
                     <%  }
                         oneToOnes.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.lookupTable} where ${ap.lookupTable}.${ap.entityColumn}=?', entityId)
@@ -84,7 +84,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     table: entityTable(entityNode),
                     identifier: identifier(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
-                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToManys: associations(entityNode),
                     oneToOnes: components(entityNode)
                 )
             ))
@@ -109,7 +109,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     <%
                     if(hasAssoc){
                         oneToManys.each { ap-> %>
-                            jdbcTemplate.update('delete from ${ap.table}')
+                            jdbcTemplate.update('delete from ${ap.joinTable}')
                     <%  }
                         oneToOnes.each { ap-> %>
                             jdbcTemplate.update('delete from ${ap.lookupTable}')
@@ -120,7 +120,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     ''',
                     table: entityTable(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
-                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToManys: associations(entityNode),
                     oneToOnes: components(entityNode)
                 )
             ))

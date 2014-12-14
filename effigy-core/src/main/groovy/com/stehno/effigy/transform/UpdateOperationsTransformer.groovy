@@ -27,9 +27,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.param
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import com.stehno.effigy.transform.model.VersionerPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
@@ -106,7 +106,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 table: entityTable(entityNode),
                 versioner: versioner(entityNode),
                 identifier: identifier(entityNode),
-                o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
+                o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}(entity)"
                 }.join('\n'),
                 o2o: components(entityNode).collect { ComponentPropertyModel ap ->

@@ -29,9 +29,9 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.model.OneToManyPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.codehaus.groovy.control.CompilePhase
@@ -69,7 +69,7 @@ class CreateOperationsTransformer implements ASTTransformation {
     private static void injectCreateMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
         info CreateOperationsTransformer, 'Injecting create method into repository for {}', entityNode.name
         try {
-            oneToManyAssociations(entityNode).each { OneToManyPropertyModel o2m ->
+            associations(entityNode).each { AssociationPropertyModel o2m ->
                 injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
             }
 
@@ -120,7 +120,7 @@ class CreateOperationsTransformer implements ASTTransformation {
                     ''',
                     values: values.join(','),
                     idName: identifier(entityNode).propertyName,
-                    o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
+                    o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
                     }.join('\n'),
                     components: components(entityNode).collect { ComponentPropertyModel ap ->
@@ -176,7 +176,7 @@ class CreateOperationsTransformer implements ASTTransformation {
     }
 
     // TODO: this should probably be pulled into a common area since update uses the same method
-    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, ClassNode entityNode, OneToManyPropertyModel o2m) {
+    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, ClassNode entityNode, AssociationPropertyModel o2m) {
         def statement = codeS(
             '''
                 int expects = entity.${name}.size()
@@ -200,9 +200,9 @@ class CreateOperationsTransformer implements ASTTransformation {
             ''',
 
             name: o2m.propertyName,
-            assocTable: o2m.table,
-            tableEntIdName: o2m.entityId,
-            tableAssocIdName: o2m.associationId,
+            assocTable: o2m.joinTable,
+            tableEntIdName: o2m.entityColumn,
+            tableAssocIdName: o2m.assocColumn,
             entityIdName: identifier(entityNode).propertyName,
             assocIdName: findIdName(o2m.type)
         )

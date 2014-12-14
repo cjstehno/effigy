@@ -87,7 +87,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
-            oneToManyAssociations(entityNode).each { ap ->
+            associations(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -130,7 +130,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                         }
                     <% } %>
                     ''',
-                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToManys: associations(entityNode),
                     oneToOnes: components(entityNode)
                 )
             ))
@@ -194,7 +194,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
-            oneToManyAssociations(entityNode).each { ap ->
+            associations(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -237,7 +237,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                         }
                     <% } %>
                     ''',
-                    oneToManys: oneToManyAssociations(entityNode),
+                    oneToManys: associations(entityNode),
                     oneToOnes: components(entityNode)
                 )
             ))

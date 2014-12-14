@@ -110,7 +110,7 @@ class EntityModel {
         }
     }
 
-    static List<OneToManyPropertyModel> oneToManyAssociations(ClassNode entityNode) {
+    static List<AssociationPropertyModel> associations(ClassNode entityNode) {
         entityNode.fields.findAll { f -> annotatedWith(f, Association) }.collect { o2mf ->
             def annotationNode = o2mf.getAnnotations(make(Association))[0]
             def associatedType = o2mf.type.genericsTypes.find { isEffigyEntity(it.type) }.type
@@ -118,17 +118,13 @@ class EntityModel {
             String entityTableName = entityTable(entityNode)
             String assocTableName = entityTable(associatedType)
 
-            String table = extractString(annotationNode, 'joinTable', "${entityTableName}_${o2mf.name}")
-            String entityId = extractString(annotationNode, 'entityColumn', "${entityTableName}_id")
-            String associationId = extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
-
-            new OneToManyPropertyModel(
+            new AssociationPropertyModel(
                 propertyName: o2mf.name,
                 type: o2mf.type,
                 associatedType: associatedType,
-                table: table,
-                entityId: entityId,
-                associationId: associationId
+                joinTable: extractString(annotationNode, 'joinTable', "${entityTableName}_${o2mf.name}"),
+                entityColumn: extractString(annotationNode, 'entityColumn', "${entityTableName}_id"),
+                assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
             )
         }
     }
