@@ -39,7 +39,7 @@ import java.lang.reflect.Modifier
  * Transformer used for processing the EffigyRepository annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyRepositoryTransformer implements ASTTransformation {
+class RepositoryTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -53,7 +53,7 @@ class EffigyRepositoryTransformer implements ASTTransformation {
     private static void removeAbstract(ClassNode repositoryClassNode) {
         if (Modifier.isAbstract(repositoryClassNode.modifiers)) {
             repositoryClassNode.modifiers = Modifier.PUBLIC
-            info EffigyRepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
+            info RepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
     }
 
@@ -75,6 +75,6 @@ class EffigyRepositoryTransformer implements ASTTransformation {
 
         repositoryClassNode.addField(jdbcTemplateFieldNode)
 
-        info EffigyRepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryClassNode.name
+        info RepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryClassNode.name
     }
 }

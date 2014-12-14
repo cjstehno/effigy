@@ -43,14 +43,14 @@ import java.sql.ResultSet
  * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyResultSetExtractorTransformer implements ASTTransformation {
+class EntityResultSetExtractorTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
         if (hasAssociatedEntities(entityClassNode)) {
-            info EffigyResultSetExtractorTransformer, 'Creating ResultSetExtractor for: {}', entityClassNode.name
+            info EntityResultSetExtractorTransformer, 'Creating ResultSetExtractor for: {}', entityClassNode.name
 
             ClassNode extractorClassNode = buildAssociationExtractor(entityClassNode, source)
             injectExtractorAccessor(entityClassNode, extractorClassNode)
@@ -140,7 +140,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            error EntityResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
@@ -164,7 +164,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        info EffigyEntityTransformer, 'Injected association extractor helper method for {}', entityClassNode.name
+        info EntityTransformer, 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -247,7 +247,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            error EffigyResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            error EntityResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
@@ -273,6 +273,6 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
             ]))))
         ))
 
-        info EffigyEntityTransformer, 'Injected collection association extractor helper method for {}', entityClassNode.name
+        info EntityTransformer, 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

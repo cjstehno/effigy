@@ -29,13 +29,13 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
  * Handles the transformation of the Effigy Entity classes (annotated with the EffigyEntity annotation).
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyEntityTransformer implements ASTTransformation {
+class EntityTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         def entityClassNode = nodes[1] as ClassNode
 
-        debug EffigyEntityTransformer, 'Visiting Entity: {}', entityClassNode.name
+        debug EntityTransformer, 'Visiting Entity: {}', entityClassNode.name
 
         // FIXME: this does not do anything
     }
