@@ -18,8 +18,9 @@ package people.entity
 
 import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
+import groovy.transform.Canonical
 
-@Entity
+@Entity @Canonical
 class Job {
 
     @Id Long id
