@@ -16,7 +16,7 @@ class Person {
     @Column('date_of_birth') Date birthDate
     boolean married
 
-    @OneToMany(table = 'peoples_pets', entityId = 'person_id', associationId = 'pet_id')
+    @Association(joinTable = 'peoples_pets', entityColumn = 'person_id', assocColumn = 'pet_id')
     Set<Pet> pets = [] as Set<Pet>
 
     @Embedded Address home

@@ -1,6 +1,9 @@
 
 # Things to do
 
+- association support for un-annotated collections
+- association support for single object
+- assoication support for maps
 ! ensure that Association entities are Effigy Entity annotated
 
 ! decouple the create/update method injection code for associations
@@ -11,17 +14,12 @@
 
 * implement @Ignored (ignored field) - or Transient
 
-* support manytomany
-* support maps as asociation containers
-
 * support for finders
 
 * test in real project scenarios
 
 
-
 ------------
-
 
 1-1
 

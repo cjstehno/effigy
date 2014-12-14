@@ -111,16 +111,16 @@ class EntityModel {
     }
 
     static List<OneToManyPropertyModel> oneToManyAssociations(ClassNode entityNode) {
-        entityNode.fields.findAll { f -> annotatedWith(f, OneToMany) }.collect { o2mf ->
-            def annotationNode = o2mf.getAnnotations(make(OneToMany))[0]
+        entityNode.fields.findAll { f -> annotatedWith(f, Association) }.collect { o2mf ->
+            def annotationNode = o2mf.getAnnotations(make(Association))[0]
             def associatedType = o2mf.type.genericsTypes.find { isEffigyEntity(it.type) }.type
 
             String entityTableName = entityTable(entityNode)
             String assocTableName = entityTable(associatedType)
 
-            String table = extractString(annotationNode, 'table', "${entityTableName}_${o2mf.name}")
-            String entityId = extractString(annotationNode, 'entityId', "${entityTableName}_id")
-            String associationId = extractString(annotationNode, 'associationId', "${assocTableName}_id")
+            String table = extractString(annotationNode, 'joinTable', "${entityTableName}_${o2mf.name}")
+            String entityId = extractString(annotationNode, 'entityColumn', "${entityTableName}_id")
+            String associationId = extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
 
             new OneToManyPropertyModel(
                 propertyName: o2mf.name,
@@ -227,7 +227,7 @@ class EntityModel {
     }
 
     private static boolean isAssociation(FieldNode fieldNode) {
-        annotatedWith(fieldNode, OneToMany) || annotatedWith(fieldNode, Component)
+        annotatedWith(fieldNode, Association) || annotatedWith(fieldNode, Component)
     }
 
     private static EntityPropertyModel extractEmbeddedProperty(FieldNode f) {

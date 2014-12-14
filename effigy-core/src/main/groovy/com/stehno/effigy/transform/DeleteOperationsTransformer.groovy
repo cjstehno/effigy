@@ -16,8 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.warn
+import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -55,11 +54,11 @@ class DeleteOperationsTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectDeleteMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
-        info DeleteOperationsTransformer, 'Injecting delete method into repository for {}', entityNode.name
+    private static void injectDeleteMethod(final ClassNode repositoryNode, ClassNode entityNode) {
+        info DeleteOperationsTransformer, 'Injecting delete method into repository ({}).', repositoryNode.name
 
         try {
-            repositoryClassNode.addMethod(new MethodNode(
+            repositoryNode.addMethod(new MethodNode(
                 'delete',
                 Modifier.PUBLIC,
                 ClassHelper.boolean_TYPE,
@@ -90,15 +89,16 @@ class DeleteOperationsTransformer implements ASTTransformation {
                 )
             ))
         } catch (ex) {
-            ex.printStackTrace()
+            error DeleteOperationsTransformer, 'Problem injecting delete method into repository ({}): {}', repositoryNode.name, ex.message
+            throw ex
         }
     }
 
-    private static void injectDeleteAllMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
+    private static void injectDeleteAllMethod(final ClassNode repositoryNode, ClassNode entityNode) {
         info DeleteOperationsTransformer, 'Injecting deleteAll method into repository for {}', entityNode.name
 
         try {
-            repositoryClassNode.addMethod(new MethodNode(
+            repositoryNode.addMethod(new MethodNode(
                 'deleteAll',
                 Modifier.PUBLIC,
                 ClassHelper.boolean_TYPE,
@@ -125,7 +125,8 @@ class DeleteOperationsTransformer implements ASTTransformation {
                 )
             ))
         } catch (ex) {
-            ex.printStackTrace()
+            error DeleteOperationsTransformer, 'Problem injecting deleteAll method into repository ({}): {}', repositoryNode.name, ex.message
+            throw ex
         }
     }
 }

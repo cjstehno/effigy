@@ -19,28 +19,29 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote that a collection property (Collection implementation) has a relationship of one entity to many associated entities.
+ * Annotation used to denote that a collection property (Collection implementation) has an association relationship with another entity (based on
+ * a reference table). The associated entity must be annotated with the Entity annotation.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@interface OneToMany {
+@interface Association {
 
     /**
-     * Name of the association table. If not explicitly specified, the table name will be the name of the
+     * Name of the association reference table. If not specified, the table name will be the name of the
      * entity table and the name of the entity association property separated by an underscore.
      */
-    String table() default ''
+    String joinTable() default ''
 
     /**
      * The id column name of the owning entity. If not explicitly specified, the entity id field name will
      * be the entity table name with the suffix '_id' appended to it.
      */
-    String entityId() default ''
+    String entityColumn() default ''
 
     /**
      * The id column name of the associated entity. If not explicitly specified, the association id field name will
      * be the associated entity table name with the suffix '_id' appended to it.
      */
-    String associationId() default ''
+    String assocColumn() default ''
 }
