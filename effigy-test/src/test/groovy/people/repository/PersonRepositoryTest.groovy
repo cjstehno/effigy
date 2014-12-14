@@ -211,5 +211,65 @@ class PersonRepositoryTest {
         assert retrieved.home.city == 'Cleavland'
         assert retrieved.home.state == 'OH'
         assert retrieved.home.zip == '84134'
+
+        assert personRepository.delete(retrieved.id)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+    }
+
+    @Test void createWithEmployer() {
+        Person personA = new Person(PERSON_A)
+        personA.home = new Address('2121 Redbird Lane', 'Apartment 2', 'Glenview', 'OH', '84134')
+        personA.work = new Address('8888 Highspeed Rd', 'Bldg 2345', 'Sunnydale', 'CA', '90210')
+
+        def id = personRepository.create(personA)
+        assert id
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 1
+
+        def retrieved = personRepository.retrieve(id)
+
+        assert retrieved.firstName == 'John'
+        assert retrieved.middleName == 'Q'
+        assert retrieved.lastName == 'Public'
+        assert !retrieved.married
+        assert retrieved.home.line1 == '2121 Redbird Lane'
+        assert retrieved.home.line2 == 'Apartment 2'
+        assert retrieved.home.city == 'Glenview'
+        assert retrieved.home.state == 'OH'
+        assert retrieved.home.zip == '84134'
+        assert retrieved.work.line1 == '8888 Highspeed Rd'
+        assert retrieved.work.line2 == 'Bldg 2345'
+        assert retrieved.work.city == 'Sunnydale'
+        assert retrieved.work.state == 'CA'
+        assert retrieved.work.zip == '90210'
+
+        retrieved.work = new Address('8888 Highspeed Rd', 'Bldg 8675309', 'Sunnydale', 'CA', '90210')
+
+        personRepository.update(retrieved)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 1
+
+        retrieved = personRepository.retrieve(id)
+
+        assert retrieved.firstName == 'John'
+        assert retrieved.middleName == 'Q'
+        assert retrieved.lastName == 'Public'
+        assert !retrieved.married
+        assert retrieved.home.line1 == '2121 Redbird Lane'
+        assert retrieved.home.line2 == 'Apartment 2'
+        assert retrieved.home.city == 'Glenview'
+        assert retrieved.home.state == 'OH'
+        assert retrieved.home.zip == '84134'
+        assert retrieved.work.line1 == '8888 Highspeed Rd'
+        assert retrieved.work.line2 == 'Bldg 8675309'
+        assert retrieved.work.city == 'Sunnydale'
+        assert retrieved.work.state == 'CA'
+        assert retrieved.work.zip == '90210'
+
+        assert personRepository.delete(id)
+
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 0
     }
 }

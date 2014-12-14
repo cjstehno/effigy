@@ -4,7 +4,7 @@ import com.stehno.effigy.annotation.*
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
 
-@EffigyEntity(table = 'people') @EqualsAndHashCode @ToString(includeNames = true)
+@Entity(table = 'people') @EqualsAndHashCode @ToString(includeNames = true)
 class Person {
 
     @Id Long id
@@ -21,7 +21,7 @@ class Person {
 
     @Embedded Address home
 
-    @OneToOne('employers') Address work
+    @Component(lookupTable = 'employers') Address work
 
     // this will not be resolved as a field
     boolean isOver21() {

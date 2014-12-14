@@ -98,7 +98,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                 ))
             }
 
-            oneToOneAssociations(entityNode).each { ap ->
+            components(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -131,7 +131,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                     <% } %>
                     ''',
                     oneToManys: oneToManyAssociations(entityNode),
-                    oneToOnes: oneToOneAssociations(entityNode)
+                    oneToOnes: components(entityNode)
                 )
             ))
 
@@ -205,7 +205,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                 ))
             }
 
-            oneToOneAssociations(entityNode).each { ap ->
+            components(entityNode).each { ap ->
                 classNode.addMethod(new MethodNode(
                     "${ap.propertyName}RowMapper",
                     Modifier.PROTECTED,
@@ -238,7 +238,7 @@ class EffigyResultSetExtractorTransformer implements ASTTransformation {
                     <% } %>
                     ''',
                     oneToManys: oneToManyAssociations(entityNode),
-                    oneToOnes: oneToOneAssociations(entityNode)
+                    oneToOnes: components(entityNode)
                 )
             ))
 

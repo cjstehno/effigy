@@ -19,23 +19,27 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a property as a one-to-one relationship with the enclosing entity. A one-to-one relationship is similar to an
- * @Embedded component , except that this relation data is contained in a separate table, rather than embedded within the same table.
+ * Annotation used to denote a property as a one-to-one relationship with the enclosing entity. The one-to-one assocation expressed by a Component
+ * is similar to an @Embedded object; however, this relation data is contained in a separate lookup table, rather than embedded within the same
+ * table.
+ *
+ * The type of the annotated field may be an Entity-annotated class; however, the entity table property as well as any Id, Version annotated fields
+ * will be ignored by the Component association functionality.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@interface OneToOne {
+@interface Component {
 
     /**
      * The database table used to store the component information. If not specified, the default will be a table named as the embedded type name
      * suffixed with an 's'.
      */
-    String value() default ''
+    String lookupTable() default ''
 
     /**
      * The column name of the field used to identify the owning entity in the associated table. If not specified, the default will be the table name
      * of the owning entity suffixed with '_id'.
      */
-    String entityId() default ''
+    String entityColumn() default ''
 }

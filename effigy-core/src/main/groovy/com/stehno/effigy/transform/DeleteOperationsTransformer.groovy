@@ -23,7 +23,7 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.make
 
-import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.annotation.Repository
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
@@ -42,7 +42,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode repositoryNode = nodes[1] as ClassNode
 
-        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
             info DeleteOperationsTransformer, 'Adding delete operations to repository ({})', repositoryNode.name
@@ -73,7 +73,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                             jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.entityId}=?', entityId)
                     <%  }
                         oneToOnes.each { ap-> %>
-                            jdbcTemplate.update('delete from ${ap.table} where ${ap.table}.${ap.identifierColumn}=?', entityId)
+                            jdbcTemplate.update('delete from ${ap.lookupTable} where ${ap.lookupTable}.${ap.entityColumn}=?', entityId)
                     <%  }
                     } %>
 
@@ -86,7 +86,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     identifier: identifier(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
                     oneToManys: oneToManyAssociations(entityNode),
-                    oneToOnes: oneToOneAssociations(entityNode)
+                    oneToOnes: components(entityNode)
                 )
             ))
         } catch (ex) {
@@ -112,7 +112,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                             jdbcTemplate.update('delete from ${ap.table}')
                     <%  }
                         oneToOnes.each { ap-> %>
-                            jdbcTemplate.update('delete from ${ap.table}')
+                            jdbcTemplate.update('delete from ${ap.lookupTable}')
                     <%  }
                     } %>
 
@@ -121,7 +121,7 @@ class DeleteOperationsTransformer implements ASTTransformation {
                     table: entityTable(entityNode),
                     hasAssoc: hasAssociatedEntities(entityNode),
                     oneToManys: oneToManyAssociations(entityNode),
-                    oneToOnes: oneToOneAssociations(entityNode)
+                    oneToOnes: components(entityNode)
                 )
             ))
         } catch (ex) {

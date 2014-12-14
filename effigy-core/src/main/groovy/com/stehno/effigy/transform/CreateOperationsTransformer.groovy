@@ -26,12 +26,12 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.annotation.EffigyEntity
-import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
+import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
-import com.stehno.effigy.transform.model.OneToOnePropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.codehaus.groovy.control.CompilePhase
@@ -53,7 +53,7 @@ class CreateOperationsTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode repositoryNode = nodes[1] as ClassNode
 
-        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
 
@@ -73,8 +73,8 @@ class CreateOperationsTransformer implements ASTTransformation {
                 injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
             }
 
-            oneToOneAssociations(entityNode).each { ap ->
-                injectO2OSaveMethod repositoryClassNode, entityNode, ap
+            components(entityNode).each { ap ->
+                injectComponentSaveMethod repositoryClassNode, entityNode, ap
             }
 
             def versioner = versioner(entityNode)
@@ -114,7 +114,7 @@ class CreateOperationsTransformer implements ASTTransformation {
                         entity.${idName} = keys.key
 
                         $o2m
-                        $o2o
+                        $components
 
                         return keys.key
                     ''',
@@ -123,7 +123,7 @@ class CreateOperationsTransformer implements ASTTransformation {
                     o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
                     }.join('\n'),
-                    o2o: oneToOneAssociations(entityNode).collect { OneToOnePropertyModel ap ->
+                    components: components(entityNode).collect { ComponentPropertyModel ap ->
                         "save${ap.propertyName.capitalize()}(entity.${identifier(entityNode).propertyName},entity.${ap.propertyName})"
                     }.join('\n')
                 ),
@@ -144,7 +144,7 @@ class CreateOperationsTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectO2OSaveMethod(ClassNode repositoryNode, ClassNode entityNode, OneToOnePropertyModel o2op) {
+    private static void injectComponentSaveMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {
         def statement = codeS(
             '''
                 if( !id || !entity ) return
@@ -159,8 +159,8 @@ class CreateOperationsTransformer implements ASTTransformation {
                 }
             ''',
             name: o2op.propertyName,
-            assocTable: o2op.table,
-            assocColumns: "${o2op.identifierColumn},${columnNames(o2op.type)}",
+            assocTable: o2op.lookupTable,
+            assocColumns: "${o2op.entityColumn},${columnNames(o2op.type)}",
             assocPlaceholders: "?,${columnPlaceholders(o2op.type)}",
             assocValues: (["id"] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(',')
         )
@@ -168,8 +168,8 @@ class CreateOperationsTransformer implements ASTTransformation {
         repositoryNode.addMethod(new MethodNode(
             "save${o2op.propertyName.capitalize()}",
             Modifier.PROTECTED,
-            ClassHelper.VOID_TYPE,
-            [param(OBJECT_TYPE, 'id'), param(newClass(entityNode), 'entity')] as Parameter[],
+            VOID_TYPE,
+            [param(identifier(entityNode).type, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
             null,
             statement
         ))
@@ -210,7 +210,7 @@ class CreateOperationsTransformer implements ASTTransformation {
         repositoryClassNode.addMethod(new MethodNode(
             "save${o2m.propertyName.capitalize()}",
             Modifier.PROTECTED,
-            ClassHelper.VOID_TYPE,
+            VOID_TYPE,
             [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
             null,
             statement
@@ -219,7 +219,7 @@ class CreateOperationsTransformer implements ASTTransformation {
 
     // FIXME: this should be part of the model (?)
     private static findIdName(ClassNode classNode) {
-        GenericsType mappedType = classNode.genericsTypes.find { hasAnnotation(it.type, EffigyEntity) }
+        GenericsType mappedType = classNode.genericsTypes.find { hasAnnotation(it.type, Entity) }
         mappedType.type.fields.find { hasAnnotation(it, Id) }.name
     }
 }

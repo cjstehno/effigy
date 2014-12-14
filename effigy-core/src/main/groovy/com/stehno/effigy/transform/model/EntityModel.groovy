@@ -31,11 +31,12 @@ import java.sql.Types
  */
 class EntityModel {
 
-    // FIXME: need to add OneToOne support to the finders and then work through the CRUD inejctors
-
     static IdentifierPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
+        idFieldNode ? extractIdentifier(idFieldNode) : null
+    }
 
+    private static IdentifierPropertyModel extractIdentifier(FieldNode idFieldNode) {
         new IdentifierPropertyModel(
             columnName: extractFieldName(idFieldNode),
             propertyName: idFieldNode.name,
@@ -90,13 +91,12 @@ class EntityModel {
         }
     }
 
-    // FIXME: the way I use this needs to change - prob need to check for association type or make separate methods
     static boolean hasAssociatedEntities(ClassNode entityNode) {
         entityNode.fields.find { f -> isAssociation(f) }
     }
 
     static String entityTable(ClassNode entityNode) {
-        AnnotationNode effigyAnnotNode = entityNode.getAnnotations(make(EffigyEntity))[0]
+        AnnotationNode effigyAnnotNode = entityNode.getAnnotations(make(Entity))[0]
         if (effigyAnnotNode) {
             return extractString(effigyAnnotNode, 'table', entityNode.nameWithoutPackage.toLowerCase() + 's')
         } else {
@@ -133,18 +133,15 @@ class EntityModel {
         }
     }
 
-    static List<OneToOnePropertyModel> oneToOneAssociations(final ClassNode entityNode) {
-        entityNode.fields.findAll { f -> annotatedWith(f, OneToOne) }.collect { o2of ->
-            def annotationNode = o2of.getAnnotations(make(OneToOne))[0]
+    static List<ComponentPropertyModel> components(final ClassNode entityNode) {
+        entityNode.fields.findAll { f -> annotatedWith(f, Component) }.collect { o2of ->
+            def annotationNode = o2of.getAnnotations(make(Component))[0]
 
-            String table = extractString(annotationNode, 'value', "${o2of.name}s")
-            String identifierName = extractString(annotationNode, 'entityId', "${entityTable(entityNode)}_id")
-
-            new OneToOnePropertyModel(
+            new ComponentPropertyModel(
                 propertyName: o2of.name,
                 type: o2of.type,
-                table: table,
-                identifierColumn: identifierName
+                lookupTable: extractString(annotationNode, 'lookupTable', "${o2of.name}s"),
+                entityColumn: extractString(annotationNode, 'entityColumn', "${entityTable(entityNode)}_id")
             )
         }
     }
@@ -199,6 +196,7 @@ class EntityModel {
         }
     }
 
+    // FIXME: need to expand the support here
     private static int sqlType(final FieldNode fieldNode) {
         if (fieldNode.type.enum) return Types.VARCHAR
 
@@ -225,15 +223,15 @@ class EntityModel {
      * @return true , if the class is annotated with EffigyEntity
      */
     static boolean isEffigyEntity(final ClassNode node) {
-        node.getAnnotations(make(EffigyEntity))
+        node.getAnnotations(make(Entity))
     }
 
     private static boolean isAssociation(FieldNode fieldNode) {
-        annotatedWith(fieldNode, OneToMany) || annotatedWith(fieldNode, OneToOne)
+        annotatedWith(fieldNode, OneToMany) || annotatedWith(fieldNode, Component)
     }
 
     private static EntityPropertyModel extractEmbeddedProperty(FieldNode f) {
-        String prefix = extractString(f.getAnnotations(make(Embedded))[0], 'value', f.name)
+        String prefix = extractString(f.getAnnotations(make(Embedded))[0], 'prefix', f.name)
 
         def fldNames = []
         def colNames = []

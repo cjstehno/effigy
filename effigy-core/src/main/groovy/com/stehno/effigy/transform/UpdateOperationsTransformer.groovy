@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
@@ -25,10 +26,10 @@ import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.OneToManyPropertyModel
-import com.stehno.effigy.transform.model.OneToOnePropertyModel
 import com.stehno.effigy.transform.model.VersionerPropertyModel
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
@@ -38,6 +39,7 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
+
 /**
  * Injects the Update CRUD operations into an Entity repository.
  */
@@ -48,7 +50,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode repositoryNode = nodes[1] as ClassNode
 
-        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
             info UpdateOperationsTransformer, 'Adding update operations to repository ({})', repositoryNode.name
@@ -65,8 +67,8 @@ class UpdateOperationsTransformer implements ASTTransformation {
     private static void injectUpdateMethod(final ClassNode repositoryClassNode, ClassNode entityNode) {
         info UpdateOperationsTransformer, 'Injecting update method into repository for {}', entityNode.name
         try {
-            oneToOneAssociations(entityNode).each { ap ->
-                injectO2OUpdateMethod repositoryClassNode, entityNode, ap
+            components(entityNode).each { ap ->
+                injectComponentUpdateMethod repositoryClassNode, entityNode, ap
             }
 
             def vars = []
@@ -107,7 +109,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 o2m: oneToManyAssociations(entityNode).collect { OneToManyPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}(entity)"
                 }.join('\n'),
-                o2o: oneToOneAssociations(entityNode).collect { OneToOnePropertyModel ap ->
+                o2o: components(entityNode).collect { ComponentPropertyModel ap ->
                     "update${ap.propertyName.capitalize()}(entity.${identifier(entityNode).propertyName}, entity.${ap.propertyName})"
                 }.join('\n')
             )
@@ -126,13 +128,23 @@ class UpdateOperationsTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectO2OUpdateMethod(ClassNode repositoryNode, ClassNode entityNode, OneToOnePropertyModel o2op) {
+    private static void injectComponentUpdateMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {
+        def colUpdates = []
+        def varUpdates = []
+
+        components(entityNode).each { ap ->
+            entityProperties(ap.type).collect { p ->
+                colUpdates << "${p.columnName} = ?"
+                varUpdates << "entity.${p.propertyName}"
+            }.join(',')
+        }
+
         def statement = codeS(
             '''
                 if( !id || !entity ){
                     jdbcTemplate.update('delete from $assocTable where $idCol = ?', id)
                 } else {
-                    int count = jdbcTemplate.update( 'update $assocTable set $updates where $idCol = ?', id )
+                    int count = jdbcTemplate.update( 'update $assocTable set $updates where $idCol = ?', $vars,id )
 
                     if( count != 1 ){
                         throw new RuntimeException('Update count for $name (' + count + ') did not match expected count (1) - update failed.')
@@ -140,20 +152,17 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 }
             ''',
             name: o2op.propertyName,
-            idCol: o2op.identifierColumn,
-            assocTable: o2op.table,
-            updates: oneToOneAssociations(entityNode).collect { ap ->
-                entityProperties(ap.type).collect { p ->
-                    "${p.columnName} = entity.${p.propertyName}"
-                }.join(',')
-            }.join(',')
+            idCol: o2op.entityColumn,
+            assocTable: o2op.lookupTable,
+            updates: colUpdates.join(','),
+            vars: varUpdates.join(',')
         )
 
         repositoryNode.addMethod(new MethodNode(
             "update${o2op.propertyName.capitalize()}",
             Modifier.PROTECTED,
             ClassHelper.VOID_TYPE,
-            [param(OBJECT_TYPE, 'id'), param(newClass(entityNode), 'entity')] as Parameter[],
+            [param(OBJECT_TYPE, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
             null,
             statement
         ))

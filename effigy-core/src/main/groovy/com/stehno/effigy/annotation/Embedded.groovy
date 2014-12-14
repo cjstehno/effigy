@@ -20,6 +20,9 @@ import java.lang.annotation.*
 
 /**
  * Annotation used to denote an embedded component field. The fields of the embedded object are part of the enclosing table.
+ *
+ * The type of the embedded object may be an Effigy Entity; however, it need not be. Also, if it is annotated with @Entity, any @Id
+ * or @Version annotations will not be honored, since the table data is contained in the table for the enclosing entity.
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
@@ -29,5 +32,5 @@ import java.lang.annotation.*
     /**
      * The database column name prefix used by the embedded properties. If not specified, the default is to use the name of the entity property.
      */
-    String value() default ''
+    String prefix() default ''
 }

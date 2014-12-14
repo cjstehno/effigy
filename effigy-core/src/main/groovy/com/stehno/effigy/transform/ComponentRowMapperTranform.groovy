@@ -17,8 +17,7 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.model.EntityModel.entityProperties
-import static com.stehno.effigy.transform.model.EntityModel.oneToOneAssociations
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -40,22 +39,22 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import java.sql.ResultSet
 
 /**
- * Transformer used for creating a RowMapper instance for the OneToOne associations of an Entity.
+ * Transformer used for creating a RowMapper instance for the Component associations of an Entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class OneToOneAssociationRowMapperTransformer implements ASTTransformation {
+class ComponentRowMapperTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityNode = nodes[1] as ClassNode
 
-        debug OneToOneAssociationRowMapperTransformer, 'Visiting {} for association row mapper creation.', entityNode.name
+        debug ComponentRowMapperTransformer, 'Visiting {} for association row mapper creation.', entityNode.name
 
-        oneToOneAssociations(entityNode).each { ap ->
-            debug OneToOneAssociationRowMapperTransformer, 'Visiting one-to-one association ({}).', ap.type.name
+        components(entityNode).each { ap ->
+            debug ComponentRowMapperTransformer, 'Visiting one-to-one association ({}).', ap.type.name
 
-            if (!rowMapperExists(ap.type, source)) {
-                info OneToOneAssociationRowMapperTransformer, 'Creating one-to-one Association RowMapper for: {}', ap.type.name
+            if (!isEffigyEntity(ap.type) && !rowMapperExists(ap.type, source)) {
+                info ComponentRowMapperTransformer, 'Creating one-to-one Association RowMapper for: {}', ap.type.name
 
                 injectRowMapperAccessor(ap.type, buildRowMapper(ap.type, source))
             }
@@ -110,12 +109,12 @@ class OneToOneAssociationRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            info OneToOneAssociationRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
+            info ComponentRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
 
             return mapperClassNode
 
         } catch (ex) {
-            error OneToOneAssociationRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
+            error ComponentRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
             throw ex
         }
     }
@@ -139,6 +138,6 @@ class OneToOneAssociationRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, 'prefix', constX(''))] as Parameter[]
         ))
 
-        info OneToOneAssociationRowMapperTransformer, 'Injected row mapper helper method for {}', assocNode.name
+        info ComponentRowMapperTransformer, 'Injected row mapper helper method for {}', assocNode.name
     }
 }

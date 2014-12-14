@@ -1,5 +1,7 @@
 > This is just a temporary dumping point...
 
+objects used in Associations or as Components must be Effigy Entities themselves.
+
 
 # OneToMany
 
@@ -26,24 +28,14 @@ exception.
 
 The associations will be deleted, not the associated entities themselves.
 
-# OneToOne
+# Embedded
+
+# Component
 
 This association is applied to an entity property to denote an association of one entity to one associated entity. The association is represented
 by a single entity
 
-## Create
+The object itself will be managed by the enclosing entiy
 
-The associated object will be created if populated.
-
-## Retrieve
-
-The associated object will be retrieved with the main entity.
-
-## Update
-
-The association will be updated, created or deleted as required by the update state of the enclosing entity.
-
-## Delete
-
-The associated object will be deleted with its parent entity.
+... much like the OneToMany, the associations will be managed, not the actual objects
 

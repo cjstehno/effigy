@@ -25,7 +25,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.annotation.EffigyRepository
+import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.*
@@ -47,7 +47,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode repositoryNode = nodes[1] as ClassNode
 
-        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(EffigyRepository))[0]
+        AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
             info RetrieveOperationsTransformer, 'Adding retrieve operations to repository ({})', repositoryNode.name
@@ -204,9 +204,9 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
         }.join(',')
 
-        String o2oFields = oneToOneAssociations(entityNode).collect { ap ->
+        String o2oFields = components(entityNode).collect { ap ->
             entityProperties(ap.type).collect { p ->
-                "${ap.table}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+                "${ap.lookupTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
             }.join(',')
         }.join(',')
 
@@ -224,8 +224,8 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.table}.${ap.associationId}=${associatedTable}.${associatedIdentifier.columnName}"
         }
 
-        oneToOneAssociations(entityNode).each { ap ->
-            sql += " LEFT OUTER JOIN ${ap.table} on ${ap.table}.${ap.identifierColumn}=${entityTableName}.${entityIdentifier.columnName}"
+        components(entityNode).each { ap ->
+            sql += " LEFT OUTER JOIN ${ap.lookupTable} on ${ap.lookupTable}.${ap.entityColumn}=${entityTableName}.${entityIdentifier.columnName}"
         }
 
         if (single) {

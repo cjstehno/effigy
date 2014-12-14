@@ -20,14 +20,14 @@ import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Entity property model for one-to-one associations.
+ * Entity property model for one-to-one lookup component associations.
  */
 @Immutable(knownImmutableClasses = [ClassNode])
-class OneToOnePropertyModel implements EntityPropertyModel {
+class ComponentPropertyModel implements EntityPropertyModel {
 
     String propertyName
     ClassNode type
 
-    String table
-    String identifierColumn
+    String lookupTable
+    String entityColumn
 }

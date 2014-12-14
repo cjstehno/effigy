@@ -16,10 +16,10 @@
 
 package com.stehno.effigy.annotation
 
+import com.stehno.effigy.transform.ComponentRowMapperTransformer
 import com.stehno.effigy.transform.EffigyEntityTransformer
 import com.stehno.effigy.transform.EffigyResultSetExtractorTransformer
-import com.stehno.effigy.transform.EffigyRowMapperTransformer
-import com.stehno.effigy.transform.OneToOneAssociationRowMapperTransformer
+import com.stehno.effigy.transform.EntityRowMapperTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
@@ -33,10 +33,10 @@ import java.lang.annotation.*
 @GroovyASTTransformationClass(classes = [
     EffigyEntityTransformer,
     EffigyResultSetExtractorTransformer,
-    OneToOneAssociationRowMapperTransformer,
-    EffigyRowMapperTransformer
+    ComponentRowMapperTransformer,
+    EntityRowMapperTransformer
 ])
-@interface EffigyEntity {
+@interface Entity {
 
     /**
      * The name of the database table represented by the entity. The default will be to use the pluralized name of the entity.

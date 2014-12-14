@@ -42,13 +42,13 @@ import java.sql.ResultSet
  * Transformer used for creating a RowMapper instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class EffigyRowMapperTransformer implements ASTTransformation {
+class EntityRowMapperTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
-        info EffigyRowMapperTransformer, 'Creating RowMapper for: {}', entityClassNode.name
+        info EntityRowMapperTransformer, 'Creating RowMapper for: {}', entityClassNode.name
 
         ClassNode mapperClassNode = buildRowMapper(entityClassNode, source)
         injectRowMapperAccessor(entityClassNode, mapperClassNode)
@@ -81,6 +81,7 @@ class EffigyRowMapperTransformer implements ASTTransformation {
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(entityNode), block(
                 codeS(
                     '''
+                        def emptyEntity = true
                         <%  props.each { p->
                                 if( p.class.simpleName == 'EmbeddedPropertyModel' ){ %>
                                     def ${p.propertyName}_map = [${p.collectSubProperties { fld,col,typ-> "$fld : rs.getObject(prefix + '$col')" }.join(',')}]
@@ -89,9 +90,11 @@ class EffigyRowMapperTransformer implements ASTTransformation {
                                     }
                         <%      } else { %>
                                     entity.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
-                        <%      }
-                            } %>
-                        return ( entity.${identifier.propertyName} ? entity : null )
+                        <%      } %>
+                                emptyEntity = emptyEntity && (entity.${p.propertyName} == null)
+                        <%  } %>
+
+                            return emptyEntity ? null : entity
                         ''',
                     props: entityProperties(entityNode),
                     identifier: identifier(entityNode)
@@ -100,12 +103,12 @@ class EffigyRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            info EffigyRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
+            info EntityRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
 
             return mapperClassNode
 
         } catch (ex) {
-            error EffigyRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
+            error EntityRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
             throw ex
         }
     }
@@ -129,6 +132,6 @@ class EffigyRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, 'prefix', constX(''))] as Parameter[]
         ))
 
-        info EffigyRowMapperTransformer, 'Injected row mapper helper method for {}', entityClassNode
+        info EntityRowMapperTransformer, 'Injected row mapper helper method for {}', entityClassNode
     }
 }

@@ -28,7 +28,7 @@ import java.lang.annotation.*
 @Retention(RetentionPolicy.SOURCE)
 @Documented
 @GroovyASTTransformationClass(classes = [EffigyRepositoryTransformer])
-@interface EffigyRepository {
+@interface Repository {
 
     /**
      * The entity type handled by the repository (must be annotated with @Effigy)
