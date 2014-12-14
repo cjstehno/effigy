@@ -59,7 +59,7 @@ class EntityModel {
     // does not include relationship fields
     static List<EntityPropertyModel> entityProperties(ClassNode entityNode, boolean includeId = true) {
         entityNode.fields.findAll { f ->
-            !f.static && !f.name.startsWith('$') && !isAssociation(f) && (includeId ? true : !annotatedWith(f, Id))
+            !f.static && !f.name.startsWith('$') && !isAssociation(f) && !isEntity(f.type) && (includeId ? true : !annotatedWith(f, Id))
         }.collect { f ->
             if (annotatedWith(f, Id)) {
                 new IdentifierPropertyModel(
@@ -92,7 +92,7 @@ class EntityModel {
     }
 
     static boolean hasAssociatedEntities(ClassNode entityNode) {
-        entityNode.fields.find { f -> isAssociation(f) }
+        entityNode.fields.find { f -> isAssociation(f) || isEntity(f.type) }
     }
 
     static String entityTable(ClassNode entityNode) {
@@ -111,32 +111,48 @@ class EntityModel {
     }
 
     static List<AssociationPropertyModel> associations(ClassNode entityNode) {
-        entityNode.fields.findAll { f -> annotatedWith(f, Association) }.collect { o2mf ->
-            def annotationNode = o2mf.getAnnotations(make(Association))[0]
-            def associatedType = o2mf.type.genericsTypes.find { isEffigyEntity(it.type) }.type
+        entityNode.fields.findAll { f -> annotatedWith(f, Association) || isEntity(f.type) }.collect { assoc ->
+            def annotationNode = assoc.getAnnotations(make(Association))[0]
+            if (annotationNode) {
+                def associatedType = assoc.type.genericsTypes.find { isEntity(it.type) }.type
 
-            String entityTableName = entityTable(entityNode)
-            String assocTableName = entityTable(associatedType)
+                String entityTableName = entityTable(entityNode)
+                String assocTableName = entityTable(associatedType)
 
-            new AssociationPropertyModel(
-                propertyName: o2mf.name,
-                type: o2mf.type,
-                associatedType: associatedType,
-                joinTable: extractString(annotationNode, 'joinTable', "${entityTableName}_${o2mf.name}"),
-                entityColumn: extractString(annotationNode, 'entityColumn', "${entityTableName}_id"),
-                assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
-            )
+                return new AssociationPropertyModel(
+                    propertyName: assoc.name,
+                    type: assoc.type,
+                    associatedType: associatedType,
+                    joinTable: extractString(annotationNode, 'joinTable', "${entityTableName}_${assoc.name}"),
+                    entityColumn: extractString(annotationNode, 'entityColumn', "${entityTableName}_id"),
+                    assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
+                )
+
+            } else {
+                // handle naked entity type (1-1 association)
+
+                String entityTableName = entityTable(entityNode)
+
+                return new AssociationPropertyModel(
+                    propertyName: assoc.name,
+                    type: assoc.type,
+                    associatedType: assoc.type,
+                    joinTable: "${entityTableName}_${assoc.name}",
+                    entityColumn: "${entityTableName}_id",
+                    assocColumn: "${entityTable(assoc.type)}_id"
+                )
+            }
         }
     }
 
     static List<ComponentPropertyModel> components(final ClassNode entityNode) {
-        entityNode.fields.findAll { f -> annotatedWith(f, Component) }.collect { o2of ->
-            def annotationNode = o2of.getAnnotations(make(Component))[0]
+        entityNode.fields.findAll { f -> annotatedWith(f, Component) }.collect { comp ->
+            def annotationNode = comp.getAnnotations(make(Component))[0]
 
             new ComponentPropertyModel(
-                propertyName: o2of.name,
-                type: o2of.type,
-                lookupTable: extractString(annotationNode, 'lookupTable', "${o2of.name}s"),
+                propertyName: comp.name,
+                type: comp.type,
+                lookupTable: extractString(annotationNode, 'lookupTable', "${comp.name}s"),
                 entityColumn: extractString(annotationNode, 'entityColumn', "${entityTable(entityNode)}_id")
             )
         }
@@ -218,7 +234,7 @@ class EntityModel {
      * @param node the class node being tested
      * @return true , if the class is annotated with EffigyEntity
      */
-    static boolean isEffigyEntity(final ClassNode node) {
+    static boolean isEntity(final ClassNode node) {
         node.getAnnotations(make(Entity))
     }
 

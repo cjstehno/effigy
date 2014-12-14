@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
@@ -39,6 +40,7 @@ import org.springframework.jdbc.core.RowMapper
 
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
+
 /**
  * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
@@ -117,21 +119,25 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 [] as ClassNode[],
                 codeS(
                     '''
-                    <% oneToManys.each { ap-> %>
+                    <% assocs.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
-                            entity.${ap.propertyName} << ${ap.propertyName}Value
+                            if( entity.${ap.propertyName} instanceof Collection ){
+                                entity.${ap.propertyName} << ${ap.propertyName}Value
+                            } else {
+                                entity.${ap.propertyName} = ${ap.propertyName}Value
+                            }
                         }
                     <% } %>
-                    <% oneToOnes.each { ap-> %>
+                    <% compos.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
                             entity.${ap.propertyName} = ${ap.propertyName}Value
                         }
                     <% } %>
                     ''',
-                    oneToManys: associations(entityNode),
-                    oneToOnes: components(entityNode)
+                    assocs: associations(entityNode),
+                    compos: components(entityNode)
                 )
             ))
 
@@ -224,21 +230,21 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 [] as ClassNode[],
                 codeS(
                     '''
-                    <% oneToManys.each { ap-> %>
+                    <% assocs.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
                             entity.${ap.propertyName} << ${ap.propertyName}Value
                         }
                     <% } %>
-                    <% oneToOnes.each { ap-> %>
+                    <% compos.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
                             entity.${ap.propertyName} = ${ap.propertyName}Value
                         }
                     <% } %>
                     ''',
-                    oneToManys: associations(entityNode),
-                    oneToOnes: components(entityNode)
+                    assocs: associations(entityNode),
+                    compos: components(entityNode)
                 )
             ))
 

@@ -39,3 +39,27 @@ The object itself will be managed by the enclosing entiy
 
 ... much like the OneToMany, the associations will be managed, not the actual objects
 
+1-1
+
+SomeType someField
+
+type may be generic or may be an entity
+relationship managed via relation table
+recognized by field not being one of the supported types and not collection, or annotation
+
+@Association(joinTable='foo', entityColumn='entity_id', assocColumn='assoc_id')
+
+crud operations will manage the relationships, not the actual entities
+
+
+*-1, *-*
+
+Collection impls, or Map
+
+associated type may be generic or entity
+relationship managed via relation table
+recognized by field being a collection or map, or annotation
+
+@Association(joinTable='foo', entityColumn='entity_id', assocColumn='assoc_id')
+
+crud operations will manage the relationships, not the actual entities

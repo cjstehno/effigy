@@ -5,10 +5,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
-import people.entity.Address
-import people.entity.Animal
-import people.entity.Person
-import people.entity.Pet
+import people.entity.*
 
 class PersonRepositoryTest {
 
@@ -31,12 +28,16 @@ class PersonRepositoryTest {
 
     private PersonRepository personRepository
     private PetRepository petRepository
+    private JobRepository jobRepository
 
     @Before void before() {
         personRepository = new EffigyPersonRepository(
             jdbcTemplate: database.jdbcTemplate
         )
         petRepository = new EffigyPetRepository(
+            jdbcTemplate: database.jdbcTemplate
+        )
+        jobRepository = new EffigyJobRepository(
             jdbcTemplate: database.jdbcTemplate
         )
     }
@@ -271,5 +272,35 @@ class PersonRepositoryTest {
 
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 0
+    }
+
+    @Test void createWithJob() {
+        def jobId = jobRepository.create(new Job(title: 'Software Engr'))
+        def otherJobId = jobRepository.create(new Job(title: 'Taco Vendor'))
+
+        def person = new Person(PERSON_A)
+        person.job = jobRepository.retrieve(jobId)
+
+        def personId = personRepository.create(person)
+
+        person = personRepository.retrieve(personId)
+
+        assert person.firstName == 'John'
+        assert person.middleName == 'Q'
+        assert person.lastName == 'Public'
+        assert !person.married
+        assert person.job.title == 'Software Engr'
+
+        person.job = jobRepository.retrieve(otherJobId)
+
+        personRepository.update(person)
+
+        def retrieved = personRepository.retrieve(personId)
+
+        assert retrieved.firstName == 'John'
+        assert retrieved.middleName == 'Q'
+        assert retrieved.lastName == 'Public'
+        assert !retrieved.married
+        assert retrieved.job.title == 'Taco Vendor'
     }
 }

@@ -189,29 +189,32 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             }
         }
 
-        sql += associations(entityNode).collect { ap ->
+        def assocFields = []
+
+        associations(entityNode).each { ap ->
             String associatedTable = entityTable(ap.associatedType)
 
-            entityProperties(ap.associatedType).collect { p ->
+            entityProperties(ap.associatedType).each { p ->
                 if (p instanceof EmbeddedPropertyModel) {
                     p.columnNames.each { cn ->
-                        "${associatedTable}.${cn} as ${ap.propertyName}_${cn}"
+                        assocFields << "${associatedTable}.${cn} as ${ap.propertyName}_${cn}"
                     }
                 } else {
-                    "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+                    assocFields << "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
                 }
-            }.join(',')
+            }
+        }
 
-        }.join(',')
+        sql += assocFields.join(',')
 
-        String o2oFields = components(entityNode).collect { ap ->
+        String componentFields = components(entityNode).collect { ap ->
             entityProperties(ap.type).collect { p ->
                 "${ap.lookupTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
             }.join(',')
         }.join(',')
 
-        if (o2oFields) {
-            sql += ",$o2oFields"
+        if (componentFields) {
+            sql += ",$componentFields"
         }
 
         sql += " from ${entityTableName}"
@@ -231,6 +234,11 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         if (single) {
             sql += " where ${entityTableName}.${entityIdentifier.columnName}=?"
         }
+
+
+        trace RetrieveOperationsTransformer, '------------------------------'
+        trace RetrieveOperationsTransformer, 'Sql for entity ({}): {}', entityNode.name, sql
+        trace RetrieveOperationsTransformer, '------------------------------'
 
         sql
     }

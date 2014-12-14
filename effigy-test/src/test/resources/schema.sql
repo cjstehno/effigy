@@ -25,6 +25,17 @@ CREATE TABLE peoples_pets (
   UNIQUE (person_id, pet_id)
 );
 
+CREATE TABLE jobs (
+  id    BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  title VARCHAR(25)           NOT NULL
+);
+
+CREATE TABLE people_job (
+  people_id BIGINT REFERENCES people (id),
+  jobs_id   BIGINT REFERENCES jobs (id),
+  UNIQUE (people_id, jobs_id)
+);
+
 CREATE TABLE employers (
   people_id BIGINT REFERENCES people (id),
   line1     VARCHAR(30),

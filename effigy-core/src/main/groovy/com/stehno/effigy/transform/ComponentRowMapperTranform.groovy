@@ -53,7 +53,7 @@ class ComponentRowMapperTransformer implements ASTTransformation {
         components(entityNode).each { ap ->
             debug ComponentRowMapperTransformer, 'Visiting one-to-one association ({}).', ap.type.name
 
-            if (!isEffigyEntity(ap.type) && !rowMapperExists(ap.type, source)) {
+            if (!isEntity(ap.type) && !rowMapperExists(ap.type, source)) {
                 info ComponentRowMapperTransformer, 'Creating one-to-one Association RowMapper for: {}', ap.type.name
 
                 injectRowMapperAccessor(ap.type, buildRowMapper(ap.type, source))

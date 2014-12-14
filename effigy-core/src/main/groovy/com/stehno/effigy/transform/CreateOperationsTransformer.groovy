@@ -19,15 +19,12 @@ package com.stehno.effigy.transform
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static com.stehno.effigy.transform.util.AstUtils.arrayX
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-import com.stehno.effigy.annotation.Entity
-import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
@@ -69,8 +66,8 @@ class CreateOperationsTransformer implements ASTTransformation {
     private static void injectCreateMethod(final ClassNode repositoryClassNode, final ClassNode entityNode) {
         info CreateOperationsTransformer, 'Injecting create method into repository for {}', entityNode.name
         try {
-            associations(entityNode).each { AssociationPropertyModel o2m ->
-                injectO2MSaveMethod(repositoryClassNode, entityNode, o2m)
+            associations(entityNode).each { AssociationPropertyModel ap ->
+                injectAssociationSaveMethod repositoryClassNode, entityNode, ap
             }
 
             components(entityNode).each { ap ->
@@ -139,14 +136,16 @@ class CreateOperationsTransformer implements ASTTransformation {
             ))
 
         } catch (ex) {
-            error CreateOperationsTransformer, 'Unable to inject create operations for entity ({}): ', entityNode.name, ex.message
+            error CreateOperationsTransformer, 'Unable to inject create operations for entity ({}): {}', entityNode.name, ex.message
+            ex.printStackTrace()
             throw ex
         }
     }
 
     private static void injectComponentSaveMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {
-        def statement = codeS(
-            '''
+        try {
+            def statement = codeS(
+                '''
                 if( !id || !entity ) return
 
                 int count = jdbcTemplate.update(
@@ -158,28 +157,40 @@ class CreateOperationsTransformer implements ASTTransformation {
                     throw new RuntimeException('Insert count for $name (' + count + ') did not match expected count (1) - save failed.')
                 }
             ''',
-            name: o2op.propertyName,
-            assocTable: o2op.lookupTable,
-            assocColumns: "${o2op.entityColumn},${columnNames(o2op.type)}",
-            assocPlaceholders: "?,${columnPlaceholders(o2op.type)}",
-            assocValues: (["id"] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(',')
-        )
+                name: o2op.propertyName,
+                assocTable: o2op.lookupTable,
+                assocColumns: "${o2op.entityColumn},${columnNames(o2op.type)}",
+                assocPlaceholders: "?,${columnPlaceholders(o2op.type)}",
+                assocValues: (["id"] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(',')
+            )
 
-        repositoryNode.addMethod(new MethodNode(
-            "save${o2op.propertyName.capitalize()}",
-            Modifier.PROTECTED,
-            VOID_TYPE,
-            [param(identifier(entityNode).type, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
-            null,
-            statement
-        ))
+            repositoryNode.addMethod(new MethodNode(
+                "save${o2op.propertyName.capitalize()}",
+                Modifier.PROTECTED,
+                VOID_TYPE,
+                [param(identifier(entityNode).type, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
+                null,
+                statement
+            ))
+        } catch (ex) {
+            error CreateOperationsTransformer, 'Unable to inject component save method for entity ({}): {}', entityNode.name, ex.message
+            throw ex
+        }
     }
 
     // TODO: this should probably be pulled into a common area since update uses the same method
-    private static void injectO2MSaveMethod(ClassNode repositoryClassNode, ClassNode entityNode, AssociationPropertyModel o2m) {
-        def statement = codeS(
-            '''
-                int expects = entity.${name}.size()
+    private static void injectAssociationSaveMethod(ClassNode repositoryClassNode, ClassNode entityNode, AssociationPropertyModel assoc) {
+        info CreateOperationsTransformer, 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
+        try {
+            def statement = codeS(
+                '''
+                int expects = 0
+                if( entity.${name} instanceof Collection ){
+                    expects = entity.${name}?.size() ?: 0
+                } else {
+                    expects = entity.${name} != null ? 1 : 0
+                }
+
                 int count = 0
                 def ent = entity
 
@@ -198,28 +209,26 @@ class CreateOperationsTransformer implements ASTTransformation {
                     throw new RuntimeException('Insert count for $name (' + count + ') did not match expected count (' + expects + ') - save failed.')
                 }
             ''',
+                name: assoc.propertyName,
+                assocTable: assoc.joinTable,
+                tableEntIdName: assoc.entityColumn,
+                tableAssocIdName: assoc.assocColumn,
+                entityIdName: identifier(entityNode).propertyName,
+                assocIdName: identifier(assoc.associatedType).propertyName
+            )
 
-            name: o2m.propertyName,
-            assocTable: o2m.joinTable,
-            tableEntIdName: o2m.entityColumn,
-            tableAssocIdName: o2m.assocColumn,
-            entityIdName: identifier(entityNode).propertyName,
-            assocIdName: findIdName(o2m.type)
-        )
-
-        repositoryClassNode.addMethod(new MethodNode(
-            "save${o2m.propertyName.capitalize()}",
-            Modifier.PROTECTED,
-            VOID_TYPE,
-            [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
-            null,
-            statement
-        ))
-    }
-
-    // FIXME: this should be part of the model (?)
-    private static findIdName(ClassNode classNode) {
-        GenericsType mappedType = classNode.genericsTypes.find { hasAnnotation(it.type, Entity) }
-        mappedType.type.fields.find { hasAnnotation(it, Id) }.name
+            repositoryClassNode.addMethod(new MethodNode(
+                "save${assoc.propertyName.capitalize()}",
+                Modifier.PROTECTED,
+                VOID_TYPE,
+                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
+                null,
+                statement
+            ))
+        } catch (ex) {
+            error CreateOperationsTransformer, 'Unable to inject association save method for entity ({}): {}', entityNode.name, ex.message
+            ex.printStackTrace()
+            throw ex
+        }
     }
 }
