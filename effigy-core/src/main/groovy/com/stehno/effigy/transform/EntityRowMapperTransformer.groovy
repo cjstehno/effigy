@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
@@ -42,7 +43,10 @@ import java.sql.ResultSet
  * Transformer used for creating a RowMapper instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class EntityRowMapperTransformer implements ASTTransformation {
+
+    private static final String PREFIX = 'prefix'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -84,7 +88,9 @@ class EntityRowMapperTransformer implements ASTTransformation {
                         def emptyEntity = true
                         <%  props.each { p->
                                 if( p.class.simpleName == 'EmbeddedPropertyModel' ){ %>
-                                    def ${p.propertyName}_map = [${p.collectSubProperties { fld,col,typ-> "$fld : rs.getObject(prefix + '$col')" }.join(',')}]
+                                    def ${p.propertyName}_map = [
+                                        ${p.collectSubProperties { fld,col,typ-> "$fld : rs.getObject(prefix + '$col')" }.join(',')}
+                                    ]
                                     if( ${p.propertyName}_map.find {k,v-> v != null } ){
                                         entity.${p.propertyName} = new${p.propertyName.capitalize()}( ${p.propertyName}_map )
                                     }
@@ -128,8 +134,8 @@ class EntityRowMapperTransformer implements ASTTransformation {
             PUBLIC | STATIC,
             'rowMapper',
             newClass(mapperClassNode),
-            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX('prefix'), varX('prefix'))])))),
-            [param(STRING_TYPE, 'prefix', constX(''))] as Parameter[]
+            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX(PREFIX), varX(PREFIX))])))),
+            [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
         info EntityRowMapperTransformer, 'Injected row mapper helper method for {}', entityClassNode

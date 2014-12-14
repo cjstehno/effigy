@@ -1,4 +1,5 @@
 package people
+
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2
 
 import org.junit.rules.ExternalResource
@@ -6,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder
+
 /**
  * Created by cjstehno on 11/26/2014.
  */

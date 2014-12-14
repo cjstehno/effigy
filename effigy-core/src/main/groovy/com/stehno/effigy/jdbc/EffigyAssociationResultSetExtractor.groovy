@@ -33,8 +33,8 @@ abstract class EffigyAssociationResultSetExtractor<T> implements ResultSetExtrac
     T extractData(final ResultSet rs) throws SQLException, DataAccessException {
         def entity = null
 
-        while( rs.next() ){
-            if( !entity ){
+        while (rs.next()) {
+            if (!entity) {
                 entity = primaryRowMapper().mapRow(rs, 0)
             }
 

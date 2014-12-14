@@ -21,20 +21,24 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.ClassExpression
+
 /**
  * Created by cjstehno on 11/26/2014.
  */
 class AnnotationUtils {
 
-    public static ClassNode extractClass(AnnotationNode annotation, String key) {
-        def pair = annotation.members.find { pair -> pair.key == key; };
-        if (pair == null) return null;
+    static ClassNode extractClass(AnnotationNode annotation, String key) {
+        def pair = annotation.members.find { pair -> pair.key == key }
+        if (pair == null) {
+            return null
+        }
 
         assert (pair.value instanceof ClassExpression)
+
         return pair.value.type;
     }
 
-    public static String extractString(AnnotationNode annotation, String key, String defvalue = null) {
+    static String extractString(AnnotationNode annotation, String key, String defvalue = null) {
         def pair = annotation.members.find { pair -> pair.key == key }
         return pair ? pair.value.value : defvalue
     }
@@ -48,7 +52,7 @@ class AnnotationUtils {
      * @param annotationClass
      * @return
      */
-    public static boolean hasAnnotation(AnnotatedNode node, Class... annotationClass) {
+    static boolean hasAnnotation(AnnotatedNode node, Class... annotationClass) {
         annotationClass.find { ac ->
             node.getAnnotations(ClassHelper.make(ac))
         }

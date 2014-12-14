@@ -34,6 +34,8 @@ import java.lang.reflect.Modifier
  */
 class AstUtils {
 
+    private static final String SEPARATOR_LINE = '-' * 50
+
     static List<ASTNode> code(Map bindings = [:], String text) {
         new AstBuilder().buildFromString(
             CompilePhase.CANONICALIZATION,
@@ -45,9 +47,9 @@ class AstUtils {
     static String string(Map bindings = [:], String text) {
         String result = new GStringTemplateEngine().createTemplate(text).make(bindings) as String
 
-        trace AstUtils, '-' * 50
+        trace AstUtils, SEPARATOR_LINE
         trace AstUtils, result
-        trace AstUtils, '-' * 50
+        trace AstUtils, SEPARATOR_LINE
 
         result
     }

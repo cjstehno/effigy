@@ -44,7 +44,13 @@ import java.lang.reflect.Modifier
  * Transformer used to process the @CreateOperations annotation - injects CRUD create methods.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class CreateOperationsTransformer implements ASTTransformation {
+
+    private static final String ID = 'id'
+    private static final String ENTITY = 'entity'
+    private static final String NEWLINE = '\n'
+    private static final String COMMA = ','
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -98,7 +104,11 @@ class CreateOperationsTransformer implements ASTTransformation {
                 versioner ? codeS('entity.$name = 0', name: versioner.propertyName) : new EmptyStatement(),
 
                 declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
-                    constX("insert into ${entityTable(entityNode)} (${columnNames(entityNode, false)}) values (${columnPlaceholders(entityNode, false)})" as String),
+                    constX(
+                        """insert into ${entityTable(entityNode)} (${columnNames(entityNode, false)}) values (${
+                            columnPlaceholders(entityNode, false)
+                        })""" as String
+                    ),
                     arrayX(int_TYPE, columnTypes(entityNode, false).collect { typ ->
                         constX(typ)
                     })
@@ -115,14 +125,14 @@ class CreateOperationsTransformer implements ASTTransformation {
 
                         return keys.key
                     ''',
-                    values: values.join(','),
+                    values: values.join(COMMA),
                     idName: identifier(entityNode).propertyName,
                     o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                         "save${o2m.propertyName.capitalize()}(entity)"
-                    }.join('\n'),
+                    }.join(NEWLINE),
                     components: components(entityNode).collect { ComponentPropertyModel ap ->
                         "save${ap.propertyName.capitalize()}(entity.${identifier(entityNode).propertyName},entity.${ap.propertyName})"
-                    }.join('\n')
+                    }.join(NEWLINE)
                 ),
             )
 
@@ -130,14 +140,13 @@ class CreateOperationsTransformer implements ASTTransformation {
                 'create',
                 Modifier.PUBLIC,
                 identifier(entityNode).type,
-                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
+                [new Parameter(newClass(entityNode), ENTITY)] as Parameter[],
                 null,
                 statement
             ))
 
         } catch (ex) {
             error CreateOperationsTransformer, 'Unable to inject create operations for entity ({}): {}', entityNode.name, ex.message
-            ex.printStackTrace()
             throw ex
         }
     }
@@ -161,14 +170,14 @@ class CreateOperationsTransformer implements ASTTransformation {
                 assocTable: o2op.lookupTable,
                 assocColumns: "${o2op.entityColumn},${columnNames(o2op.type)}",
                 assocPlaceholders: "?,${columnPlaceholders(o2op.type)}",
-                assocValues: (["id"] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(',')
+                assocValues: ([ID] + entityProperties(o2op.type).collect { "entity.${it.propertyName}" }).join(COMMA)
             )
 
             repositoryNode.addMethod(new MethodNode(
                 "save${o2op.propertyName.capitalize()}",
                 Modifier.PROTECTED,
                 VOID_TYPE,
-                [param(identifier(entityNode).type, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
+                [param(identifier(entityNode).type, ID), param(newClass(o2op.type), ENTITY)] as Parameter[],
                 null,
                 statement
             ))
@@ -221,13 +230,12 @@ class CreateOperationsTransformer implements ASTTransformation {
                 "save${assoc.propertyName.capitalize()}",
                 Modifier.PROTECTED,
                 VOID_TYPE,
-                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
+                [new Parameter(newClass(entityNode), ENTITY)] as Parameter[],
                 null,
                 statement
             ))
         } catch (ex) {
             error CreateOperationsTransformer, 'Unable to inject association save method for entity ({}): {}', entityNode.name, ex.message
-            ex.printStackTrace()
             throw ex
         }
     }

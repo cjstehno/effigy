@@ -41,7 +41,13 @@ import java.lang.reflect.Modifier
  * Transform used to inject the Retrieve CRUD operations.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class RetrieveOperationsTransformer implements ASTTransformation {
+
+    private static final String EXTRACTOR = 'extractor'
+    private static final String ROW_MAPPER = 'rowMapper'
+    private static final String MAPPER = 'mapper'
+    private static final String COMMA = ','
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -87,7 +93,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX('mapper'), callX(classX(newClass(entityNode)), 'rowMapper')),
+            declS(varX(MAPPER), callX(classX(newClass(entityNode)), ROW_MAPPER)),
 
             codeS(
                 '''
@@ -106,7 +112,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
-            declS(varX('extractor'), callX(classX(newClass(entityNode)), 'associationExtractor')),
+            declS(varX(EXTRACTOR), callX(classX(newClass(entityNode)), 'associationExtractor')),
 
             codeS(
                 '''
@@ -142,7 +148,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static Statement retrieveAllWithRelations(ClassNode entityNode) {
         block(
-            declS(varX('extractor'), callX(classX(newClass(entityNode)), 'collectionAssociationExtractor')),
+            declS(varX(EXTRACTOR), callX(classX(newClass(entityNode)), 'collectionAssociationExtractor')),
 
             codeS(
                 '''
@@ -158,7 +164,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static Statement retrieveAllWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX('mapper'), callX(classX(newClass(entityNode)), 'rowMapper')),
+            declS(varX(MAPPER), callX(classX(newClass(entityNode)), ROW_MAPPER)),
 
             codeS(
                 '''
@@ -205,13 +211,13 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             }
         }
 
-        sql += assocFields.join(',')
+        sql += assocFields.join(COMMA)
 
         String componentFields = components(entityNode).collect { ap ->
             entityProperties(ap.type).collect { p ->
                 "${ap.lookupTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
-            }.join(',')
-        }.join(',')
+            }.join(COMMA)
+        }.join(COMMA)
 
         if (componentFields) {
             sql += ",$componentFields"
@@ -234,7 +240,6 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         if (single) {
             sql += " where ${entityTableName}.${entityIdentifier.columnName}=?"
         }
-
 
         trace RetrieveOperationsTransformer, '------------------------------'
         trace RetrieveOperationsTransformer, 'Sql for entity ({}): {}', entityNode.name, sql

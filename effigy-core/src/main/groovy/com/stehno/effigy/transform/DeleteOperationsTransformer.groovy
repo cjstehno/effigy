@@ -35,6 +35,7 @@ import java.lang.reflect.Modifier
  * Created by cjstehno on 12/6/2014.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class DeleteOperationsTransformer implements ASTTransformation {
 
     @Override

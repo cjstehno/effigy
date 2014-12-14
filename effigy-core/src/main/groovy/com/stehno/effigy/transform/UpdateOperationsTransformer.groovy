@@ -44,7 +44,11 @@ import java.lang.reflect.Modifier
  * Injects the Update CRUD operations into an Entity repository.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class UpdateOperationsTransformer implements ASTTransformation {
+
+    private static final String NEWLINE = '\n'
+    private static final String COMMA = ','
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -108,10 +112,10 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 identifier: identifier(entityNode),
                 o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}(entity)"
-                }.join('\n'),
+                }.join(NEWLINE),
                 o2o: components(entityNode).collect { ComponentPropertyModel ap ->
                     "update${ap.propertyName.capitalize()}(entity.${identifier(entityNode).propertyName}, entity.${ap.propertyName})"
-                }.join('\n')
+                }.join(NEWLINE)
             )
 
             repositoryClassNode.addMethod(new MethodNode(
@@ -136,7 +140,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
             entityProperties(ap.type).collect { p ->
                 colUpdates << "${p.columnName} = ?"
                 varUpdates << "entity.${p.propertyName}"
-            }.join(',')
+            }.join(COMMA)
         }
 
         def statement = codeS(
@@ -154,8 +158,8 @@ class UpdateOperationsTransformer implements ASTTransformation {
             name: o2op.propertyName,
             idCol: o2op.entityColumn,
             assocTable: o2op.lookupTable,
-            updates: colUpdates.join(','),
-            vars: varUpdates.join(',')
+            updates: colUpdates.join(COMMA),
+            vars: varUpdates.join(COMMA)
         )
 
         repositoryNode.addMethod(new MethodNode(
@@ -182,7 +186,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
             }
         }
 
-        String columnUpdates = columns.join(',')
+        String columnUpdates = columns.join(COMMA)
 
         String identifier = identifier(entityNode).columnName
 

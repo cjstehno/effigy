@@ -105,8 +105,8 @@ class PersonRepositoryTest {
         Person retrieved = personRepository.retrieve(id)
 
         assert retrieved.pets.size() == 2
-        assert retrieved.pets.find { p-> p.name == 'Chester' }.animal == Animal.CAT
-        assert retrieved.pets.find { p-> p.name == 'Fester' }.animal == Animal.SNAKE
+        assert retrieved.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
+        assert retrieved.pets.find { p -> p.name == 'Fester' }.animal == Animal.SNAKE
 
         def people = personRepository.retrieveAll()
         assert people.size() == 2
@@ -155,7 +155,7 @@ class PersonRepositoryTest {
         assert updated.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
     }
 
-    @Test void deleteAll(){
+    @Test void deleteAll() {
         Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
         Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
 

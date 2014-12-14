@@ -31,6 +31,8 @@ import java.sql.Types
  */
 class EntityModel {
 
+    private static final String PLURAL = 's'
+
     static IdentifierPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
         idFieldNode ? extractIdentifier(idFieldNode) : null
@@ -98,10 +100,9 @@ class EntityModel {
     static String entityTable(ClassNode entityNode) {
         AnnotationNode effigyAnnotNode = entityNode.getAnnotations(make(Entity))[0]
         if (effigyAnnotNode) {
-            return extractString(effigyAnnotNode, 'table', entityNode.nameWithoutPackage.toLowerCase() + 's')
-        } else {
-            return entityNode.nameWithoutPackage.toLowerCase() + 's'
+            return extractString(effigyAnnotNode, 'table', entityNode.nameWithoutPackage.toLowerCase() + PLURAL)
         }
+        return entityNode.nameWithoutPackage.toLowerCase() + PLURAL
     }
 
     static List<EmbeddedPropertyModel> embeddedEntityProperties(ClassNode entityNode) {
@@ -128,20 +129,19 @@ class EntityModel {
                     assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
                 )
 
-            } else {
-                // handle naked entity type (1-1 association)
-
-                String entityTableName = entityTable(entityNode)
-
-                return new AssociationPropertyModel(
-                    propertyName: assoc.name,
-                    type: assoc.type,
-                    associatedType: assoc.type,
-                    joinTable: "${entityTableName}_${assoc.name}",
-                    entityColumn: "${entityTableName}_id",
-                    assocColumn: "${entityTable(assoc.type)}_id"
-                )
             }
+
+            // handle naked entity type (1-1 association)
+            String entityTableName = entityTable(entityNode)
+
+            return new AssociationPropertyModel(
+                propertyName: assoc.name,
+                type: assoc.type,
+                associatedType: assoc.type,
+                joinTable: "${entityTableName}_${assoc.name}",
+                entityColumn: "${entityTableName}_id",
+                assocColumn: "${entityTable(assoc.type)}_id"
+            )
         }
     }
 
@@ -203,14 +203,15 @@ class EntityModel {
         if (fieldColumnAnnot) {
             return extractString(fieldColumnAnnot, 'value')
 
-        } else {
-            return StringUtils.camelCaseToUnderscore(field.name)
         }
+        return StringUtils.camelCaseToUnderscore(field.name)
     }
 
     // FIXME: need to expand the support here
     private static int sqlType(final FieldNode fieldNode) {
-        if (fieldNode.type.enum) return Types.VARCHAR
+        if (fieldNode.type.enum) {
+            return Types.VARCHAR
+        }
 
         switch (fieldNode.type.name) {
             case 'java.lang.String': return Types.VARCHAR

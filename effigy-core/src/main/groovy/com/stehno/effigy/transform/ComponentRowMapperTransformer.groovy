@@ -42,7 +42,11 @@ import java.sql.ResultSet
  * Transformer used for creating a RowMapper instance for the Component associations of an Entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class ComponentRowMapperTransformer implements ASTTransformation {
+
+    private static final String PREFIX = 'prefix'
+    private static final String MAP = 'map'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -63,7 +67,7 @@ class ComponentRowMapperTransformer implements ASTTransformation {
 
     private static boolean rowMapperExists(ClassNode assocNode, SourceUnit source) {
         String mapperName = rowMapperName(assocNode)
-        source.AST.getClasses().find { cn -> cn.name == mapperName }
+        source.AST.classes.find { cn -> cn.name == mapperName }
     }
 
     private static GString rowMapperName(ClassNode assocNode) {
@@ -90,8 +94,8 @@ class ComponentRowMapperTransformer implements ASTTransformation {
                 PROTECTED,
                 'createEntity',
                 newClass(assocNode),
-                returnS(ctorX(newClass(assocNode), args(varX('map')))),
-                [param(makeClassSafe(Map), 'map')] as Parameter[]
+                returnS(ctorX(newClass(assocNode), args(varX(MAP)))),
+                [param(makeClassSafe(Map), MAP)] as Parameter[]
             ))
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(assocNode), block(
@@ -134,8 +138,8 @@ class ComponentRowMapperTransformer implements ASTTransformation {
             PUBLIC | STATIC,
             'rowMapper',
             newClass(mapperClassNode),
-            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX('prefix'), varX('prefix'))])))),
-            [param(STRING_TYPE, 'prefix', constX(''))] as Parameter[]
+            returnS(ctorX(newClass(mapperClassNode), args(new MapExpression([new MapEntryExpression(constX(PREFIX), varX(PREFIX))])))),
+            [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
         info ComponentRowMapperTransformer, 'Injected row mapper helper method for {}', assocNode.name

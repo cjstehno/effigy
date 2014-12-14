@@ -4,6 +4,7 @@ subprojects {
 
     apply plugin:'groovy'
 	apply plugin:'maven-publish'
+    apply plugin: 'codenarc'
 
     compileJava {
         sourceCompatibility = 1.8
@@ -24,6 +25,25 @@ subprojects {
 
     test {
         jvmArgs '-Xverify:none'
+    }
+
+    codenarc {
+        toolVersion = '0.22'
+    }
+
+    codenarcMain {
+        ignoreFailures false
+        configFile file('../config/codenarc/codenarc-main.rules')
+
+        maxPriority1Violations 0
+        maxPriority2Violations 10
+        maxPriority3Violations 20
+    }
+
+    codenarcTest {
+        // we won't fail the build for test inspection errors
+        ignoreFailures true
+        configFile file('../config/codenarc/codenarc-test.rules')
     }
 }
 

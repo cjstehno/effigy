@@ -21,6 +21,8 @@ package com.stehno.effigy.logging
  */
 class Logger {
 
+    private static final String REPLACEMENT_PATTERN = /\{\}/
+
     static enum Level {
         OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL
     }
@@ -73,18 +75,14 @@ class Logger {
     }
 
     private static void log(Level lvl, Class clazz, String msg, Object... args) {
-        if (level.ordinal() >= lvl.ordinal()) {
-            args.each { arg ->
-                msg = msg.replaceFirst(/\{\}/, (arg != null ? arg : '<null>') as String)
-            }
-            println "[${lvl.name()}:${clazz.simpleName}] $msg"
-        }
+        logClos(lvl, clazz, msg) { args }
     }
 
+    @SuppressWarnings(['Println', 'ParameterReassignment'])
     private static void logClos(Level lvl, Class clazz, String msg, Closure closure) {
         if (level.ordinal() >= lvl.ordinal()) {
             closure().each { arg ->
-                msg = msg.replaceFirst(/\{\}/, (arg != null ? arg : '<null>') as String)
+                msg = msg.replaceFirst(REPLACEMENT_PATTERN, (arg != null ? arg : '<null>') as String)
             }
             println "[${lvl.name()}:${clazz.simpleName}] $msg"
         }

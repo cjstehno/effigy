@@ -45,7 +45,14 @@ import java.sql.ResultSet
  * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@SuppressWarnings('GStringExpressionWithinString')
 class EntityResultSetExtractorTransformer implements ASTTransformation {
+
+    private static final String ROW_MAPPER = 'rowMapper'
+    private static final String MAP_ASSOCIATIONS = 'mapAssociations'
+    private static final String RS = 'rs'
+    private static final String PRIMARY_ROW_MAPPER = 'primaryRowMapper'
+    private static final String ENTITY = 'entity'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -81,12 +88,12 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             )
 
             classNode.addMethod(new MethodNode(
-                'primaryRowMapper',
+                PRIMARY_ROW_MAPPER,
                 Modifier.PROTECTED,
                 makeClassSafe(RowMapper),
                 [] as Parameter[],
                 [] as ClassNode[],
-                new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
+                new ReturnStatement(callX(classX(newClass(entityNode)), ROW_MAPPER, args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
             associations(entityNode).each { ap ->
@@ -96,7 +103,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                     makeClassSafe(RowMapper),
                     [] as Parameter[],
                     [] as ClassNode[],
-                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), ROW_MAPPER, args(constX("${ap.propertyName}_" as String))))
                 ))
             }
 
@@ -107,15 +114,15 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                     makeClassSafe(RowMapper),
                     [] as Parameter[],
                     [] as ClassNode[],
-                    new ReturnStatement(callX(classX(newClass(ap.type)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                    new ReturnStatement(callX(classX(newClass(ap.type)), ROW_MAPPER, args(constX("${ap.propertyName}_" as String))))
                 ))
             }
 
             classNode.addMethod(new MethodNode(
-                'mapAssociations',
+                MAP_ASSOCIATIONS,
                 Modifier.PROTECTED,
                 VOID_TYPE,
-                [param(makeClassSafe(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
+                [param(makeClassSafe(ResultSet), RS), param(OBJECT_TYPE, ENTITY)] as Parameter[],
                 [] as ClassNode[],
                 codeS(
                     '''
@@ -192,12 +199,12 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             )
 
             classNode.addMethod(new MethodNode(
-                'primaryRowMapper',
+                PRIMARY_ROW_MAPPER,
                 Modifier.PROTECTED,
                 makeClassSafe(RowMapper),
                 [] as Parameter[],
                 [] as ClassNode[],
-                new ReturnStatement(callX(classX(newClass(entityNode)), 'rowMapper', args(constX("${entityTable(entityNode)}_" as String))))
+                new ReturnStatement(callX(classX(newClass(entityNode)), ROW_MAPPER, args(constX("${entityTable(entityNode)}_" as String))))
             ))
 
             associations(entityNode).each { ap ->
@@ -207,7 +214,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                     makeClassSafe(RowMapper),
                     [] as Parameter[],
                     [] as ClassNode[],
-                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                    new ReturnStatement(callX(classX(newClass(ap.associatedType)), ROW_MAPPER, args(constX("${ap.propertyName}_" as String))))
                 ))
             }
 
@@ -218,15 +225,15 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                     makeClassSafe(RowMapper),
                     [] as Parameter[],
                     [] as ClassNode[],
-                    new ReturnStatement(callX(classX(newClass(ap.type)), 'rowMapper', args(constX("${ap.propertyName}_" as String))))
+                    new ReturnStatement(callX(classX(newClass(ap.type)), ROW_MAPPER, args(constX("${ap.propertyName}_" as String))))
                 ))
             }
 
             classNode.addMethod(new MethodNode(
-                'mapAssociations',
+                MAP_ASSOCIATIONS,
                 Modifier.PROTECTED,
                 VOID_TYPE,
-                [param(makeClassSafe(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[],
+                [param(makeClassSafe(ResultSet), RS), param(OBJECT_TYPE, ENTITY)] as Parameter[],
                 [] as ClassNode[],
                 codeS(
                     '''
@@ -253,7 +260,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            error EntityResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            error EntityResultSetExtractorTransformer, 'Problem building collection ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
