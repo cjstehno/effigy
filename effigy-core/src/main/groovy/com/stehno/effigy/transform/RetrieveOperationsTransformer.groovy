@@ -91,26 +91,30 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         }
     }
 
-    private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
+    // FIXME: move to common area
+    static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
             declS(varX(MAPPER), callX(classX(newClass(entityNode)), ROW_MAPPER)),
-
             codeS(
                 '''
                     jdbcTemplate.queryForObject(
-                        'select ${columnNames} from ${table} where ${identifier.columnName}=?',
+                        '$sql',
                         mapper,
                         entityId
                     )
-                    ''',
-                table: entityTable(entityNode),
-                identifier: identifier(entityNode),
-                columnNames: columnNames(entityNode)
+                ''',
+                sql: sqlWithoutRelations(entityNode, true)
             )
         )
     }
 
-    private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
+    static String sqlWithoutRelations(ClassNode entityNode, boolean single = false) {
+        String sql = "select ${columnNames(entityNode)} from ${entityTable(entityNode)}"
+        single ? "$sql where ${identifier(entityNode).columnName}=?" : sql
+    }
+
+    // FIXME: move to common area
+    static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
             declS(varX(EXTRACTOR), callX(classX(newClass(entityNode)), 'associationExtractor')),
 
@@ -169,17 +173,17 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             codeS(
                 '''
                     jdbcTemplate.query(
-                        'select ${columnNames} from ${table}',
+                        '$sql',
                         mapper
                     )
                 ''',
-                table: entityTable(entityNode),
-                columnNames: columnNames(entityNode)
+                sql: sqlWithoutRelations(entityNode)
             )
         )
     }
 
-    private static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
+    // FIXME: this needs to be extracted into a speparate class
+    static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
         String sql = 'select '
 
         String entityTableName = entityTable(entityNode)

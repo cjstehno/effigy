@@ -10,4 +10,9 @@ import people.entity.Person
 @Repository(forEntity = Person) @CrudOperations
 abstract class EffigyPersonRepository implements PersonRepository {
 
+    abstract List<Person> findByLastName(String lastName)
+
+    List<Person> findBySomething(String something) {
+        throw new UnsupportedOperationException('This is not valid')
+    }
 }

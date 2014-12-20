@@ -25,6 +25,15 @@ import java.lang.annotation.*
  * Annotation used to inject Finder operations into a repository. The repository class must also be annotated with the Effigy @Repository annotation.
  *
  * This annotation injects the CrudOperations.count(entityId), CrudOperations.count() CrudOperations.exists(entityId) methods.
+ *
+ * With the @FindOperations annotation you also et added finder methods based on methods defined by the interface or abstract methods of the annotated
+ * repository. All methods of the name pattern "findBy[propName][[And][propName]...]" will be used to generate finder methods based on the method
+ * name. Concrete methods with names matching the pattern will be ignored.
+ *
+ * The return type of the method should be the entity type in singular, collection or array form, which will be used in generating the method
+ * implementation.
+ *
+ * Finders will not throw an exception if there is no data is retrieved.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

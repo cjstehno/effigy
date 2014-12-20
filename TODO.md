@@ -9,10 +9,6 @@
 - rename the extractors to Entity.extractor() and collectionExtractor()
 ! decouple the create/update method injection code for associations
 
-- add generation for other helper methods
-    count()
-    exists(entityId)
-
 - add generation for finders/helpers
     findXYZ
     countXYZ
@@ -27,12 +23,10 @@
     (are there already spring annotations for thsi stuff)
 
 
-@FindOperations - should be part of CrudOperations collected transform, and as stand alone
-! the various CRUD operations are somewhat interdependent, this should be documented
 
-with the FindOperations annotation you get added code-defined finder methods based on interface or abstract methods of the repository
 
-all methods of the name pattern "find[One|]By(propName)[And|Or|][propName]..." - mainly focus on the find prefix, which should be allowable from an interface or as an abstract method signature.
+
+
 
 Entity findOneById(id) - like retrieve(id); however, no error if not exist
 - allows findOne

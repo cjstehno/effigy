@@ -17,11 +17,13 @@
 package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.model.EntityModel.entityTable
-import static com.stehno.effigy.transform.model.EntityModel.identifier
+import static com.stehno.effigy.transform.RetrieveOperationsTransformer.retrieveSingleWitRelations
+import static com.stehno.effigy.transform.RetrieveOperationsTransformer.retrieveSingleWithoutRelations
+import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
+import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
@@ -47,13 +49,37 @@ class FindOperationsTransformer implements ASTTransformation {
         AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
         if (repositoryAnnot) {
             ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
-            info RetrieveOperationsTransformer, 'Adding retrieve operations to repository ({})', repositoryNode.name
+            info FindOperationsTransformer, 'Adding retrieve operations to repository ({})', repositoryNode.name
 
             injectCountMethod repositoryNode, entityNode
             injectExistsMethod repositoryNode, entityNode
 
+            repositoryNode.allDeclaredMethods.findAll { m -> !m.static && m.abstract && m.name.startsWith('findBy') }.each { finder ->
+                injectFinderMethod repositoryNode, entityNode, finder
+            }
+
         } else {
-            warn CreateOperationsTransformer, 'FindOperations can only be applied to classes annotated with Effigy @Repository - ignored.'
+            warn FindOperationsTransformer, 'FindOperations can only be applied to classes annotated with Effigy @Repository - ignored.'
+        }
+    }
+
+    private static void injectFinderMethod(ClassNode repositoryNode, ClassNode entityNode, MethodNode methodNode) {
+        info FindOperationsTransformer, 'Injecting finder ({}) into repository ({}).', methodNode.name, repositoryNode.name
+
+        def criteria = (methodNode.name - 'findBy').split('And')
+
+        boolean returnOne = !(methodNode.returnType.array || methodNode.returnType == LIST_TYPE)
+
+        // TODO: verify that I have parameters expected from method name (as params and on entity)
+        // TODO: use returnOne to limit
+        // TODO: pull out JdbcTemplateHelper to build jdbcTemplate call nodes (and a sql builder)
+
+        methodNode.modifiers = Modifier.PUBLIC
+
+        if (hasAssociatedEntities(entityNode)) {
+            methodNode.code = retrieveSingleWitRelations(entityNode)
+        } else {
+            methodNode.code = retrieveSingleWithoutRelations(entityNode)
         }
     }
 
@@ -81,7 +107,7 @@ class FindOperationsTransformer implements ASTTransformation {
                 [param(identifier(entityNode).type, 'entityId', constX(null))] as Parameter[]
             ))
         } catch (ex) {
-            error RetrieveOperationsTransformer, 'Unable to inject count method into repository ({}): {}', repositoryNode.name, ex.message
+            error FindOperationsTransformer, 'Unable to inject count method into repository ({}): {}', repositoryNode.name, ex.message
             throw ex
         }
     }
@@ -97,16 +123,14 @@ class FindOperationsTransformer implements ASTTransformation {
                 'exists',
                 ClassHelper.boolean_TYPE,
                 block(codeS(
-                    '''
-                        jdbcTemplate.queryForObject('select $idCol from $table where $idCol=?', Object, entityId) != null
-                    ''',
+                    'jdbcTemplate.queryForObject(\'select $idCol from $table where $idCol=?\', Object, entityId) != null',
                     table: entityTable(entityNode),
                     idCol: identifier(entityNode).columnName
                 )),
                 [param(identifier(entityNode).type, 'entityId')] as Parameter[]
             ))
         } catch (ex) {
-            error RetrieveOperationsTransformer, 'Unable to inject exists method into repository ({}): {}', repositoryNode.name, ex.message
+            error FindOperationsTransformer, 'Unable to inject exists method into repository ({}): {}', repositoryNode.name, ex.message
             throw ex
         }
     }

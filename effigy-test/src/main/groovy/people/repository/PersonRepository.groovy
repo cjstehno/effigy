@@ -8,10 +8,5 @@ import people.entity.Person
  */
 interface PersonRepository extends CrudOperations<Person,Long>{
 
-    /*
-        FIXME: implement generated finders for simple things
-        -- probably need an annotation to ignore methods on the impl side in case
-           user wants to implement it themselves
-     */
-//    List<Person> findByMarried(boolean status)
+    List<Person> findByMarried(boolean married)
 }
