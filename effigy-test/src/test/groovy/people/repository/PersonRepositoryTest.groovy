@@ -49,6 +49,8 @@ class PersonRepositoryTest {
 
         assert id == 1
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+        assert personRepository.count() == 1
+        assert personRepository.count(id) == 1
 
         def result = personRepository.retrieve(1)
         assert result == personA
@@ -58,6 +60,9 @@ class PersonRepositoryTest {
         def idB = personRepository.create(personB)
 
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
+        assert personRepository.count() == 2
+        assert personRepository.count(id) == 1
+        assert personRepository.count(idB) == 1
 
         def people = personRepository.retrieveAll()
         assert people.size() == 2
@@ -66,9 +71,15 @@ class PersonRepositoryTest {
 
         assert personRepository.delete(1)
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
+        assert personRepository.count() == 1
+        assert personRepository.count(id) == 0
+        assert personRepository.count(idB) == 1
 
         assert personRepository.deleteAll()
         assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+        assert personRepository.count() == 0
+        assert personRepository.count(id) == 0
+        assert personRepository.count(idB) == 0
     }
 
     @Test void update() {

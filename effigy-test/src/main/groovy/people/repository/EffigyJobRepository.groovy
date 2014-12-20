@@ -24,5 +24,5 @@ import people.entity.Job
  * Created by cjstehno on 12/14/2014.
  */
 @Repository(forEntity = Job) @CrudOperations
-class EffigyJobRepository implements JobRepository {
+abstract class EffigyJobRepository implements JobRepository {
 }

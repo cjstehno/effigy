@@ -22,6 +22,9 @@ package com.stehno.effigy.repository
  */
 interface CrudOperations<E, K> {
 
+    // FIXME: this interface should be broken up like the annotations
+    // FIXME: convert the *All() methods to be empty calls basically the singular call with default=null for empty method call - more groovyesque
+
     /**
      * Persists the new entity in the database. The ID value will be returned and also updated on the
      * entity instance passed into the method.
@@ -71,4 +74,10 @@ interface CrudOperations<E, K> {
      * @return a value of true, if any entities were actually deleted
      */
     boolean deleteAll()
+
+    int count()
+
+    int count(K entityId)
+
+    boolean exists(K entityId)
 }

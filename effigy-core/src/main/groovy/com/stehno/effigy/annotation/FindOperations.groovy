@@ -16,27 +16,20 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.*
+import com.stehno.effigy.transform.FindOperationsTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
 
 /**
- * Annotation used to inject the Create, Retrieve, Update and Delete operations into a repository. The repository class must also be annotated with
- * the @EffigyRepository annotation.
+ * Annotation used to inject Finder operations into a repository. The repository class must also be annotated with the Effigy @Repository annotation.
  *
- * This annotation injects all of the methods from the CrudOperations interface into a repository.
+ * This annotation injects the CrudOperations.count(entityId), CrudOperations.count() CrudOperations.exists(entityId) methods.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [
-    CreateOperationsTransformer,
-    RetrieveOperationsTransformer,
-    UpdateOperationsTransformer,
-    DeleteOperationsTransformer,
-    FindOperationsTransformer
-])
-@interface CrudOperations {
+@GroovyASTTransformationClass(classes = [FindOperationsTransformer])
+@interface FindOperations {
 
 }
