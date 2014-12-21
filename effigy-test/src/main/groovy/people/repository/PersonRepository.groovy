@@ -8,5 +8,5 @@ import people.entity.Person
  */
 interface PersonRepository extends CrudOperations<Person,Long>{
 
-    List<Person> findByMarried(boolean married)
+//    List<Person> findByMarried(boolean married)
 }

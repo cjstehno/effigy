@@ -19,7 +19,7 @@ package com.stehno.effigy.transform
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
@@ -44,9 +44,6 @@ import java.lang.reflect.Modifier
 @SuppressWarnings('GStringExpressionWithinString')
 class RetrieveOperationsTransformer implements ASTTransformation {
 
-    private static final String EXTRACTOR = 'extractor'
-    private static final String ROW_MAPPER = 'rowMapper'
-    private static final String MAPPER = 'mapper'
     private static final String COMMA = ','
 
     @Override
@@ -81,7 +78,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
                 'retrieve',
                 Modifier.PUBLIC,
                 newClass(entityNode),
-                [new Parameter(identifier(entityNode).type, 'entityId')] as Parameter[],
+                [param(identifier(entityNode).type, 'entityId')] as Parameter[],
                 null,
                 hasAssociatedEntities(entityNode) ? retrieveSingleWitRelations(entityNode) : retrieveSingleWithoutRelations(entityNode)
             ))
@@ -91,42 +88,28 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         }
     }
 
-    // FIXME: move to common area
-    static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
+    private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX(MAPPER), callX(classX(newClass(entityNode)), ROW_MAPPER)),
-            codeS(
-                '''
-                    jdbcTemplate.queryForObject(
-                        '$sql',
-                        mapper,
-                        entityId
-                    )
-                ''',
-                sql: sqlWithoutRelations(entityNode, true)
+            queryForObject(
+                sqlWithoutRelations(entityNode, true),
+                entityRowMapper(entityNode),
+                varX('entityId')
             )
         )
     }
 
+    // FIXME: move to common area
     static String sqlWithoutRelations(ClassNode entityNode, boolean single = false) {
         String sql = "select ${columnNames(entityNode)} from ${entityTable(entityNode)}"
         single ? "$sql where ${identifier(entityNode).columnName}=?" : sql
     }
 
-    // FIXME: move to common area
-    static Statement retrieveSingleWitRelations(ClassNode entityNode) {
+    private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
-            declS(varX(EXTRACTOR), callX(classX(newClass(entityNode)), 'associationExtractor')),
-
-            codeS(
-                '''
-                    jdbcTemplate.query(
-                        '$sql',
-                        extractor,
-                        entityId
-                    )
-                    ''',
-                sql: sqlWithRelations(entityNode, true)
+            query(
+                sqlWithRelations(entityNode, true),
+                entityExtractor(entityNode),
+                varX('entityId')
             )
         )
     }
@@ -152,32 +135,18 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static Statement retrieveAllWithRelations(ClassNode entityNode) {
         block(
-            declS(varX(EXTRACTOR), callX(classX(newClass(entityNode)), 'collectionAssociationExtractor')),
-
-            codeS(
-                '''
-                    jdbcTemplate.query(
-                        '$sql',
-                        extractor
-                    )
-                    ''',
-                sql: sqlWithRelations(entityNode)
+            query(
+                sqlWithRelations(entityNode),
+                entityCollectionExtractor(entityNode)
             )
         )
     }
 
     private static Statement retrieveAllWithoutRelations(ClassNode entityNode) {
         block(
-            declS(varX(MAPPER), callX(classX(newClass(entityNode)), ROW_MAPPER)),
-
-            codeS(
-                '''
-                    jdbcTemplate.query(
-                        '$sql',
-                        mapper
-                    )
-                ''',
-                sql: sqlWithoutRelations(entityNode)
+            query(
+                sqlWithoutRelations(entityNode),
+                entityRowMapper(entityNode)
             )
         )
     }

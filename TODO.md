@@ -47,3 +47,8 @@ need ability to define more complex criteria, probably just as sql
 List<Entity> findWhere(String name, Date birthDate)
 - take the default select sql and append based on param position or name
     name=:name and birth_date between (x and :birthDate)
+
+
+Consider alternate sql dsl options:
+    http://www.jooq.org/doc/3.0/manual/getting-started/use-cases/jooq-as-a-standalone-sql-builder/
+    http://jodd.org/doc/db/sqlgenerator.html

@@ -15,15 +15,12 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.RetrieveOperationsTransformer.retrieveSingleWitRelations
-import static com.stehno.effigy.transform.RetrieveOperationsTransformer.retrieveSingleWithoutRelations
-import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.model.EntityModel.entityTable
+import static com.stehno.effigy.transform.model.EntityModel.identifier
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
-import static org.codehaus.groovy.ast.ClassHelper.LIST_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
@@ -35,7 +32,6 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
-
 /**
  * Created by cjstehno on 12/20/2014.
  */
@@ -66,7 +62,7 @@ class FindOperationsTransformer implements ASTTransformation {
     private static void injectFinderMethod(ClassNode repositoryNode, ClassNode entityNode, MethodNode methodNode) {
         info FindOperationsTransformer, 'Injecting finder ({}) into repository ({}).', methodNode.name, repositoryNode.name
 
-        def criteria = (methodNode.name - 'findBy').split('And')
+/*        def criteria = (methodNode.name - 'findBy').split('And')
 
         boolean returnOne = !(methodNode.returnType.array || methodNode.returnType == LIST_TYPE)
 
@@ -80,7 +76,7 @@ class FindOperationsTransformer implements ASTTransformation {
             methodNode.code = retrieveSingleWitRelations(entityNode)
         } else {
             methodNode.code = retrieveSingleWithoutRelations(entityNode)
-        }
+        }*/
     }
 
     /**
