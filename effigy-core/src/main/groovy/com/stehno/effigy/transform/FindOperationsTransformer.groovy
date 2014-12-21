@@ -15,13 +15,14 @@
  */
 
 package com.stehno.effigy.transform
-
 import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.model.EntityModel.entityTable
-import static com.stehno.effigy.transform.model.EntityModel.identifier
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithRelations
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutRelations
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
@@ -33,7 +34,6 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
-
 /**
  * Created by cjstehno on 12/20/2014.
  */
@@ -66,21 +66,47 @@ class FindOperationsTransformer implements ASTTransformation {
     private static void injectFinderMethod(ClassNode repositoryNode, ClassNode entityNode, MethodNode methodNode) {
         info FindOperationsTransformer, 'Injecting finder ({}) into repository ({}).', methodNode.name, repositoryNode.name
 
-/*        def criteria = (methodNode.name - 'findBy').split('And')
+        def criteriaParams = (methodNode.name - 'findBy').split('And').collect { "${it[0].toLowerCase()}${it[1..-1]}" }
 
-        boolean returnOne = !(methodNode.returnType.array || methodNode.returnType == LIST_TYPE)
+        def entityTable = entityTable(entityNode)
 
-        // TODO: verify that I have parameters expected from method name (as params and on entity)
-        // TODO: use returnOne to limit
-        // TODO: pull out JdbcTemplateHelper to build jdbcTemplate call nodes (and a sql builder)
+        def wheres = criteriaParams.collect { propName ->
+            def param = methodNode.parameters.find { it.name == propName as String }
+            assert param, "Finder mismatch: No parameter exists for criteria ($propName)"
+
+            def property = entityProperty(entityNode, propName as String)
+            assert property, "Finder mismatch: No entity property exists for criteria ($propName)"
+
+            "$entityTable.${property.columnName}=?"
+        }
+
+        def params = criteriaParams.collect { propName ->
+            varX(propName)
+        }
 
         methodNode.modifiers = Modifier.PUBLIC
 
         if (hasAssociatedEntities(entityNode)) {
-            methodNode.code = retrieveSingleWitRelations(entityNode)
+            methodNode.code = block(
+                query(
+                    selectWithRelations(entityNode, wheres),
+                    entityCollectionExtractor(entityNode),
+                    params
+                )
+            )
         } else {
-            methodNode.code = retrieveSingleWithoutRelations(entityNode)
-        }*/
+            methodNode.code = block(
+                query(
+                    selectWithoutRelations(entityNode, wheres),
+                    entityRowMapper(entityNode),
+                    params
+                )
+            )
+        }
+
+        if (!repositoryNode.hasMethod(methodNode.name, methodNode.parameters)) {
+            repositoryNode.addMethod(methodNode)
+        }
     }
 
     /**

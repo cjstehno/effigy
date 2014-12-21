@@ -18,19 +18,16 @@ package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithRelations
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutRelations
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
-import static com.stehno.effigy.transform.util.SqlBuilder.select
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.Repository
-import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.model.EntityPropertyModel
-import com.stehno.effigy.transform.model.IdentifierPropertyModel
-import com.stehno.effigy.transform.util.SelectSql
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
@@ -48,7 +45,6 @@ import java.lang.reflect.Modifier
 class RetrieveOperationsTransformer implements ASTTransformation {
 
     private static final String ENTITY_ID = 'entityId'
-    private static final String SEPARATOR = '------------------------------'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -95,32 +91,19 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
             queryForObject(
-                sqlWithoutRelations(entityNode, true),
+                selectWithoutRelations(entityNode, ["${identifier(entityNode).columnName}=?"]),
                 entityRowMapper(entityNode),
-                varX(ENTITY_ID)
+                [varX(ENTITY_ID)]
             )
         )
-    }
-
-    // FIXME: move to common area(?)
-    static String sqlWithoutRelations(ClassNode entityNode, boolean single = false) {
-        SelectSql sql = select()
-            .columns(listColumnNames(entityNode))
-            .from(entityTable(entityNode))
-
-        if (single) {
-            sql.where("${identifier(entityNode).columnName}=?")
-        }
-
-        sql.build()
     }
 
     private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
             query(
-                sqlWithRelations(entityNode, true),
+                selectWithRelations(entityNode, ["${entityTable(entityNode)}.${identifier(entityNode).columnName}=?"]),
                 entityExtractor(entityNode),
-                varX(ENTITY_ID)
+                [varX(ENTITY_ID)]
             )
         )
     }
@@ -147,7 +130,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveAllWithRelations(ClassNode entityNode) {
         block(
             query(
-                sqlWithRelations(entityNode),
+                selectWithRelations(entityNode),
                 entityCollectionExtractor(entityNode)
             )
         )
@@ -156,75 +139,9 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveAllWithoutRelations(ClassNode entityNode) {
         block(
             query(
-                sqlWithoutRelations(entityNode),
+                selectWithoutRelations(entityNode),
                 entityRowMapper(entityNode)
             )
         )
-    }
-
-    // FIXME: this should be extracted into a shared class of some sort - used by finders too
-    static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
-        SelectSql selectSql = select()
-
-        String entityTableName = entityTable(entityNode)
-
-        // add entity columns
-        entityProperties(entityNode).each { p ->
-            addColumns(selectSql, p, entityTableName, entityTableName)
-        }
-
-        // add association cols
-        associations(entityNode).each { ap ->
-            String associatedTable = entityTable(ap.associatedType)
-
-            entityProperties(ap.associatedType).each { p ->
-                addColumns(selectSql, p, associatedTable, ap.propertyName)
-            }
-        }
-
-        // add component cols
-        components(entityNode).each { ap ->
-            entityProperties(ap.type).each { p ->
-                selectSql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
-            }
-        }
-
-        selectSql.from(entityTableName)
-
-        def entityIdentifier = identifier(entityNode)
-
-        associations(entityNode).each { ap ->
-            String associatedTable = entityTable(ap.associatedType)
-            IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
-
-            selectSql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
-            selectSql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
-        }
-
-        components(entityNode).each { ap ->
-            selectSql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
-        }
-
-        if (single) {
-            selectSql.where("${entityTableName}.${entityIdentifier.columnName}=?")
-        }
-
-        String sql = selectSql.build()
-
-        trace RetrieveOperationsTransformer, SEPARATOR
-        trace RetrieveOperationsTransformer, 'Sql for entity ({}): {}', entityNode.name, sql
-        trace RetrieveOperationsTransformer, SEPARATOR
-
-        sql
-    }
-
-    private static void addColumns(SelectSql selectSql, EntityPropertyModel p, String table, String prefix) {
-        if (p instanceof EmbeddedPropertyModel) {
-            p.columnNames.each { cn ->
-                selectSql.column(table, cn, "${prefix}_$cn")
-            }
-        } else {
-            selectSql.column(table, p.columnName as String, "${prefix}_${p.columnName}")
-        }
     }
 }

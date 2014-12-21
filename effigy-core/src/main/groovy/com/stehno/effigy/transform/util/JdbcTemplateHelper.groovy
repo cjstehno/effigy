@@ -47,19 +47,19 @@ class JdbcTemplateHelper {
         callX(classX(newClass(entityNode)), 'associationExtractor')
     }
 
-    static Statement query(String sql, Expression handler, Expression... params) {
+    static Statement query(String sql, Expression handler, List<Expression> params = []) {
         returnS(
             callX(varX('jdbcTemplate'), 'query', queryArgs(sql, handler, params))
         )
     }
 
-    static Statement queryForObject(String sql, Expression handler, Expression... params) {
+    static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
         returnS(
             callX(varX('jdbcTemplate'), 'queryForObject', queryArgs(sql, handler, params))
         )
     }
 
-    private static ArgumentListExpression queryArgs(String sql, Expression handler, Expression... params) {
+    private static ArgumentListExpression queryArgs(String sql, Expression handler, List<Expression> params) {
         ArgumentListExpression arguments = args(
             constX(sql),
             handler

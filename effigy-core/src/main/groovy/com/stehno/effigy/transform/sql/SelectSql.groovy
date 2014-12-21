@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform.util
+package com.stehno.effigy.transform.sql
 
 /**
  * Created by cjstehno on 12/21/2014.
  */
-class SqlBuilder {
-
-    static SelectSql select() {
-        new SelectSql()
-    }
-}
-
 class SelectSql {
 
     private final froms = []
@@ -62,6 +55,13 @@ class SelectSql {
 
     SelectSql leftOuterJoin(String joinTable, String tableA, String tableAId, String tableB, String tableBId) {
         leftOuterJoins << "LEFT OUTER JOIN $joinTable on $tableA.$tableAId=$tableB.$tableBId"
+        this
+    }
+
+    SelectSql wheres(List<String> criteria) {
+        if (criteria) {
+            wheres.addAll(criteria)
+        }
         this
     }
 

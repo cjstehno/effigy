@@ -314,4 +314,17 @@ class PersonRepositoryTest {
         assert !retrieved.married
         assert retrieved.job.title == 'Taco Vendor'
     }
+
+    @Test void finders() {
+        def idA = personRepository.create(new Person(PERSON_A))
+        def idB = personRepository.create(new Person(PERSON_B))
+
+        def marriedPeople = personRepository.findByMarried(true)
+        assert marriedPeople.size() == 1
+        assert marriedPeople[0].id == idB
+
+        def publics = personRepository.findByLastName('Public')
+        assert publics.size() == 1
+        assert publics[0].id == idA
+    }
 }

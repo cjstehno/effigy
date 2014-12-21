@@ -30,10 +30,12 @@ import java.lang.annotation.*
  * repository. All methods of the name pattern "findBy[propName][[And][propName]...]" will be used to generate finder methods based on the method
  * name. Concrete methods with names matching the pattern will be ignored.
  *
- * The return type of the method should be the entity type in singular, collection or array form, which will be used in generating the method
+ * The return type of the method should be the entity type in collection or array form, which will be used in generating the method
  * implementation.
  *
  * Finders will not throw an exception if there is no data is retrieved.
+ *
+ * Finder query criteria based on properties is only allowed for properties of the entity itself, not associations or embedded properties.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

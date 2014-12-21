@@ -58,38 +58,48 @@ class EntityModel {
         ) : null
     }
 
+    static EntityPropertyModel entityProperty(ClassNode entityNode, String propertyName) {
+        extractProperty(entityNode.fields.find { f ->
+            !f.static && f.name == propertyName && !isAssociation(f) && !isEntity(f.type)
+        })
+    }
+
     // does not include relationship fields
     static List<EntityPropertyModel> entityProperties(ClassNode entityNode, boolean includeId = true) {
         entityNode.fields.findAll { f ->
             !f.static && !f.name.startsWith('$') && !isAssociation(f) && !isEntity(f.type) && (includeId ? true : !annotatedWith(f, Id))
-        }.collect { f ->
-            if (annotatedWith(f, Id)) {
-                new IdentifierPropertyModel(
-                    columnName: extractFieldName(f),
-                    propertyName: f.name,
-                    type: f.type,
-                    columnType: sqlType(f)
-                )
+        }.collect { f -> extractProperty(f) }
+    }
 
-            } else if (annotatedWith(f, Version)) {
-                new VersionerPropertyModel(
-                    columnName: extractFieldName(f),
-                    propertyName: f.name,
-                    type: f.type,
-                    columnType: sqlType(f)
-                )
+    private static EntityPropertyModel extractProperty(FieldNode f) {
+        if (!f) {
+            null
+        } else if (annotatedWith(f, Id)) {
+            new IdentifierPropertyModel(
+                columnName: extractFieldName(f),
+                propertyName: f.name,
+                type: f.type,
+                columnType: sqlType(f)
+            )
 
-            } else if (annotatedWith(f, Embedded)) {
-                extractEmbeddedProperty(f)
+        } else if (annotatedWith(f, Version)) {
+            new VersionerPropertyModel(
+                columnName: extractFieldName(f),
+                propertyName: f.name,
+                type: f.type,
+                columnType: sqlType(f)
+            )
 
-            } else {
-                new FieldPropertyModel(
-                    columnName: extractFieldName(f),
-                    propertyName: f.name,
-                    type: f.type,
-                    columnType: sqlType(f)
-                )
-            }
+        } else if (annotatedWith(f, Embedded)) {
+            extractEmbeddedProperty(f)
+
+        } else {
+            new FieldPropertyModel(
+                columnName: extractFieldName(f),
+                propertyName: f.name,
+                type: f.type,
+                columnType: sqlType(f)
+            )
         }
     }
 
