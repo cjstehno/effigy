@@ -47,6 +47,7 @@ import java.sql.ResultSet
 class EntityRowMapperTransformer implements ASTTransformation {
 
     private static final String PREFIX = 'prefix'
+    private static final String DATA = 'data'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -77,8 +78,8 @@ class EntityRowMapperTransformer implements ASTTransformation {
                     PROTECTED,
                     "new${emb.propertyName.capitalize()}",
                     newClass(emb.type),
-                    returnS(ctorX(newClass(emb.type), args(varX('data')))),
-                    [param(makeClassSafe(Map), 'data')] as Parameter[]
+                    returnS(ctorX(newClass(emb.type), args(varX(DATA)))),
+                    [param(makeClassSafe(Map), DATA)] as Parameter[]
                 ))
             }
 

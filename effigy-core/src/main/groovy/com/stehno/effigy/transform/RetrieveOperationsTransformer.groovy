@@ -28,6 +28,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
+import com.stehno.effigy.transform.model.EntityPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import com.stehno.effigy.transform.util.SelectSql
 import org.codehaus.groovy.ast.*
@@ -46,7 +47,8 @@ import java.lang.reflect.Modifier
 @SuppressWarnings('GStringExpressionWithinString')
 class RetrieveOperationsTransformer implements ASTTransformation {
 
-    private static final String COMMA = ','
+    private static final String ENTITY_ID = 'entityId'
+    private static final String SEPARATOR = '------------------------------'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -80,7 +82,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
                 'retrieve',
                 Modifier.PUBLIC,
                 newClass(entityNode),
-                [param(identifier(entityNode).type, 'entityId')] as Parameter[],
+                [param(identifier(entityNode).type, ENTITY_ID)] as Parameter[],
                 null,
                 hasAssociatedEntities(entityNode) ? retrieveSingleWitRelations(entityNode) : retrieveSingleWithoutRelations(entityNode)
             ))
@@ -95,7 +97,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             queryForObject(
                 sqlWithoutRelations(entityNode, true),
                 entityRowMapper(entityNode),
-                varX('entityId')
+                varX(ENTITY_ID)
             )
         )
     }
@@ -118,7 +120,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             query(
                 sqlWithRelations(entityNode, true),
                 entityExtractor(entityNode),
-                varX('entityId')
+                varX(ENTITY_ID)
             )
         )
     }
@@ -160,7 +162,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         )
     }
 
-    // FIXME: this needs to be extracted into a speparate class
+    // FIXME: this should be extracted into a shared class of some sort - used by finders too
     static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
         SelectSql selectSql = select()
 
@@ -168,13 +170,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
         // add entity columns
         entityProperties(entityNode).each { p ->
-            if (p instanceof EmbeddedPropertyModel) {
-                p.columnNames.each { cn ->
-                    selectSql.column(entityTableName, cn, "${entityTableName}_${cn}")
-                }
-            } else {
-                selectSql.column(entityTableName, p.columnName as String, "${entityTableName}_${p.columnName}")
-            }
+            addColumns(selectSql, p, entityTableName, entityTableName)
         }
 
         // add association cols
@@ -182,13 +178,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
             String associatedTable = entityTable(ap.associatedType)
 
             entityProperties(ap.associatedType).each { p ->
-                if (p instanceof EmbeddedPropertyModel) {
-                    p.columnNames.each { cn ->
-                        selectSql.column(associatedTable, cn, "${ap.propertyName}_${cn}")
-                    }
-                } else {
-                    selectSql.column(associatedTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
-                }
+                addColumns(selectSql, p, associatedTable, ap.propertyName)
             }
         }
 
@@ -221,10 +211,20 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
         String sql = selectSql.build()
 
-        trace RetrieveOperationsTransformer, '------------------------------'
+        trace RetrieveOperationsTransformer, SEPARATOR
         trace RetrieveOperationsTransformer, 'Sql for entity ({}): {}', entityNode.name, sql
-        trace RetrieveOperationsTransformer, '------------------------------'
+        trace RetrieveOperationsTransformer, SEPARATOR
 
         sql
+    }
+
+    private static void addColumns(SelectSql selectSql, EntityPropertyModel p, String table, String prefix) {
+        if (p instanceof EmbeddedPropertyModel) {
+            p.columnNames.each { cn ->
+                selectSql.column(table, cn, "${prefix}_$cn")
+            }
+        } else {
+            selectSql.column(table, p.columnName as String, "${prefix}_${p.columnName}")
+        }
     }
 }

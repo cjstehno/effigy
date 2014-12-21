@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.model.EntityModel.identifier
@@ -32,11 +33,14 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
+
 /**
  * Created by cjstehno on 12/20/2014.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class FindOperationsTransformer implements ASTTransformation {
+
+    private static final String ENTITY_ID = 'entityId'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -100,7 +104,7 @@ class FindOperationsTransformer implements ASTTransformation {
                     table: entityTable(entityNode),
                     idCol: identifier(entityNode).columnName
                 )),
-                [param(identifier(entityNode).type, 'entityId', constX(null))] as Parameter[]
+                [param(identifier(entityNode).type, ENTITY_ID, constX(null))] as Parameter[]
             ))
         } catch (ex) {
             error FindOperationsTransformer, 'Unable to inject count method into repository ({}): {}', repositoryNode.name, ex.message
@@ -123,7 +127,7 @@ class FindOperationsTransformer implements ASTTransformation {
                     table: entityTable(entityNode),
                     idCol: identifier(entityNode).columnName
                 )),
-                [param(identifier(entityNode).type, 'entityId')] as Parameter[]
+                [param(identifier(entityNode).type, ENTITY_ID)] as Parameter[]
             ))
         } catch (ex) {
             error FindOperationsTransformer, 'Unable to inject exists method into repository ({}): {}', repositoryNode.name, ex.message

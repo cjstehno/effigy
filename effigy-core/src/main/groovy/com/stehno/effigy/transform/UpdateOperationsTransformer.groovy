@@ -49,6 +49,8 @@ class UpdateOperationsTransformer implements ASTTransformation {
 
     private static final String NEWLINE = '\n'
     private static final String COMMA = ','
+    private static final String ID = 'id'
+    private static final String ENTITY = 'entity'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -122,7 +124,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
                 'update',
                 Modifier.PUBLIC,
                 ClassHelper.VOID_TYPE,
-                [new Parameter(newClass(entityNode), 'entity')] as Parameter[],
+                [new Parameter(newClass(entityNode), ENTITY)] as Parameter[],
                 null,
                 nodes[0] as Statement
             ))
@@ -166,7 +168,7 @@ class UpdateOperationsTransformer implements ASTTransformation {
             "update${o2op.propertyName.capitalize()}",
             Modifier.PROTECTED,
             ClassHelper.VOID_TYPE,
-            [param(OBJECT_TYPE, 'id'), param(newClass(o2op.type), 'entity')] as Parameter[],
+            [param(OBJECT_TYPE, ID), param(newClass(o2op.type), ENTITY)] as Parameter[],
             null,
             statement
         ))
