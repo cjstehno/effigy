@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithRelations
@@ -34,6 +35,7 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
+
 /**
  * Created by cjstehno on 12/20/2014.
  */
@@ -63,43 +65,28 @@ class FindOperationsTransformer implements ASTTransformation {
         }
     }
 
+    @SuppressWarnings('GroovyAssignabilityCheck')
     private static void injectFinderMethod(ClassNode repositoryNode, ClassNode entityNode, MethodNode methodNode) {
         info FindOperationsTransformer, 'Injecting finder ({}) into repository ({}).', methodNode.name, repositoryNode.name
 
-        def criteriaParams = (methodNode.name - 'findBy').split('And').collect { "${it[0].toLowerCase()}${it[1..-1]}" }
-
-        def entityTable = entityTable(entityNode)
-
-        def wheres = criteriaParams.collect { propName ->
-            def param = methodNode.parameters.find { it.name == propName as String }
-            assert param, "Finder mismatch: No parameter exists for criteria ($propName)"
-
-            def property = entityProperty(entityNode, propName as String)
-            assert property, "Finder mismatch: No entity property exists for criteria ($propName)"
-
-            "$entityTable.${property.columnName}=?"
-        }
-
-        def params = criteriaParams.collect { propName ->
-            varX(propName)
-        }
+        def (whereCriteria, whereParams) = resolveCriteria(methodNode, entityNode)
 
         methodNode.modifiers = Modifier.PUBLIC
 
         if (hasAssociatedEntities(entityNode)) {
             methodNode.code = block(
                 query(
-                    selectWithRelations(entityNode, wheres),
+                    selectWithRelations(entityNode, whereCriteria),
                     entityCollectionExtractor(entityNode),
-                    params
+                    whereParams
                 )
             )
         } else {
             methodNode.code = block(
                 query(
-                    selectWithoutRelations(entityNode, wheres),
+                    selectWithoutRelations(entityNode, whereCriteria),
                     entityRowMapper(entityNode),
-                    params
+                    whereParams
                 )
             )
         }
@@ -107,6 +94,27 @@ class FindOperationsTransformer implements ASTTransformation {
         if (!repositoryNode.hasMethod(methodNode.name, methodNode.parameters)) {
             repositoryNode.addMethod(methodNode)
         }
+    }
+
+    private static List resolveCriteria(MethodNode methodNode, ClassNode entityNode) {
+        def criteriaParams = (methodNode.name - 'findBy').split('And').collect { "${it[0].toLowerCase()}${it[1..-1]}" }
+
+        def entityTable = entityTable(entityNode)
+
+        def whereCriteria = []
+        def whereParams = []
+
+        criteriaParams.each { propName ->
+            def param = methodNode.parameters.find { it.name == propName as String }
+            assert param, "Finder mismatch: No parameter exists for criteria ($propName)"
+
+            def property = entityProperty(entityNode, propName as String)
+            assert property, "Finder mismatch: No entity property exists for criteria ($propName)"
+
+            whereCriteria << "$entityTable.${property.columnName}=?"
+            whereParams << varX(propName)
+        }
+        [whereCriteria, whereParams]
     }
 
     /**
