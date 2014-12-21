@@ -20,6 +20,7 @@ import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
+import static com.stehno.effigy.transform.util.SqlBuilder.select
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
@@ -28,6 +29,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
+import com.stehno.effigy.transform.util.SelectSql
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
@@ -98,10 +100,17 @@ class RetrieveOperationsTransformer implements ASTTransformation {
         )
     }
 
-    // FIXME: move to common area
+    // FIXME: move to common area(?)
     static String sqlWithoutRelations(ClassNode entityNode, boolean single = false) {
-        String sql = "select ${columnNames(entityNode)} from ${entityTable(entityNode)}"
-        single ? "$sql where ${identifier(entityNode).columnName}=?" : sql
+        SelectSql sql = select()
+            .columns(listColumnNames(entityNode))
+            .from(entityTable(entityNode))
+
+        if (single) {
+            sql.where("${identifier(entityNode).columnName}=?")
+        }
+
+        sql.build()
     }
 
     private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
@@ -153,66 +162,64 @@ class RetrieveOperationsTransformer implements ASTTransformation {
 
     // FIXME: this needs to be extracted into a speparate class
     static String sqlWithRelations(ClassNode entityNode, final boolean single = false) {
-        String sql = 'select '
+        SelectSql selectSql = select()
 
         String entityTableName = entityTable(entityNode)
-        def entityIdentifier = identifier(entityNode)
 
+        // add entity columns
         entityProperties(entityNode).each { p ->
             if (p instanceof EmbeddedPropertyModel) {
                 p.columnNames.each { cn ->
-                    sql += "${entityTableName}.${cn} as ${entityTableName}_${cn},"
+                    selectSql.column(entityTableName, cn, "${entityTableName}_${cn}")
                 }
             } else {
-                sql += "${entityTableName}.${p.columnName} as ${entityTableName}_${p.columnName},"
+                selectSql.column(entityTableName, p.columnName as String, "${entityTableName}_${p.columnName}")
             }
         }
 
-        def assocFields = []
-
+        // add association cols
         associations(entityNode).each { ap ->
             String associatedTable = entityTable(ap.associatedType)
 
             entityProperties(ap.associatedType).each { p ->
                 if (p instanceof EmbeddedPropertyModel) {
                     p.columnNames.each { cn ->
-                        assocFields << "${associatedTable}.${cn} as ${ap.propertyName}_${cn}"
+                        selectSql.column(associatedTable, cn, "${ap.propertyName}_${cn}")
                     }
                 } else {
-                    assocFields << "${associatedTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
+                    selectSql.column(associatedTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
                 }
             }
         }
 
-        sql += assocFields.join(COMMA)
-
-        String componentFields = components(entityNode).collect { ap ->
-            entityProperties(ap.type).collect { p ->
-                "${ap.lookupTable}.${p.columnName} as ${ap.propertyName}_${p.columnName}"
-            }.join(COMMA)
-        }.join(COMMA)
-
-        if (componentFields) {
-            sql += ",$componentFields"
+        // add component cols
+        components(entityNode).each { ap ->
+            entityProperties(ap.type).each { p ->
+                selectSql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
+            }
         }
 
-        sql += " from ${entityTableName}"
+        selectSql.from(entityTableName)
+
+        def entityIdentifier = identifier(entityNode)
 
         associations(entityNode).each { ap ->
             String associatedTable = entityTable(ap.associatedType)
             IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
 
-            sql += " LEFT OUTER JOIN ${ap.joinTable} on ${ap.joinTable}.${ap.entityColumn}=${entityTableName}.${entityIdentifier.columnName}"
-            sql += " LEFT OUTER JOIN ${associatedTable} on ${ap.joinTable}.${ap.assocColumn}=${associatedTable}.${associatedIdentifier.columnName}"
+            selectSql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+            selectSql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
         }
 
         components(entityNode).each { ap ->
-            sql += " LEFT OUTER JOIN ${ap.lookupTable} on ${ap.lookupTable}.${ap.entityColumn}=${entityTableName}.${entityIdentifier.columnName}"
+            selectSql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
         }
 
         if (single) {
-            sql += " where ${entityTableName}.${entityIdentifier.columnName}=?"
+            selectSql.where("${entityTableName}.${entityIdentifier.columnName}=?")
         }
+
+        String sql = selectSql.build()
 
         trace RetrieveOperationsTransformer, '------------------------------'
         trace RetrieveOperationsTransformer, 'Sql for entity ({}): {}', entityNode.name, sql

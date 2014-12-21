@@ -158,6 +158,18 @@ class EntityModel {
         }
     }
 
+    static List<String> listColumnNames(ClassNode entityNode, boolean includeId = true) {
+        def values = []
+        entityProperties(entityNode, includeId).each {
+            if (it instanceof EmbeddedPropertyModel) {
+                values.addAll(it.columnNames)
+            } else {
+                values << it.columnName
+            }
+        }
+        values
+    }
+
     static String columnNames(ClassNode entityNode, boolean includeId = true) {
         def values = []
         entityProperties(entityNode, includeId).each {
