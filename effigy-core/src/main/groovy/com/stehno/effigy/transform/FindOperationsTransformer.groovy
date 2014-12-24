@@ -16,17 +16,8 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithRelations
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutRelations
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AstUtils.codeS
-import static com.stehno.effigy.transform.util.AstUtils.methodN
-import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
-import static org.codehaus.groovy.ast.ClassHelper.make
-import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
+import com.stehno.effigy.annotation.Limit
+import com.stehno.effigy.annotation.Limited
 import com.stehno.effigy.annotation.Repository
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.control.CompilePhase
@@ -36,13 +27,26 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
+import static com.stehno.effigy.logging.Logger.*
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithAssociations
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutAssociations
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
+import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static com.stehno.effigy.transform.util.AstUtils.methodN
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
+import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
- * Created by cjstehno on 12/20/2014.
+ * Injects the finder operations into an Effigy Repository.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class FindOperationsTransformer implements ASTTransformation {
 
     private static final String ENTITY_ID = 'entityId'
+    private static final String FIND_BY = 'findBy'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -56,7 +60,7 @@ class FindOperationsTransformer implements ASTTransformation {
             injectCountMethod repositoryNode, entityNode
             injectExistsMethod repositoryNode, entityNode
 
-            repositoryNode.allDeclaredMethods.findAll { m -> !m.static && m.abstract && m.name.startsWith('findBy') }.each { finder ->
+            repositoryNode.allDeclaredMethods.findAll { m -> !m.static && m.abstract && m.name.startsWith(FIND_BY) }.each { finder ->
                 injectFinderMethod repositoryNode, entityNode, finder
             }
 
@@ -68,43 +72,73 @@ class FindOperationsTransformer implements ASTTransformation {
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void injectFinderMethod(ClassNode repositoryNode, ClassNode entityNode, MethodNode methodNode) {
         info FindOperationsTransformer, 'Injecting finder ({}) into repository ({}).', methodNode.name, repositoryNode.name
+        try {
+            def (whereCriteria, whereParams) = resolveCriteria(methodNode, entityNode)
 
-        def (whereCriteria, whereParams) = resolveCriteria(methodNode, entityNode)
+            def (limitSql, limitParam) = resolveLimitation(methodNode)
 
-        methodNode.modifiers = Modifier.PUBLIC
+            methodNode.modifiers = Modifier.PUBLIC
 
-        if (hasAssociatedEntities(entityNode)) {
-            methodNode.code = block(
-                query(
-                    selectWithRelations(entityNode, whereCriteria),
-                    entityCollectionExtractor(entityNode),
-                    whereParams
+            if (hasAssociatedEntities(entityNode)) {
+                methodNode.code = block(
+                    query(
+                        selectWithAssociations(entityNode, whereCriteria),
+                        entityCollectionExtractor(entityNode, limitParam),
+                        whereParams
+                    )
                 )
-            )
-        } else {
-            methodNode.code = block(
-                query(
-                    selectWithoutRelations(entityNode, whereCriteria),
-                    entityRowMapper(entityNode),
-                    whereParams
-                )
-            )
-        }
+            } else {
+                if (limitParam) {
+                    whereParams << limitParam
+                }
 
-        if (!repositoryNode.hasMethod(methodNode.name, methodNode.parameters)) {
-            repositoryNode.addMethod(methodNode)
+                methodNode.code = block(
+                    query(
+                        selectWithoutAssociations(entityNode, whereCriteria, limitSql),
+                        entityRowMapper(entityNode),
+                        whereParams
+                    )
+                )
+            }
+
+            if (!repositoryNode.hasMethod(methodNode.name, methodNode.parameters)) {
+                repositoryNode.addMethod(methodNode)
+            }
+
+        } catch (ex) {
+            error FindOperationsTransformer, 'Problem injecting finder ({}): {}', methodNode.name, ex.message
+            throw ex
         }
     }
 
-    private static List resolveCriteria(MethodNode methodNode, ClassNode entityNode) {
-        def criteriaParams = (methodNode.name - 'findBy').split('And').collect { "${it[0].toLowerCase()}${it[1..-1]}" }
+    private static List resolveLimitation(MethodNode methodNode) {
+        def limitSql = null
+        def limitParam = null
 
+        def annotation = methodNode.getAnnotations(make(Limited))[0]
+        if (annotation) {
+            Integer limitValue = extractInteger(annotation, 'value')
+            limitSql = '?'
+            limitParam = constX(limitValue)
+
+        } else {
+            def limitInput = methodNode.parameters.find { p -> p.getAnnotations(make(Limit)) }
+            if (limitInput) {
+                limitSql = '?'
+                limitParam = varX(limitInput.name)
+            }
+        }
+
+        [limitSql, limitParam]
+    }
+
+    private static List resolveCriteria(MethodNode methodNode, ClassNode entityNode) {
         def entityTable = entityTable(entityNode)
 
         def whereCriteria = []
         def whereParams = []
 
-        criteriaParams.each { propName ->
+        (methodNode.name - FIND_BY).split('And').collect { "${it[0].toLowerCase()}${it[1..-1]}" }.each { propName ->
             def param = methodNode.parameters.find { it.name == propName as String }
             assert param, "Finder mismatch: No parameter exists for criteria ($propName)"
 
@@ -112,8 +146,14 @@ class FindOperationsTransformer implements ASTTransformation {
             assert property, "Finder mismatch: No entity property exists for criteria ($propName)"
 
             whereCriteria << "$entityTable.${property.columnName}=?"
-            whereParams << varX(propName)
+
+            if (property.type.enum) {
+                whereParams << callX(varX(propName), 'name')
+            } else {
+                whereParams << varX(propName)
+            }
         }
+
         [whereCriteria, whereParams]
     }
 

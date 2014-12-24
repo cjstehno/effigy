@@ -7,7 +7,8 @@ import people.entity.Person
 /**
  * Created by cjstehno on 11/26/2014.
  */
-@Repository(forEntity = Person) @CrudOperations
+@Repository(forEntity = Person)
+@CrudOperations
 abstract class EffigyPersonRepository implements PersonRepository {
 
     abstract List<Person> findByLastName(String lastName)

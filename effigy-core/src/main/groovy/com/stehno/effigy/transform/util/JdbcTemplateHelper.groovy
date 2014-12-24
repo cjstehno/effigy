@@ -29,6 +29,9 @@ import org.codehaus.groovy.ast.stmt.Statement
  */
 class JdbcTemplateHelper {
 
+    private static final String JDBC_TEMPLATE = 'jdbcTemplate'
+    private static final String COLLECTION_ASSOCIATION_EXTRACTOR = 'collectionAssociationExtractor'
+
     /**
      * Expression used to access the RowMapper accessor method for an entity.
      *
@@ -39,8 +42,12 @@ class JdbcTemplateHelper {
         callX(classX(newClass(entityNode)), 'rowMapper')
     }
 
-    static Expression entityCollectionExtractor(ClassNode entityNode) {
-        callX(classX(newClass(entityNode)), 'collectionAssociationExtractor')
+    static Expression entityCollectionExtractor(ClassNode entityNode, Expression limitX = null) {
+        if (limitX) {
+            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR, args(limitX))
+        } else {
+            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR)
+        }
     }
 
     static Expression entityExtractor(ClassNode entityNode) {
@@ -49,13 +56,13 @@ class JdbcTemplateHelper {
 
     static Statement query(String sql, Expression handler, List<Expression> params = []) {
         returnS(
-            callX(varX('jdbcTemplate'), 'query', queryArgs(sql, handler, params))
+            callX(varX(JDBC_TEMPLATE), 'query', queryArgs(sql, handler, params))
         )
     }
 
     static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
         returnS(
-            callX(varX('jdbcTemplate'), 'queryForObject', queryArgs(sql, handler, params))
+            callX(varX(JDBC_TEMPLATE), 'queryForObject', queryArgs(sql, handler, params))
         )
     }
 

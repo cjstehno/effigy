@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform.sql
+
 /**
  * Builder used to create SQL statement strings.
  */

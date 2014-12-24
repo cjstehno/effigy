@@ -17,14 +17,18 @@
 package com.stehno.effigy.transform.sql
 
 /**
- * Created by cjstehno on 12/21/2014.
+ * Builder for select SQL queries. This class should not be used directly, see the SqlBuilder instead.
  */
+@SuppressWarnings('ConfusingMethodName')
 class SelectSql {
 
     private final froms = []
     private final columns = []
     private final leftOuterJoins = []
     private final wheres = []
+    private String limit
+    private String offset
+    private final orders = []
 
     SelectSql columns(List<String> columnNames) {
         columnNames.each { name ->
@@ -70,6 +74,26 @@ class SelectSql {
         this
     }
 
+    SelectSql limit(String value) {
+        limit = value
+        this
+    }
+
+    SelectSql offset(String value) {
+        offset = value
+        this
+    }
+
+    SelectSql order(String ordering) {
+        orders << ordering
+        this
+    }
+
+    SelectSql orders(List<String> orders) {
+        this.orders.addAll(orders)
+        this
+    }
+
     String build() {
         StringBuilder sql = new StringBuilder('select ')
 
@@ -84,6 +108,19 @@ class SelectSql {
         if (wheres) {
             sql.append(' where ')
             sql.append(wheres.join(' and '))
+        }
+
+        if (orders) {
+            sql.append(' order by ')
+            sql.append(orders.join(','))
+        }
+
+        if (offset) {
+            sql.append(" offset $offset")
+        }
+
+        if (limit) {
+            sql.append(" limit $limit")
         }
 
         sql.toString()

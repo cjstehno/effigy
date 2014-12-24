@@ -23,6 +23,8 @@ import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 import java.sql.SQLException
 
+import static java.lang.Math.min
+
 /**
  * Spring ResultSetExtractor used internally by the Effigy entity transformers to build extractors for handling
  * entity collections associations. This class is not really intended for use outside of the framework.
@@ -30,6 +32,11 @@ import java.sql.SQLException
 abstract class EffigyCollectionAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
 
     String entityIdentifier
+
+    /**
+     * Limit the number of results returned by the extractor, leave null to retrieve all results.
+     */
+    Integer limit
 
     @Override
     T extractData(final ResultSet rs) throws SQLException, DataAccessException {
@@ -45,10 +52,16 @@ abstract class EffigyCollectionAssociationResultSetExtractor<T> implements Resul
                 entities[entity[entityIdentifier]] = entity
                 mapAssociations(rs, entity)
             }
-
         }
 
-        entities.values() as List
+        def results = entities.values() as List
+
+        // TODO: this is not very efficient - should be able to cut the limit before processing all records(?)
+        if (limit) {
+            results[0..(min(limit, results.size()) - 1)] as List
+        } else {
+            entities.values() as List
+        }
     }
 
     /**

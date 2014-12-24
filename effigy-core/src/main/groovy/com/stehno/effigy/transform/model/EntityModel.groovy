@@ -32,6 +32,9 @@ import java.sql.Types
 class EntityModel {
 
     private static final String PLURAL = 's'
+    private static final String DOLLAR_SIGN = '$'
+    private static final String COMMA = ','
+    private static final String ENTITY_COLUMN = 'entityColumn'
 
     static IdentifierPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
@@ -67,7 +70,7 @@ class EntityModel {
     // does not include relationship fields
     static List<EntityPropertyModel> entityProperties(ClassNode entityNode, boolean includeId = true) {
         entityNode.fields.findAll { f ->
-            !f.static && !f.name.startsWith('$') && !isAssociation(f) && !isEntity(f.type) && (includeId ? true : !annotatedWith(f, Id))
+            !f.static && !f.name.startsWith(DOLLAR_SIGN) && !isAssociation(f) && !isEntity(f.type) && (includeId ? true : !annotatedWith(f, Id))
         }.collect { f -> extractProperty(f) }
     }
 
@@ -135,7 +138,7 @@ class EntityModel {
                     type: assoc.type,
                     associatedType: associatedType,
                     joinTable: extractString(annotationNode, 'joinTable', "${entityTableName}_${assoc.name}"),
-                    entityColumn: extractString(annotationNode, 'entityColumn', "${entityTableName}_id"),
+                    entityColumn: extractString(annotationNode, ENTITY_COLUMN, "${entityTableName}_id"),
                     assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
                 )
 
@@ -163,7 +166,7 @@ class EntityModel {
                 propertyName: comp.name,
                 type: comp.type,
                 lookupTable: extractString(annotationNode, 'lookupTable', "${comp.name}s"),
-                entityColumn: extractString(annotationNode, 'entityColumn', "${entityTable(entityNode)}_id")
+                entityColumn: extractString(annotationNode, ENTITY_COLUMN, "${entityTable(entityNode)}_id")
             )
         }
     }
@@ -189,7 +192,7 @@ class EntityModel {
                 values << it.columnName
             }
         }
-        values.join(',')
+        values.join(COMMA)
     }
 
     static String columnPlaceholders(ClassNode entityNode, boolean includeId = true) {
@@ -201,7 +204,7 @@ class EntityModel {
                 values << '?'
             }
         }
-        values.join(',')
+        values.join(COMMA)
     }
 
     static List<Integer> columnTypes(ClassNode entityNode, boolean includeId = true) {
@@ -273,7 +276,7 @@ class EntityModel {
         def colTypes = []
 
         f.type.fields.each { embfld ->
-            if (!embfld.static && !embfld.name.startsWith('$')) {
+            if (!embfld.static && !embfld.name.startsWith(DOLLAR_SIGN)) {
                 fldNames << embfld.name
                 colNames << "${prefix}_${extractFieldName(embfld)}"
                 colTypes << sqlType(embfld)

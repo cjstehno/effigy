@@ -16,16 +16,6 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AstUtils.codeS
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
-import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
-import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
 import org.codehaus.groovy.ast.*
@@ -41,6 +31,15 @@ import org.springframework.jdbc.core.RowMapper
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
 
+import static com.stehno.effigy.logging.Logger.error
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static org.codehaus.groovy.ast.ClassHelper.*
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+
 /**
  * Transformer used for creating a ResultSetExtractor instance for the entity.
  */
@@ -53,6 +52,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
     private static final String RS = 'rs'
     private static final String PRIMARY_ROW_MAPPER = 'primaryRowMapper'
     private static final String ENTITY = 'entity'
+    private static final String LIMIT = 'limit'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -279,10 +279,11 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             'collectionAssociationExtractor',
             Modifier.PUBLIC | Modifier.STATIC,
             newClass(extractorClassNode),
-            [] as Parameter[],
+            [param(Integer_TYPE, LIMIT, constX(null))] as Parameter[],
             [] as ClassNode[],
             returnS(ctorX(newClass(extractorClassNode), args(new MapExpression([
-                new MapEntryExpression(constX('entityIdentifier'), constX(identifier(entityClassNode).propertyName))
+                new MapEntryExpression(constX('entityIdentifier'), constX(identifier(entityClassNode).propertyName)),
+                new MapEntryExpression(constX(LIMIT), varX(LIMIT))
             ]))))
         ))
 

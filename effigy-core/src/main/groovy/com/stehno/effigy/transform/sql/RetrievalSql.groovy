@@ -26,21 +26,37 @@ import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 12/21/2014.
+ *  FIXME: document
  */
 class RetrievalSql {
 
     private static final String SEPARATOR = '------------------------------'
 
-    static String selectWithoutRelations(final ClassNode entityNode, final List<String> whereCriteria = []) {
+    static String selectWithoutAssociations(ClassNode entityNode, List<String> whereCriteria = [], String limit = null, String offset = null, List<String> orders = []) {
         SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
         sql.wheres(whereCriteria)
 
-        sql.build()
+        if (offset) {
+            sql.offset(offset)
+        }
+
+        if (limit) {
+            sql.limit(limit)
+        }
+
+        if (orders) {
+            sql.orders(orders)
+        }
+
+        def string = sql.build()
+
+        logSql(entityNode, string)
+
+        string
     }
 
-    static String selectWithRelations(final ClassNode entityNode, final List<String> whereCriteria = []) {
+    static String selectWithAssociations(ClassNode entityNode, List<String> whereCriteria = [], List<String> orders = []) {
         SelectSql selectSql = select()
 
         String entityTableName = entityTable(entityNode)
@@ -86,9 +102,7 @@ class RetrievalSql {
 
         String sql = selectSql.build()
 
-        trace RetrievalSql, SEPARATOR
-        trace RetrievalSql, 'Sql for entity ({}): {}', entityNode.name, sql
-        trace RetrievalSql, SEPARATOR
+        logSql entityNode, sql
 
         sql
     }
@@ -101,5 +115,11 @@ class RetrievalSql {
         } else {
             selectSql.column(table, p.columnName as String, "${prefix}_${p.columnName}")
         }
+    }
+
+    private static void logSql(ClassNode entityNode, String string) {
+        trace RetrievalSql, SEPARATOR
+        trace RetrievalSql, 'Sql for entity ({}): {}', entityNode.name, string
+        trace RetrievalSql, SEPARATOR
     }
 }

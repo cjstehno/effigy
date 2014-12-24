@@ -18,8 +18,8 @@ package com.stehno.effigy.transform
 
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithRelations
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutRelations
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithAssociations
+import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutAssociations
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.make
@@ -91,7 +91,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveSingleWithoutRelations(ClassNode entityNode) {
         block(
             queryForObject(
-                selectWithoutRelations(entityNode, ["${identifier(entityNode).columnName}=?"]),
+                selectWithoutAssociations(entityNode, ["${identifier(entityNode).columnName}=?"]),
                 entityRowMapper(entityNode),
                 [varX(ENTITY_ID)]
             )
@@ -101,7 +101,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveSingleWitRelations(ClassNode entityNode) {
         block(
             query(
-                selectWithRelations(entityNode, ["${entityTable(entityNode)}.${identifier(entityNode).columnName}=?"]),
+                selectWithAssociations(entityNode, ["${entityTable(entityNode)}.${identifier(entityNode).columnName}=?"]),
                 entityExtractor(entityNode),
                 [varX(ENTITY_ID)]
             )
@@ -130,7 +130,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveAllWithRelations(ClassNode entityNode) {
         block(
             query(
-                selectWithRelations(entityNode),
+                selectWithAssociations(entityNode),
                 entityCollectionExtractor(entityNode)
             )
         )
@@ -139,7 +139,7 @@ class RetrieveOperationsTransformer implements ASTTransformation {
     private static Statement retrieveAllWithoutRelations(ClassNode entityNode) {
         block(
             query(
-                selectWithoutRelations(entityNode),
+                selectWithoutAssociations(entityNode),
                 entityRowMapper(entityNode)
             )
         )

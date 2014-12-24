@@ -318,6 +318,20 @@ class PersonRepositoryTest {
     @Test void finders() {
         def idA = personRepository.create(new Person(PERSON_A))
         def idB = personRepository.create(new Person(PERSON_B))
+        def idC = personRepository.create(new Person(
+            firstName : 'John',
+            middleName: 'F',
+            lastName  : 'Private',
+            birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
+            married   : false
+        ))
+        def idD = personRepository.create(new Person(
+            firstName : 'John',
+            middleName: 'M',
+            lastName  : 'Smith',
+            birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
+            married   : false
+        ))
 
         def marriedPeople = personRepository.findByMarried(true)
         assert marriedPeople.size() == 1
@@ -326,5 +340,9 @@ class PersonRepositoryTest {
         def publics = personRepository.findByLastName('Public')
         assert publics.size() == 1
         assert publics[0].id == idA
+
+        def johns = personRepository.findByFirstName('John')
+        assert johns.size() == 2
+        assert johns.every { it.firstName == 'John' }
     }
 }
