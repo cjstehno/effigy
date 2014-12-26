@@ -5,12 +5,12 @@ CREATE TABLE people (
   middle_name   VARCHAR(25),
   last_name     VARCHAR(25)           NOT NULL,
   date_of_birth TIMESTAMP             NOT NULL,
-  married    BOOL NOT NULL,
-  home_line1 VARCHAR(30),
-  home_line2 VARCHAR(30),
-  home_city  VARCHAR(20),
-  home_state VARCHAR(2),
-  home_zip   VARCHAR(10)
+  married       BOOL                  NOT NULL,
+  home_line1    VARCHAR(30),
+  home_line2    VARCHAR(30),
+  home_city     VARCHAR(20),
+  home_state    VARCHAR(2),
+  home_zip      VARCHAR(10)
 );
 
 CREATE TABLE pets (
@@ -43,4 +43,10 @@ CREATE TABLE employers (
   city      VARCHAR(20),
   state     VARCHAR(2),
   zip       VARCHAR(10)
-)
+);
+
+CREATE TABLE rooms (
+  id       BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  name     VARCHAR(25)           NOT NULL,
+  capacity BIGINT                NOT NULL
+);

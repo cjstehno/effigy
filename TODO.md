@@ -113,6 +113,10 @@ int count(lastName)
 @Exists()
   similar to count
 
+support for generic INSERT,UPDATE, DELETE, SELECT statements no based on entities
+@SqlInsert, @SqlUpdate, ...
+
+
 
 VALIDATION
 

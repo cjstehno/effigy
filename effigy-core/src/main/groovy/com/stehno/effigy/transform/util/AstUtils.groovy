@@ -77,4 +77,10 @@ class AstUtils {
     ) {
         new MethodNode(name, mod, returnType, params, exceptions, body)
     }
+
+    static void removeAbstract(MethodNode methodNode) {
+        if (Modifier.isAbstract(methodNode.modifiers)) {
+            methodNode.modifiers = Modifier.PUBLIC
+        }
+    }
 }

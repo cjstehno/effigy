@@ -16,15 +16,15 @@
 
 package com.stehno.effigy.transform.model
 
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
-import static org.codehaus.groovy.ast.ClassHelper.make
-
 import com.stehno.effigy.annotation.*
 import com.stehno.effigy.transform.util.StringUtils
 import org.codehaus.groovy.ast.*
 
 import java.sql.Types
+
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static org.codehaus.groovy.ast.ClassHelper.make
 
 /**
  * Utility functions for working with the Effigy entity model.
@@ -246,10 +246,15 @@ class EntityModel {
             case 'java.lang.Boolean':
             case 'boolean':
                 return Types.BOOLEAN
-            case 'java.lang.Integer': return Types.INTEGER
+            case 'java.lang.Integer':
+            case 'int':
+                return Types.INTEGER
             case 'java.lang.Long':
             case 'long':
                 return Types.BIGINT
+            case 'java.lang.Short':
+            case 'short':
+                return Types.TINYINT
             default: return Types.JAVA_OBJECT
         }
     }
@@ -262,6 +267,10 @@ class EntityModel {
      */
     static boolean isEntity(final ClassNode node) {
         node.getAnnotations(make(Entity))
+    }
+
+    static boolean isRepository(final ClassNode node) {
+        node.getAnnotations(make(Repository))
     }
 
     private static boolean isAssociation(FieldNode fieldNode) {

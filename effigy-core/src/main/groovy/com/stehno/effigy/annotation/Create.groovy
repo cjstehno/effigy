@@ -16,24 +16,24 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.RepositoryTransformer
+import com.stehno.effigy.transform.CreateTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a repository managed by the Effigy API.
+ * Annotation used to denote a create method in an Effigy repository.
+ *
+ * Create method must accept as parameters, one of the following:
+ *  - an object of the entity type (to be created)
+ *  - individual properties (by name and type) of the entity to be created
+ *
+ * Create methods must return the identity type for the entity.
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [RepositoryTransformer])
-@interface Repository {
-
-    // FIXME: either change forEntity to value or make it an alias to simplify the annotation
-
-    /**
-     * The entity type handled by the repository (must be annotated with @Effigy)
-     */
-    Class forEntity()
+@GroovyASTTransformationClass(classes = [CreateTransformer])
+@interface Create {
+    // nothing to see here
 }
