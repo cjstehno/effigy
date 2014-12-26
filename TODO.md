@@ -12,28 +12,112 @@
 - add support for @Transient fields - to be ignored by Effigy inspections
 
 
-- finder criteria extra information
-    - limit
-    - order
-    - pagination
-- finder complex/custom criteria
-    @Criteria('name=? and birthDate between (x and ?)')
-    List<Entity> findWhere(String name, Date birthDate)
-    - take the default select sql and append based on param position or name
-        name=:name and birth_date between (x and :birthDate)
+UPDATED SQL ANNOTATION HANDLING
 
-    @OrderedBy(...) - compiled in
-    findBySomething(something)
 
-    findBySomething(something, @OrderBy orderBy) - specified at runtime
+keep mapper and extractors
+keep basic crud
 
-    findBySomething(something, @PageBy PageBy
+need support for
+  paging
+  ordering
+  limiting
 
-    
+@ - property name reference to a db column
+# - macro that will be expanded based on content
+: - sql statement placeholder
+
+THESE SHOULD REPLACE THE EXISTINNG CRUD - just provide an inteface annotted properly to reproduce the desired
+methods
+
+methods in interface or abstract
+parameter names/types are important
+return types may be important
+
+@Retrieve
+  basically everything in sql after 'select * from TABLE...'
+  return value should be a single entity or collection of entities of the enclosing repository type
+  params are just replacement variables - if no sql provided they will be considered propertues and used to gen basic where clause
+
+@Retrieve('where @id=:id')
+Person retrieve(id)
+
+@Retrieve()
+List<Person> retrieveAll()
+
+@Retrieve('where #firstName=:firstName and #lastName=:lastName limit=:limit')
+List<Person> findByName(String lastName, String firstName, int limit)
+
+@Retrieve('where #firstName=:firstName and #lastName=:lastName #pageBy')
+List<Person> findByName(String lastName, String firstName, PageBy pageBy)
+
+@Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy order by @lastName, @firstName desc')
+List<Person> findByName(String lastName, String firstName, PageBy pageBy)
+  #pageBy --> offset=:offset limit=:limit (values pulled from pageBy object or offset limit params)
+
+@Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy #orderBy')
+List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
+
+@Delete
+  'delete from TABLE...'
+  return type should be
+    boolean - deleted or not
+    int - count of rows deleted
+
+
+@Delete('where @id=:id')
+boolean delete(long id)
+
+@Delete('where @lastName=:lastName')
+int delete(String lastName)
+
+@Create()
+  insert into TABLE (cols...) values (vals..)
+  return type should be same as ID type for entity
+  params should be entity or properties of entity
+
+@Create()
+Long create( entity )
+- does the standard create
+
+@Create()
+Long create( firstName, lastName)
+
+
+@Update()
+  update TABLE set (col=val) where
+  params should be entity or properties of entity (where non-entity are used in where clause)
+  return type should be int for update count or boolean for updated/not-updated
+
+@Update
+boolean update(entity)
+
+@Update - will use default where clause based on property name
+int update(entity, lastName)
+
+@Update('where @lastName like(:name)')
+int update(entity, name)
+
+
+@Count()
+  select count(@id)...
+  params are placeholders or property names
+
+@Count() - adds where clause based on properites when empty
+int count(id)
+
+@Count('where @lastName=:lastName)
+int count(lastName)
+
+
+@Exists()
+  similar to count
+
+
+VALIDATION
+
 - annotation-driven validation support hooks
     length(min,max,range)
     notnull
     number(min,max,range)
     (are there already spring annotations for thsi stuff)
-
-
