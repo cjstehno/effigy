@@ -21,6 +21,8 @@ import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.MapEntryExpression
+import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
@@ -63,12 +65,7 @@ class CreateTransformer implements ASTTransformation {
 
                 validateReturnType entityNode, methodNode.returnType
 
-                if (isEntityParameter(methodNode.parameters, entityNode)) {
-                    implementCreateMethod repositoryNode, entityNode, methodNode
-
-                } else {
-                    // FIXME: params are properties of entity
-                }
+                implementCreateMethod repositoryNode, entityNode, methodNode
 
             } else {
                 warn(
@@ -105,9 +102,31 @@ class CreateTransformer implements ASTTransformation {
         parameters.size() == 1 && parameters[0].type == entityNode
     }
 
+    private static boolean isMapParameter(Parameter[] parameters) {
+        parameters.size() == 1 && parameters[0].type == MAP_TYPE
+    }
+
     private static void implementCreateMethod(final ClassNode repositoryNode, final ClassNode entityNode, final MethodNode methodNode) {
         info CreateTransformer, 'Injecting create method into repository for {}', entityNode.name
         try {
+            String entityVar = ENTITY
+            def entityCreator = null
+
+            if (isEntityParameter(methodNode.parameters, entityNode)) {
+                entityVar = methodNode.parameters[0].name
+
+            } else if (isMapParameter(methodNode.parameters)) {
+                entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
+
+            } else {
+                MapExpression argMap = new MapExpression()
+                methodNode.parameters.each { mp ->
+                    argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
+                }
+
+                entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
+            }
+
             associations(entityNode).each { AssociationPropertyModel ap ->
                 injectAssociationSaveMethod repositoryNode, entityNode, ap
             }
@@ -116,7 +135,6 @@ class CreateTransformer implements ASTTransformation {
                 injectComponentSaveMethod repositoryNode, entityNode, ap
             }
 
-            String entityVar = methodNode.parameters[0].name
             def versioner = versioner(entityNode)
 
             def values = []
@@ -136,9 +154,11 @@ class CreateTransformer implements ASTTransformation {
             }
 
             def statement = block(
+                entityCreator ?: new EmptyStatement(),
+
                 declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
-                versioner ? codeS('$entity.$name = 0', name: versioner.propertyName, entity:entityVar) : new EmptyStatement(),
+                versioner ? codeS('${entity}.$name = 0', names: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
 
                 declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
                     constX(
@@ -162,7 +182,7 @@ class CreateTransformer implements ASTTransformation {
 
                         return keys.key
                     ''',
-                    entity:entityVar,
+                    entity: entityVar,
                     values: values.join(COMMA),
                     idName: identifier(entityNode).propertyName,
                     o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->

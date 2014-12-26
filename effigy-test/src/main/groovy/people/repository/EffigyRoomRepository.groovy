@@ -28,4 +28,10 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Override @Create
     abstract long create(Room room)
+
+    @Override @Create
+    abstract long create(String name, int capacity)
+
+    @Override @Create
+    abstract long create(Map<String,Object> map)
 }

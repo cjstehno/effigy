@@ -24,4 +24,8 @@ import people.entity.Room
 interface RoomRepository {
 
     long create(Room room)
+
+    long create(String name, int capacity)
+
+    long create(Map<String,Object> map)
 }

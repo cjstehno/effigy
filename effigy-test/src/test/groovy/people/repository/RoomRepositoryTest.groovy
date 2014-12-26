@@ -39,8 +39,26 @@ class RoomRepositoryTest {
     }
 
     @Test
-    void create() {
+    void createWithEntity() {
         def idA = roomRepository.create(new Room(name: 'A', capacity: 10))
+
+        assert idA == 1
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
+    }
+
+    @Test
+    void createWithParams() {
+        def idA = roomRepository.create('A', 10)
+
+        assert idA == 1
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
+    }
+
+    @Test
+    void createWithMap() {
+        def idA = roomRepository.create(name: 'A', capacity: 10)
 
         assert idA == 1
 
