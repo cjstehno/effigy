@@ -58,31 +58,6 @@ List<Person> findByName(String lastName, String firstName, PageBy pageBy)
 @Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy #orderBy')
 List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 
-@Delete
-  'delete from TABLE...'
-  return type should be
-    boolean - deleted or not
-    int - count of rows deleted
-
-
-@Delete('where @id=:id')
-boolean delete(long id)
-
-@Delete('where @lastName=:lastName')
-int delete(String lastName)
-
-@Create()
-  insert into TABLE (cols...) values (vals..)
-  return type should be same as ID type for entity
-  params should be entity or properties of entity
-
-@Create()
-Long create( entity )
-- does the standard create
-
-@Create()
-Long create( firstName, lastName)
-
 
 @Update()
   update TABLE set (col=val) where

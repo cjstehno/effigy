@@ -28,4 +28,16 @@ interface RoomRepository {
     long create(String name, int capacity)
 
     long create(Map<String,Object> map)
+
+    boolean delete(long id)
+
+    int deleteAll()
+
+    /*
+        int deleteByCapacity(int capacity)
+        boolean deleteByCapacity(map)
+
+        "where @capacity <= :min"
+        int deleteSmall(min)
+     */
 }

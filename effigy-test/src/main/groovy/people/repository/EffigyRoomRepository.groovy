@@ -17,6 +17,7 @@
 package people.repository
 
 import com.stehno.effigy.annotation.Create
+import com.stehno.effigy.annotation.Delete
 import com.stehno.effigy.annotation.Repository
 import people.entity.Room
 
@@ -34,4 +35,10 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Override @Create
     abstract long create(Map<String,Object> map)
+
+    @Override @Delete
+    abstract boolean delete(long id)
+
+    @Override @Delete
+    abstract int deleteAll()
 }

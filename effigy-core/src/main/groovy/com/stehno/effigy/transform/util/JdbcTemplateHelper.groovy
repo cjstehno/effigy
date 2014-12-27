@@ -16,13 +16,15 @@
 
 package com.stehno.effigy.transform.util
 
-import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.stmt.Statement
+import org.springframework.jdbc.core.SingleColumnRowMapper
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
  * AST helper for building interactions with the Spring JdbcTemplate.
@@ -60,10 +62,32 @@ class JdbcTemplateHelper {
         )
     }
 
+    static Expression queryX(String sql, Expression handler, List<Expression> params = []) {
+        callX(varX(JDBC_TEMPLATE), 'query', queryArgs(sql, handler, params))
+    }
+
     static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
         returnS(
             callX(varX(JDBC_TEMPLATE), 'queryForObject', queryArgs(sql, handler, params))
         )
+    }
+
+    static Expression updateX(String sql, List<Expression> params = []) {
+        callX(varX(JDBC_TEMPLATE), 'update', updateArgs(sql, params))
+    }
+
+    static Expression singleColumnRowMapper() {
+        ctorX(makeClassSafe(SingleColumnRowMapper))
+    }
+
+    private static ArgumentListExpression updateArgs(String sql, List<Expression> params) {
+        ArgumentListExpression arguments = args(constX(sql))
+
+        params.each { pex ->
+            arguments.addExpression(pex)
+        }
+
+        arguments
     }
 
     private static ArgumentListExpression queryArgs(String sql, Expression handler, List<Expression> params) {

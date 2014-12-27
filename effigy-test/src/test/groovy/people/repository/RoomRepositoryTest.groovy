@@ -16,11 +16,9 @@
 
 package people.repository
 
-import com.stehno.effigy.transform.util.JdbcTemplateHelper
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
 import people.entity.Room
 
@@ -45,15 +43,25 @@ class RoomRepositoryTest {
         assert idA == 1
 
         assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
+
+        assert roomRepository.delete(idA)
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 0
     }
 
     @Test
     void createWithParams() {
         def idA = roomRepository.create('A', 10)
+        def idB = roomRepository.create('B', 14)
 
         assert idA == 1
+        assert idB == 2
 
-        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 2
+
+        assert roomRepository.deleteAll() == 2
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 0
     }
 
     @Test
