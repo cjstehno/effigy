@@ -2,8 +2,8 @@ subprojects {
     version = '0.0.1'
     group = 'com.stehno.effigy'
 
-    apply plugin:'groovy'
-	apply plugin:'maven-publish'
+    apply plugin: 'groovy'
+    apply plugin: 'maven-publish'
     apply plugin: 'codenarc'
 
     compileJava {
@@ -19,9 +19,12 @@ subprojects {
         jcenter()
     }
 
-	dependencies {
-		compile 'org.codehaus.groovy:groovy-all:2.3.7'
-	}
+    dependencies {
+        compile 'org.codehaus.groovy:groovy-all:2.3.7'
+
+        testCompile 'junit:junit:4.11'
+        testCompile 'org.mockito:mockito-all:1.9.5'
+    }
 
     test {
         jvmArgs '-Xverify:none'

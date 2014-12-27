@@ -35,6 +35,7 @@ import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.delete
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -52,6 +53,7 @@ class DeleteTransformer implements ASTTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
+        AnnotationNode deleteNode = nodes[0] as AnnotationNode
         MethodNode methodNode = nodes[1] as MethodNode
         ClassNode repositoryNode = methodNode.declaringClass
 
@@ -61,7 +63,7 @@ class DeleteTransformer implements ASTTransformation {
                 ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
 
                 validateReturnType methodNode.returnType
-                implementDeleteMethod repositoryNode, entityNode, methodNode
+                implementDeleteMethod repositoryNode, entityNode, methodNode, deleteNode
 
             } else {
                 warn(
@@ -86,11 +88,11 @@ class DeleteTransformer implements ASTTransformation {
         returnType in [boolean_TYPE, Boolean_TYPE, Integer_TYPE, int_TYPE]
     }
 
-    private static void implementDeleteMethod(ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
+    private static void implementDeleteMethod(ClassNode repoNode, ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode) {
         try {
             def code = block()
 
-            injectAssociationDeletes entityNode, methodNode, code
+            injectAssociationDeletes entityNode, methodNode, deleteNode, code
 
             def sql = delete().from(entityTable(entityNode))
             def params = []
@@ -117,9 +119,9 @@ class DeleteTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectAssociationDeletes(ClassNode entityNode, MethodNode methodNode, BlockStatement code) {
+    private static void injectAssociationDeletes(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
         if (hasAssociatedEntities(entityNode)) {
-            injectEntityIdSelection(entityNode, methodNode, code)
+            injectEntityIdSelection(entityNode, methodNode, deleteNode, code)
 
             def closureCode = block()
 
@@ -137,15 +139,20 @@ class DeleteTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectEntityIdSelection(final ClassNode entityNode, final MethodNode methodNode, final BlockStatement code) {
+    private static void injectEntityIdSelection(final ClassNode entityNode, final MethodNode methodNode, AnnotationNode deleteNode, final BlockStatement code) {
         def sql = select().column(identifier(entityNode).columnName).from(entityTable(entityNode))
 
-        def qParams = []
-        methodNode.parameters.each { mp ->
-            sql.where("${entityProperty(entityNode, mp.name).columnName}=?")
-            qParams << varX(mp.name)
-        }
+        String annotSql = extractString(deleteNode, 'value' )
+        if( annotSql ){
+// FIXME: here
+        } else {
+            def qParams = []
+            methodNode.parameters.each { mp ->
+                sql.where("${entityProperty(entityNode, mp.name).columnName}=?")
+                qParams << varX(mp.name)
+            }
 
-        code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(), qParams)))
+            code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(), qParams)))
+        }
     }
 }

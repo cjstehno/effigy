@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package people.repository
+package com.stehno.effigy.transform.sql
 
-import people.entity.Room
+import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 12/26/14.
+ * Created by cjstehno on 12/27/14.
  */
-interface RoomRepository {
+class SqlTemplate {
 
-    long create(Room room)
+    final String text
 
-    long create(String name, int capacity)
+    SqlTemplate(final String text){
+        this.text = text
+    }
 
-    long create(Map<String,Object> map)
+    String[] variables(){
 
-    boolean delete(long id)
+    }
 
-    int deleteAll()
+    String sqlFor(ClassNode entityNode){
 
-    int deleteByCapacity(int capacity)
-
-    int deleteSmall(int min)
+    }
 }

@@ -34,7 +34,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
     abstract long create(String name, int capacity)
 
     @Create
-    abstract long create(Map<String,Object> map)
+    abstract long create(Map<String, Object> map)
 
     @Delete
     abstract boolean delete(long id)
@@ -45,6 +45,6 @@ abstract class EffigyRoomRepository implements RoomRepository {
     @Delete
     abstract int deleteByCapacity(int capacity)
 
-//    @Delete('where @capacity <= :min')
-//    abstract int deleteSmall(int min)
+    @Delete('@capacity <= :min')
+    abstract int deleteSmall(int min)
 }
