@@ -58,6 +58,7 @@ List<Person> findByName(String lastName, String firstName, PageBy pageBy)
 @Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy #orderBy')
 List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 
+TODO: Map parameter support for @Delete
 
 @Update()
   update TABLE set (col=val) where
