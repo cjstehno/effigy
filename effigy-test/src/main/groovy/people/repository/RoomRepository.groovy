@@ -33,10 +33,7 @@ interface RoomRepository {
 
     int deleteAll()
 
-    /*
-        boolean deleteByCapacity(map)
+    int deleteByCapacity(int capacity)
 
-        "where @capacity <= :min"
-        int deleteSmall(min)
-     */
+//    int deleteSmall(int min)
 }

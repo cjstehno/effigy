@@ -72,4 +72,17 @@ class RoomRepositoryTest {
 
         assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
     }
+
+    @Test
+    void deleteCapacity() {
+        roomRepository.create('A', 10)
+        roomRepository.create('B', 14)
+        roomRepository.create('C', 12)
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 3
+
+        roomRepository.deleteByCapacity(12)
+
+        assert countRowsInTable(database.jdbcTemplate, 'rooms') == 2
+    }
 }

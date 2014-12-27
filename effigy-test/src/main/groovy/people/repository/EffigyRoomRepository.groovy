@@ -27,18 +27,24 @@ import people.entity.Room
 @Repository(forEntity = Room)
 abstract class EffigyRoomRepository implements RoomRepository {
 
-    @Override @Create
+    @Create
     abstract long create(Room room)
 
-    @Override @Create
+    @Create
     abstract long create(String name, int capacity)
 
-    @Override @Create
+    @Create
     abstract long create(Map<String,Object> map)
 
-    @Override @Delete
+    @Delete
     abstract boolean delete(long id)
 
-    @Override @Delete
+    @Delete
     abstract int deleteAll()
+
+    @Delete
+    abstract int deleteByCapacity(int capacity)
+
+//    @Delete('where @capacity <= :min')
+//    abstract int deleteSmall(int min)
 }

@@ -88,17 +88,6 @@ class DeleteTransformer implements ASTTransformation {
 
     private static void implementDeleteMethod(ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         try {
-            /*
-                params:
-                    properties
-                    <none>
-                    map
-
-                returns
-                    boolean
-                    int
-             */
-
             def code = block()
 
             injectAssociationDeletes entityNode, methodNode, code
@@ -160,19 +149,3 @@ class DeleteTransformer implements ASTTransformation {
         code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(), qParams)))
     }
 }
-
-/*
-@Delete
-  'delete from TABLE...'
-  return type should be
-    boolean - deleted or not
-    int - count of rows deleted
-
-
-@Delete('where @id=:id')
-boolean delete(long id)
-
-@Delete('where @lastName=:lastName')
-int delete(String lastName)
-
- */
