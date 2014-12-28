@@ -60,6 +60,7 @@ List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 
 FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
+FIXME: @Exists methods need to support map with property fields as input parameter
 
 @Update()
   update TABLE set (col=val) where
