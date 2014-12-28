@@ -102,11 +102,24 @@ class RoomRepositoryTest {
 
         assert roomRepository.count() == 3
         assert roomRepository.count(id) == 1
-        assert roomRepository.countByRange(11,15) == 2
-        assert roomRepository.countByRange(2,5) == 0
+        assert roomRepository.countByRange(11, 15) == 2
+        assert roomRepository.countByRange(2, 5) == 0
 
         assert roomRepository.deleteSmall(13) == 2
 
         assert countRowsInTable(database.jdbcTemplate, 'rooms') == 1
+    }
+
+    @Test
+    void updateWithEntity() {
+        def idA = roomRepository.create(new Room(name: 'A', capacity: 10))
+
+        assert idA
+        assert roomRepository.count(idA) == 1
+        assert roomRepository.exists(idA)
+
+        assert roomRepository.update(new Room(id: idA, name: 'X', capacity: 100))
+
+        assert roomRepository.countByRange(99, 101) == 1
     }
 }

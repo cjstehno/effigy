@@ -31,14 +31,12 @@ class SelectSql {
     private final orders = []
 
     SelectSql columns(List<String> columnNames) {
-        columnNames.each { name ->
-            column(name)
-        }
+        columns.addAll(columnNames)
         this
     }
 
     SelectSql column(String name) {
-        columns << "$name"
+        columns << name
         this
     }
 

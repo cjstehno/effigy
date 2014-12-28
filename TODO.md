@@ -18,10 +18,6 @@ UPDATED SQL ANNOTATION HANDLING
 keep mapper and extractors
 keep basic crud
 
-need support for
-  paging
-  ordering
-  limiting
 
 @ - property name reference to a db column
 # - macro that will be expanded based on content
@@ -38,6 +34,7 @@ return types may be important
   basically everything in sql after 'select * from TABLE...'
   return value should be a single entity or collection of entities of the enclosing repository type
   params are just replacement variables - if no sql provided they will be considered propertues and used to gen basic where clause
+  need support for (in retrieve methods) : paging, ordering, limiting
 
 @Retrieve('where @id=:id')
 Person retrieve(id)
@@ -61,20 +58,9 @@ List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
+FIXME: @Update methods need to support map with property fields as input parameter
 
-@Update()
-  update TABLE set (col=val) where
-  params should be entity or properties of entity (where non-entity are used in where clause)
-  return type should be int for update count or boolean for updated/not-updated
 
-@Update
-boolean update(entity)
-
-@Update - will use default where clause based on property name
-int update(entity, lastName)
-
-@Update('where @lastName like(:name)')
-int update(entity, name)
 
 support for generic INSERT,UPDATE, DELETE, SELECT statements no based on entities
 @SqlInsert, @SqlUpdate, ...

@@ -28,5 +28,9 @@ class SqlBuilder {
     static DeleteSql delete(){
         new DeleteSql()
     }
+
+    static UpdateSql update() {
+        new UpdateSql()
+    }
 }
 

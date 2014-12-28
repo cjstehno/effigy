@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.annotation
 
+import com.stehno.effigy.transform.AssociationSaveMethodInjector
 import com.stehno.effigy.transform.CreateTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
@@ -34,7 +35,7 @@ import java.lang.annotation.*
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [CreateTransformer])
+@GroovyASTTransformationClass(classes = [CreateTransformer, AssociationSaveMethodInjector])
 @interface Create {
     // nothing to see here
 }

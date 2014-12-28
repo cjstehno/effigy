@@ -63,4 +63,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Exists('@capacity >= :min and @capacity <= :max')
     abstract boolean exists(int min, int max)
+
+    @Update
+    abstract boolean update(Room room)
 }

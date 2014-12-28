@@ -32,7 +32,6 @@ import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.PROTECTED
@@ -60,106 +59,89 @@ class CreateTransformer extends MethodImplementingTransformation {
 
     @Override
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        info CreateTransformer, 'Injecting create method into repository for {}', entityNode.name
-        try {
-            String entityVar = ENTITY
-            def entityCreator = null
+        String entityVar = ENTITY
+        def entityCreator = null
 
-            if (isEntityParameter(methodNode.parameters, entityNode)) {
-                entityVar = methodNode.parameters[0].name
+        if (isEntityParameter(methodNode.parameters, entityNode)) {
+            entityVar = methodNode.parameters[0].name
 
-            } else if (isMapParameter(methodNode.parameters)) {
-                entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
+        } else if (isMapParameter(methodNode.parameters)) {
+            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
+
+        } else {
+            MapExpression argMap = new MapExpression()
+            methodNode.parameters.each { mp ->
+                argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
+            }
+
+            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
+        }
+
+        components(entityNode).each { ap ->
+            injectComponentSaveMethod repoNode, entityNode, ap
+        }
+
+        def versioner = versioner(entityNode)
+
+        def values = []
+        entityProperties(entityNode, false).each { pi ->
+            if (pi instanceof EmbeddedPropertyModel) {
+                pi.fieldNames.each { fn ->
+                    values << "${entityVar}.${pi.propertyName}?.${fn}"
+                }
 
             } else {
-                MapExpression argMap = new MapExpression()
-                methodNode.parameters.each { mp ->
-                    argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
-                }
-
-                entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
-            }
-
-            associations(entityNode).each { AssociationPropertyModel ap ->
-                injectAssociationSaveMethod repoNode, entityNode, ap
-            }
-
-            components(entityNode).each { ap ->
-                injectComponentSaveMethod repoNode, entityNode, ap
-            }
-
-            def versioner = versioner(entityNode)
-
-            def values = []
-            entityProperties(entityNode, false).each { pi ->
-                if (pi instanceof EmbeddedPropertyModel) {
-                    pi.fieldNames.each { fn ->
-                        values << "${entityVar}.${pi.propertyName}?.${fn}"
-                    }
-
+                if (pi.type.enum) {
+                    values << "${entityVar}.${pi.propertyName}?.name()"
                 } else {
-                    if (pi.type.enum) {
-                        values << "${entityVar}.${pi.propertyName}?.name()"
-                    } else {
-                        values << "${entityVar}.${pi.propertyName}"
-                    }
+                    values << "${entityVar}.${pi.propertyName}"
                 }
             }
-
-            def statement = block(
-                entityCreator ?: new EmptyStatement(),
-
-                declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
-
-                versioner ? codeS('${entity}.$name = 0', names: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
-
-                declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
-                    constX(
-                        """insert into ${entityTable(entityNode)} (${columnNames(entityNode, false)}) values (${
-                            columnPlaceholders(entityNode, false)
-                        })""" as String
-                    ),
-                    arrayX(int_TYPE, columnTypes(entityNode, false).collect { typ ->
-                        constX(typ)
-                    })
-                ))),
-
-                codeS(
-                    '''
-                        def paramValues = [$values] as Object[]
-                        jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
-                        ${entity}.${idName} = keys.key
-
-                        $o2m
-                        $components
-
-                        return keys.key
-                    ''',
-                    entity: entityVar,
-                    values: values.join(COMMA),
-                    idName: identifier(entityNode).propertyName,
-                    o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
-                        "save${o2m.propertyName.capitalize()}($entityVar)"
-                    }.join(NEWLINE),
-                    components: components(entityNode).collect { ComponentPropertyModel ap ->
-                        "save${ap.propertyName.capitalize()}($entityVar.${identifier(entityNode).propertyName},$entityVar.${ap.propertyName})"
-                    }.join(NEWLINE)
-                ),
-            )
-
-            methodNode.modifiers = PUBLIC
-            methodNode.code = statement
-
-        } catch (ex) {
-            error(
-                CreateTransformer,
-                'Unable to implement create method ({}) for repository ({}): {}',
-                methodNode.name,
-                repoNode.name,
-                ex.message
-            )
-            throw ex
         }
+
+        def statement = block(
+            entityCreator ?: new EmptyStatement(),
+
+            declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
+
+            versioner ? codeS('${entity}.$name = 0', names: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
+
+            declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
+                constX(
+                    """insert into ${entityTable(entityNode)} (${columnNames(entityNode, false)}) values (${
+                        columnPlaceholders(entityNode, false)
+                    })""" as String
+                ),
+                arrayX(int_TYPE, columnTypes(entityNode, false).collect { typ ->
+                    constX(typ)
+                })
+            ))),
+
+            codeS(
+                '''
+                    def paramValues = [$values] as Object[]
+                    jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
+                    ${entity}.${idName} = keys.key
+
+                    $o2m
+                    $components
+
+                    return keys.key
+                    ''',
+                entity: entityVar,
+                values: values.join(COMMA),
+                idName: identifier(entityNode).propertyName,
+                o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
+                    "save${o2m.propertyName.capitalize()}($entityVar)"
+                }.join(NEWLINE),
+                components: components(entityNode).collect { ComponentPropertyModel ap ->
+                    "save${ap.propertyName.capitalize()}($entityVar.${identifier(entityNode).propertyName},$entityVar.${ap.propertyName})"
+                }.join(NEWLINE)
+            ),
+        )
+
+        methodNode.modifiers = PUBLIC
+        methodNode.code = statement
     }
 
     private static void injectComponentSaveMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {
@@ -194,59 +176,6 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             } catch (ex) {
                 error CreateTransformer, 'Unable to inject component save method for entity ({}): {}', entityNode.name, ex.message
-                throw ex
-            }
-        }
-    }
-
-    private static void injectAssociationSaveMethod(ClassNode repositoryNode, ClassNode entityNode, AssociationPropertyModel assoc) {
-        def methodName = "save${assoc.propertyName.capitalize()}"
-        def methodParams = [param(newClass(entityNode), ENTITY)] as Parameter[]
-
-        if (!repositoryNode.hasMethod(methodName, methodParams)) {
-            info CreateTransformer, 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
-            try {
-                def statement = codeS(
-                    '''
-                        int expects = 0
-                        if( entity.${name} instanceof Collection ){
-                            expects = entity.${name}?.size() ?: 0
-                        } else {
-                            expects = entity.${name} != null ? 1 : 0
-                        }
-
-                        int count = 0
-                        def ent = entity
-
-                        jdbcTemplate.update('delete from $assocTable where $tableEntIdName=?', ent.${entityIdName})
-
-                        entity.${name}.each { itm->
-                            count += jdbcTemplate.update(
-                                'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
-                                ent.${entityIdName},
-                                itm.${assocIdName}
-                            )
-                        }
-
-                        if( count != expects ){
-                            entity.${entityIdName} = 0
-                            throw new RuntimeException(
-                                'Insert count for $name (' + count + ') did not match expected count (' + expects + ') - save failed.'
-                            )
-                        }
-                    ''',
-                    name: assoc.propertyName,
-                    assocTable: assoc.joinTable,
-                    tableEntIdName: assoc.entityColumn,
-                    tableAssocIdName: assoc.assocColumn,
-                    entityIdName: identifier(entityNode).propertyName,
-                    assocIdName: identifier(assoc.associatedType).propertyName
-                )
-
-                repositoryNode.addMethod(methodN(PROTECTED, methodName, VOID_TYPE, statement, methodParams))
-
-            } catch (ex) {
-                error CreateTransformer, 'Unable to inject association save method for entity ({}): {}', entityNode.name, ex.message
                 throw ex
             }
         }

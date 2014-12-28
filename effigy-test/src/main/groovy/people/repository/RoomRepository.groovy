@@ -48,4 +48,6 @@ interface RoomRepository {
     boolean exists()
 
     boolean exists(int min, int max)
+
+    boolean update(Room room)
 }

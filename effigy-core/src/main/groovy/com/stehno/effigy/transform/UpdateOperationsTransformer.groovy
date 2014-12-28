@@ -16,16 +16,6 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AstUtils.code
-import static com.stehno.effigy.transform.util.AstUtils.codeS
-import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.make
-import static org.codehaus.groovy.ast.tools.GeneralUtils.param
-import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
@@ -39,6 +29,17 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
+
+import static com.stehno.effigy.logging.Logger.*
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.SqlBuilder.update
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.util.AstUtils.code
+import static com.stehno.effigy.transform.util.AstUtils.codeS
+import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.tools.GeneralUtils.param
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
  * Injects the Update CRUD operations into an Entity repository.
@@ -175,26 +176,24 @@ class UpdateOperationsTransformer implements ASTTransformation {
     }
 
     private static String sql(ClassNode entityNode) {
-        String table = entityTable(entityNode)
-
-        def columns = []
+        def setters = []
         entityProperties(entityNode, false).each { p ->
             if (p instanceof EmbeddedPropertyModel) {
                 p.columnNames.each { cn ->
-                    columns << "$cn = ?"
+                    setters << "$cn = ?"
                 }
             } else {
-                columns << "${p.columnName}=?"
+                setters << "${p.columnName}=?"
             }
         }
 
-        String columnUpdates = columns.join(COMMA)
-
-        String identifier = identifier(entityNode).columnName
+        def wheres = ["${identifier(entityNode).columnName} = ?"]
 
         VersionerPropertyModel versionProperty = versioner(entityNode)
-        String versionCriteria = versionProperty ? "and ${versionProperty.columnName} = ?" : ''
+        if (versionProperty) {
+            wheres << "${versionProperty.columnName} = ?"
+        }
 
-        "update $table set $columnUpdates where $identifier = ? $versionCriteria"
+        update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
     }
 }
