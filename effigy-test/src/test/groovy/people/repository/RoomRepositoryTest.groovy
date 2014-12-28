@@ -122,4 +122,17 @@ class RoomRepositoryTest {
 
         assert roomRepository.countByRange(99, 101) == 1
     }
+
+    @Test
+    void updateWithMap() {
+        def idA = roomRepository.create(new Room(name: 'A', capacity: 10))
+
+        assert idA
+        assert roomRepository.count(idA) == 1
+        assert roomRepository.exists(idA)
+
+        assert roomRepository.updateRoom(id: idA, name: 'X', capacity: 100) == 1
+
+        assert roomRepository.countByRange(99, 101) == 1
+    }
 }

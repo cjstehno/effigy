@@ -93,14 +93,19 @@ class UpdateTransformer extends MethodImplementingTransformation {
             }
         }
 
-        methodNode.modifiers = PUBLIC
-        methodNode.code = codeS('''
+        def code = block()
+
+        if (entityCreator) {
+            code.addStatement(entityCreator)
+        }
+
+        code.addStatement(codeS('''
                 <% if(versioner){ %>
                 def currentVersion = ${entity}.${versioner.propertyName} ?: 0
                 ${entity}.${versioner.propertyName} = currentVersion + 1
                 <% } %>
 
-                jdbcTemplate.update(
+                int count = jdbcTemplate.update(
                     '$sql',
                     ${vars.join(',')},
                     ${entity}.${identifier.propertyName}
@@ -111,6 +116,8 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
                 $o2m
                 $o2o
+
+                count
             ''',
             entity: entityVar,
             vars: vars,
@@ -124,7 +131,10 @@ class UpdateTransformer extends MethodImplementingTransformation {
             o2o: components(entityNode).collect { ComponentPropertyModel ap ->
                 "update${ap.propertyName.capitalize()}(${entityVar}.${identifier(entityNode).propertyName}, ${entityVar}.${ap.propertyName})"
             }.join(NEWLINE)
-        )
+        ))
+
+        methodNode.modifiers = PUBLIC
+        methodNode.code = code
     }
 
     private static void injectComponentUpdateMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {

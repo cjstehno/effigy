@@ -66,4 +66,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Update
     abstract boolean update(Room room)
+
+    @Update
+    abstract int updateRoom(Map map)
 }
