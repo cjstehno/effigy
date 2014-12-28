@@ -19,13 +19,13 @@ package com.stehno.effigy.transform
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.model.VersionerPropertyModel
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
@@ -33,6 +33,7 @@ import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.update
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.updateX
 import static java.lang.reflect.Modifier.PROTECTED
 import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -83,18 +84,23 @@ class UpdateTransformer extends MethodImplementingTransformation {
         }
 
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode, true)
+        def setterVars = extractEntitySetters(entityNode, entityVar)
 
-        // TODO: rewrite the jdbc template call as code
+        def sqlParams = []
+        sqlParams.addAll(setterVars)
+        sqlParams.addAll(params)
 
+        def entityIdent = identifier(entityNode)
+        def versioner = versioner(entityNode)
 
-        def vars = []
-        entityProperties(entityNode, false).each { p ->
-            if (p instanceof EmbeddedPropertyModel) {
-                p.fieldNames.each { pf ->
-                    vars << "${entityVar}.${p.propertyName}?.$pf"
-                }
-            } else {
-                vars << "${entityVar}.${p.propertyName}"
+        // if no sql template is defined, we want default behavior
+        if (!wheres) {
+            wheres << "${entityIdent.columnName} = ?"
+            sqlParams << propX(varX(entityVar), entityIdent.propertyName)
+
+            if (versioner) {
+                wheres << "${versioner.columnName} = ?"
+                sqlParams << propX(varX(entityVar), versioner.propertyName)
             }
         }
 
@@ -104,42 +110,63 @@ class UpdateTransformer extends MethodImplementingTransformation {
             code.addStatement(entityCreator)
         }
 
+        if (versioner) {
+            code.addStatement(codeS(
+                '''
+                ${entity}.${versioner.propertyName} = (${entity}.${versioner.propertyName} ?: 0) + 1
+                ''',
+                entity: entityVar,
+                versioner: versioner
+            ))
+        }
+
+        code.addStatement(declS(varX('count'), updateX(sql(entityNode, wheres), sqlParams)))
+
         code.addStatement(codeS('''
-                <% if(versioner){ %>
-                def currentVersion = ${entity}.${versioner.propertyName} ?: 0
-                ${entity}.${versioner.propertyName} = currentVersion + 1
-                <% } %>
-
-                int count = jdbcTemplate.update(
-                    '$sql',
-                    ${vars.join(',')},
-                    ${entity}.${identifier.propertyName}
-                    <% if(versioner){ %>
-                        ,currentVersion
-                    <% } %>
-                )
-
                 $o2m
                 $o2o
 
                 count
             ''',
-            entity: entityVar,
-            vars: vars,
-            sql: sql(entityNode, wheres),
-            table: entityTable(entityNode),
-            versioner: versioner(entityNode),
-            identifier: identifier(entityNode),
             o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                 "save${o2m.propertyName.capitalize()}(${entityVar})"
             }.join(NEWLINE),
             o2o: components(entityNode).collect { ComponentPropertyModel ap ->
-                "update${ap.propertyName.capitalize()}(${entityVar}.${identifier(entityNode).propertyName}, ${entityVar}.${ap.propertyName})"
+                "update${ap.propertyName.capitalize()}(${entityVar}.${entityIdent.propertyName}, ${entityVar}.${ap.propertyName})"
             }.join(NEWLINE)
         ))
 
         methodNode.modifiers = PUBLIC
         methodNode.code = code
+    }
+
+    private static String sql(ClassNode entityNode, List<String> wheres) {
+        def setters = []
+        entityProperties(entityNode, false).each { p ->
+            if (p instanceof EmbeddedPropertyModel) {
+                p.columnNames.each { cn ->
+                    setters << "$cn = ?"
+                }
+            } else {
+                setters << "${p.columnName}=?"
+            }
+        }
+
+        update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
+    }
+
+    private static List extractEntitySetters(ClassNode entityNode, String entityVar) {
+        def setterVars = []
+        entityProperties(entityNode, false).each { p ->
+            if (p instanceof EmbeddedPropertyModel) {
+                p.fieldNames.each { pf ->
+                    setterVars << new PropertyExpression(propX(varX(entityVar), p.propertyName), constX(pf), true)
+                }
+            } else {
+                setterVars << propX(varX(entityVar), p.propertyName)
+            }
+        }
+        setterVars
     }
 
     private static void injectComponentUpdateMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {
@@ -178,31 +205,6 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
             repositoryNode.addMethod(methodN(PROTECTED, methodName, VOID_TYPE, statement, methodParams))
         }
-    }
-
-    private static String sql(ClassNode entityNode, List<String> wheres) {
-        def setters = []
-        entityProperties(entityNode, false).each { p ->
-            if (p instanceof EmbeddedPropertyModel) {
-                p.columnNames.each { cn ->
-                    setters << "$cn = ?"
-                }
-            } else {
-                setters << "${p.columnName}=?"
-            }
-        }
-
-        // if sql template is defined, we let it rule
-        if (!wheres) {
-            wheres << "${identifier(entityNode).columnName} = ?"
-
-            VersionerPropertyModel versionProperty = versioner(entityNode)
-            if (versionProperty) {
-                wheres << "${versionProperty.columnName} = ?"
-            }
-        }
-
-        update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
     }
 
     private static void ensureParameters(MethodNode methodNode) {

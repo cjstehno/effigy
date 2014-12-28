@@ -15,13 +15,11 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.sql.SqlTemplate
 import com.stehno.effigy.transform.util.AnnotationUtils
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 
@@ -30,6 +28,7 @@ import static com.stehno.effigy.transform.model.EntityModel.entityProperty
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
+
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
@@ -76,6 +75,7 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
                 repositoryNode.name,
                 ex.message
             )
+            ex.printStackTrace()
             throw ex
         }
     }
@@ -84,6 +84,7 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
 
     abstract protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode)
 
+    @SuppressWarnings('GroovyAssignabilityCheck')
     protected static List extractParameters(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode, boolean ignoreFirst = false) {
         def wheres = []
         def params = []
@@ -94,13 +95,21 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
             params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
 
         } else {
-            methodNode.parameters[(ignoreFirst ? 1 : 0)..-1].each { mp ->
+            parameters(methodNode.parameters, ignoreFirst).each { mp ->
                 wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
                 params << varX(mp.name)
             }
         }
 
         [wheres, params]
+    }
+
+    private static List parameters(Parameter[] params, boolean ignoreFirst) {
+        if (ignoreFirst) {
+            (params as List).tail()
+        } else {
+            params
+        }
     }
 
     private static SqlTemplate extractSqlTemplate(final AnnotationNode node) {
