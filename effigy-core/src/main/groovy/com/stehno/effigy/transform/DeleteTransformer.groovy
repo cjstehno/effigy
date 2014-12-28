@@ -16,7 +16,6 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -26,11 +25,9 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
-import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.delete
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -52,33 +49,21 @@ class DeleteTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        try {
-            def code = block()
+        def code = block()
 
-            injectAssociationDeletes entityNode, methodNode, annotationNode, code
+        injectAssociationDeletes entityNode, methodNode, annotationNode, code
 
-            def (wheres, params) = extractParameters(entityNode, methodNode, annotationNode)
+        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
 
-            code.addStatement(returnS(
-                updateX(
-                    delete().from(entityTable(entityNode)).wheres(wheres).build(),
-                    params
-                )
-            ))
-
-            methodNode.modifiers = Modifier.PUBLIC
-            methodNode.code = code
-
-        } catch (ex) {
-            error(
-                DeleteTransformer,
-                'Unable to implement delete method ({}) for repository ({}): {}',
-                methodNode.name,
-                repoNode.name,
-                ex.message
+        code.addStatement(returnS(
+            updateX(
+                delete().from(entityTable(entityNode)).wheres(wheres).build(),
+                params
             )
-            throw ex
-        }
+        ))
+
+        methodNode.modifiers = Modifier.PUBLIC
+        methodNode.code = code
     }
 
     private static void injectAssociationDeletes(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
@@ -103,7 +88,7 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void injectEntityIdSelection(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
-        def (wheres, params) = extractParameters(entityNode, methodNode, deleteNode)
+        def (wheres, params) = extractParameters(deleteNode, entityNode, methodNode)
 
         code.addStatement(declS(
             varX(ENTITY_IDS),
@@ -113,29 +98,5 @@ class DeleteTransformer extends MethodImplementingTransformation {
                 params
             )
         ))
-    }
-
-    private static List extractParameters(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode) {
-        def wheres = []
-        def params = []
-
-        SqlTemplate template = extractSqlTemplate(deleteNode)
-        if (template) {
-            wheres << template.sql(entityNode)
-            params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
-
-        } else {
-            methodNode.parameters.each { mp ->
-                wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
-                params << varX(mp.name)
-            }
-        }
-
-        [wheres, params]
-    }
-
-    private static SqlTemplate extractSqlTemplate(final AnnotationNode node) {
-        String value = extractString(node, 'value')
-        value ? new SqlTemplate(value) : null
     }
 }

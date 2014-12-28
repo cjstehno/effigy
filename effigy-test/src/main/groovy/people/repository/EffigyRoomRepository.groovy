@@ -16,6 +16,7 @@
 
 package people.repository
 
+import com.stehno.effigy.annotation.Count
 import com.stehno.effigy.annotation.Create
 import com.stehno.effigy.annotation.Delete
 import com.stehno.effigy.annotation.Repository
@@ -47,4 +48,13 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Delete('@capacity <= :min')
     abstract int deleteSmall(int min)
+
+    @Count
+    abstract int count(long id)
+
+    @Count
+    abstract int count()
+
+    @Count('@capacity >= :min and @capacity <= :max')
+    abstract int countByRange(int min, int max)
 }

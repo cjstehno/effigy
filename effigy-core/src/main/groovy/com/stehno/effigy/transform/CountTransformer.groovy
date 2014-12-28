@@ -16,20 +16,42 @@
 
 package com.stehno.effigy.transform
 
-import org.codehaus.groovy.ast.ASTNode
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
+import java.lang.reflect.Modifier
+
+import static com.stehno.effigy.transform.model.EntityModel.entityTable
+import static com.stehno.effigy.transform.sql.SqlBuilder.select
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObject
+import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
+
 /**
- * Created by cjstehno on 12/28/14.
+ * Transformer used to process the @Count annotations.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class CountTransformer implements ASTTransformation {
+class CountTransformer extends MethodImplementingTransformation {
 
     @Override
-    void visit(ASTNode[] nodes, SourceUnit source) {
+    protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
+        returnType in [int_TYPE, Integer_TYPE]
+    }
 
+    @Override
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
+        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
+
+        methodNode.modifiers = Modifier.PUBLIC
+        methodNode.code = queryForObject(
+            select().column('count(*)').from(entityTable(entityNode)).wheres(wheres).build(),
+            new ClassExpression(Integer_TYPE),
+            params
+        )
     }
 }

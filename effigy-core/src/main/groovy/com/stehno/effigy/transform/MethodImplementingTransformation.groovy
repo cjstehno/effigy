@@ -17,10 +17,14 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.model.EntityModel
+import com.stehno.effigy.transform.sql.SqlTemplate
+import com.stehno.effigy.transform.util.AnnotationUtils
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.tools.GeneralUtils
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 
@@ -81,4 +85,28 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
     abstract protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode)
 
     abstract protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode)
+
+    protected static List extractParameters(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode) {
+        def wheres = []
+        def params = []
+
+        SqlTemplate template = extractSqlTemplate(annotationNode)
+        if (template) {
+            wheres << template.sql(entityNode)
+            params.addAll(template.variableNames().collect { vn -> GeneralUtils.varX(vn[1..-1]) })
+
+        } else {
+            methodNode.parameters.each { mp ->
+                wheres << "${EntityModel.entityProperty(entityNode, mp.name).columnName}=?"
+                params << GeneralUtils.varX(mp.name)
+            }
+        }
+
+        [wheres, params]
+    }
+
+    private static SqlTemplate extractSqlTemplate(final AnnotationNode node) {
+        String value = AnnotationUtils.extractString(node, 'value')
+        value ? new SqlTemplate(value) : null
+    }
 }

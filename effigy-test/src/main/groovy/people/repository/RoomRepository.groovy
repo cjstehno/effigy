@@ -36,4 +36,10 @@ interface RoomRepository {
     int deleteByCapacity(int capacity)
 
     int deleteSmall(int min)
+
+    int count(long id)
+
+    int count()
+
+    int countByRange(int min, int max)
 }

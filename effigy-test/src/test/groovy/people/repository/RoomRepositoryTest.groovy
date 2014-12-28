@@ -89,10 +89,15 @@ class RoomRepositoryTest {
     @Test
     void deleteSmall() {
         roomRepository.create('A', 10)
-        roomRepository.create('B', 14)
+        def id = roomRepository.create('B', 14)
         roomRepository.create('C', 12)
 
         assert countRowsInTable(database.jdbcTemplate, 'rooms') == 3
+
+        assert roomRepository.count() == 3
+        assert roomRepository.count(id) == 1
+        assert roomRepository.countByRange(11,15) == 2
+        assert roomRepository.countByRange(2,5) == 0
 
         assert roomRepository.deleteSmall(13) == 2
 
