@@ -56,6 +56,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
     }
 
     @Override
+    @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         ensureParameters methodNode
 
@@ -81,8 +82,12 @@ class UpdateTransformer extends MethodImplementingTransformation {
             injectComponentUpdateMethod repoNode, entityNode, ap
         }
 
-        def vars = []
+        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode, true)
 
+        // TODO: rewrite the jdbc template call as code
+
+
+        def vars = []
         entityProperties(entityNode, false).each { p ->
             if (p instanceof EmbeddedPropertyModel) {
                 p.fieldNames.each { pf ->
@@ -121,7 +126,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
             ''',
             entity: entityVar,
             vars: vars,
-            sql: sql(entityNode),
+            sql: sql(entityNode, wheres),
             table: entityTable(entityNode),
             versioner: versioner(entityNode),
             identifier: identifier(entityNode),
@@ -175,7 +180,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
         }
     }
 
-    private static String sql(ClassNode entityNode) {
+    private static String sql(ClassNode entityNode, List<String> wheres) {
         def setters = []
         entityProperties(entityNode, false).each { p ->
             if (p instanceof EmbeddedPropertyModel) {
@@ -187,11 +192,14 @@ class UpdateTransformer extends MethodImplementingTransformation {
             }
         }
 
-        def wheres = ["${identifier(entityNode).columnName} = ?"]
+        // if sql template is defined, we let it rule
+        if (!wheres) {
+            wheres << "${identifier(entityNode).columnName} = ?"
 
-        VersionerPropertyModel versionProperty = versioner(entityNode)
-        if (versionProperty) {
-            wheres << "${versionProperty.columnName} = ?"
+            VersionerPropertyModel versionProperty = versioner(entityNode)
+            if (versionProperty) {
+                wheres << "${versionProperty.columnName} = ?"
+            }
         }
 
         update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
