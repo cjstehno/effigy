@@ -15,8 +15,8 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -39,7 +39,6 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * Transformer used to process the @Delete annotation.
  */
@@ -88,21 +87,21 @@ class DeleteTransformer implements ASTTransformation {
         returnType in [boolean_TYPE, Boolean_TYPE, Integer_TYPE, int_TYPE]
     }
 
+    @SuppressWarnings('GroovyAssignabilityCheck')
     private static void implementDeleteMethod(ClassNode repoNode, ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode) {
         try {
             def code = block()
 
             injectAssociationDeletes entityNode, methodNode, deleteNode, code
 
-            def sql = delete().from(entityTable(entityNode))
-            def params = []
+            def (wheres, params) = extractParameters(entityNode, methodNode, deleteNode)
 
-            methodNode.parameters.each { p ->
-                sql.where("${entityProperty(entityNode, p.name).columnName}=?")
-                params << varX(p.name)
-            }
-
-            code.addStatement(returnS(updateX(sql.build(), params)))
+            code.addStatement(returnS(
+                updateX(
+                    delete().from(entityTable(entityNode)).wheres(wheres).build(),
+                    params
+                )
+            ))
 
             methodNode.modifiers = Modifier.PUBLIC
             methodNode.code = code
@@ -139,20 +138,41 @@ class DeleteTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectEntityIdSelection(final ClassNode entityNode, final MethodNode methodNode, AnnotationNode deleteNode, final BlockStatement code) {
-        def sql = select().column(identifier(entityNode).columnName).from(entityTable(entityNode))
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    private static void injectEntityIdSelection(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
+        def (wheres, params) = extractParameters(entityNode, methodNode, deleteNode)
 
-        String annotSql = extractString(deleteNode, 'value' )
-        if( annotSql ){
-// FIXME: here
+        code.addStatement(declS(
+            varX(ENTITY_IDS),
+            queryX(
+                select().column(identifier(entityNode).columnName).from(entityTable(entityNode)).wheres(wheres).build(),
+                singleColumnRowMapper(),
+                params
+            )
+        ))
+    }
+
+    private static List extractParameters(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode) {
+        def wheres = []
+        def params = []
+
+        SqlTemplate template = extractSqlTemplate(deleteNode)
+        if (template) {
+            wheres << template.sql(entityNode)
+            params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
+
         } else {
-            def qParams = []
             methodNode.parameters.each { mp ->
-                sql.where("${entityProperty(entityNode, mp.name).columnName}=?")
-                qParams << varX(mp.name)
+                wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
+                params << varX(mp.name)
             }
-
-            code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(), qParams)))
         }
+
+        [wheres, params]
+    }
+
+    private static SqlTemplate extractSqlTemplate(final AnnotationNode node) {
+        String value = extractString(node, 'value')
+        value ? new SqlTemplate(value) : null
     }
 }

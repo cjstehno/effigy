@@ -18,22 +18,64 @@ package com.stehno.effigy.transform.sql
 
 import org.codehaus.groovy.ast.ClassNode
 
+import static com.stehno.effigy.transform.model.EntityModel.entityProperty
+
 /**
  * Created by cjstehno on 12/27/14.
  */
 class SqlTemplate {
 
+    public static final VARIABLE_PATTERN = /:[A-Za-z0-9]*/
+    public static final PROPERTY_PATTERN = /@[A-Za-z0-9]*/
     final String text
 
-    SqlTemplate(final String text){
+    SqlTemplate(final String text) {
         this.text = text
     }
 
-    String[] variables(){
-
+    /**
+     * Retrieves the property names from the string (the @name values).
+     *
+     * return a Set of property names (including the @ prefix)
+     */
+    Set<String> propertyNames() {
+        text.findAll(PROPERTY_PATTERN).unique()
     }
 
-    String sqlFor(ClassNode entityNode){
+    /**
+     * Retrieves the variable replacement names from the string (the :name values).
+     *
+     * @return a List of the variable names (including the : prefix)
+     */
+    List<String> variableNames() {
+        text.findAll(VARIABLE_PATTERN)
+    }
 
+    /**
+     * Converts the Sql template text into valid a valid SQL fragment based on the provided entity node. The
+     * properties are converted to the proper column names and the replacement variables are converted to proper
+     * JDBC placeholders (?).
+     *
+     * e.g.
+     *
+     *  @firstName = :firstName
+     *
+     * -becomes-
+     *
+     *  first_name = ?
+     *
+     * @param entityNode the entity node to be referenced in the SQL fragment
+     * @return the converted SQL fragment
+     */
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    String sql(ClassNode entityNode) {
+        // replace @ with col name and : with ?
+        String sql = text.replaceAll(VARIABLE_PATTERN, '?')
+
+        propertyNames().each { String pname ->
+            sql = sql.replaceAll(pname, entityProperty(entityNode, pname[1..-1]).columnName)
+        }
+
+        sql
     }
 }
