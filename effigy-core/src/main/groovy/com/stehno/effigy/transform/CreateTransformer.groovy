@@ -16,24 +16,24 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.stmt.EmptyStatement
 import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
-import static com.stehno.effigy.logging.Logger.*
+import static com.stehno.effigy.logging.Logger.error
+import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.PROTECTED
 import static java.lang.reflect.Modifier.PUBLIC
@@ -46,7 +46,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 @SuppressWarnings('GStringExpressionWithinString')
-class CreateTransformer implements ASTTransformation {
+class CreateTransformer extends MethodImplementingTransformation {
 
     private static final String ID = 'id'
     private static final String ENTITY = 'entity'
@@ -54,59 +54,12 @@ class CreateTransformer implements ASTTransformation {
     private static final String COMMA = ','
 
     @Override
-    void visit(ASTNode[] nodes, SourceUnit source) {
-        MethodNode methodNode = nodes[1] as MethodNode
-        ClassNode repositoryNode = methodNode.declaringClass
-
-        try {
-            AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
-            if (repositoryAnnot) {
-                ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
-
-                validateReturnType entityNode, methodNode.returnType
-
-                implementCreateMethod repositoryNode, entityNode, methodNode
-
-            } else {
-                warn(
-                    CreateTransformer,
-                    'Create annotation may only be applied to methods of an Effigy Repository class - ignoring.'
-                )
-            }
-
-        } catch (ex) {
-            error(
-                CreateTransformer,
-                'Unable to inject create method ({}) for ({}): {}',
-                methodNode.name,
-                repositoryNode.name,
-                ex.message
-            )
-            throw ex
-        }
+    protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
+        identifier(entityNode).type == returnType
     }
 
-    private static void validateReturnType(final ClassNode entityNode, final ClassNode returnType) {
-        if (identifier(entityNode).type != returnType) {
-            error(
-                CreateTransformer,
-                'Create method return type must be the same as the entity identifier type.'
-            )
-
-            // FIXME: custom exception
-            throw new Exception('Create method return type must be the same as the entity identifier type.')
-        }
-    }
-
-    private static boolean isEntityParameter(Parameter[] parameters, ClassNode entityNode) {
-        parameters.size() == 1 && parameters[0].type == entityNode
-    }
-
-    private static boolean isMapParameter(Parameter[] parameters) {
-        parameters.size() == 1 && parameters[0].type == MAP_TYPE
-    }
-
-    private static void implementCreateMethod(final ClassNode repositoryNode, final ClassNode entityNode, final MethodNode methodNode) {
+    @Override
+    protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         info CreateTransformer, 'Injecting create method into repository for {}', entityNode.name
         try {
             String entityVar = ENTITY
@@ -128,11 +81,11 @@ class CreateTransformer implements ASTTransformation {
             }
 
             associations(entityNode).each { AssociationPropertyModel ap ->
-                injectAssociationSaveMethod repositoryNode, entityNode, ap
+                injectAssociationSaveMethod repoNode, entityNode, ap
             }
 
             components(entityNode).each { ap ->
-                injectComponentSaveMethod repositoryNode, entityNode, ap
+                injectComponentSaveMethod repoNode, entityNode, ap
             }
 
             def versioner = versioner(entityNode)
@@ -202,7 +155,7 @@ class CreateTransformer implements ASTTransformation {
                 CreateTransformer,
                 'Unable to implement create method ({}) for repository ({}): {}',
                 methodNode.name,
-                repositoryNode.name,
+                repoNode.name,
                 ex.message
             )
             throw ex
@@ -297,5 +250,13 @@ class CreateTransformer implements ASTTransformation {
                 throw ex
             }
         }
+    }
+
+    private static boolean isEntityParameter(Parameter[] parameters, ClassNode entityNode) {
+        parameters.size() == 1 && parameters[0].type == entityNode
+    }
+
+    private static boolean isMapParameter(Parameter[] parameters) {
+        parameters.size() == 1 && parameters[0].type == MAP_TYPE
     }
 }

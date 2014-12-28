@@ -16,32 +16,31 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.DeleteTransformer
+import com.stehno.effigy.transform.CountTransformer
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a delete method in an Effigy repository.
+ * Annotation used to denote a count method in an Effigy repository.
  *
- * Delete method must accept as parameters, one of the following:
- *  - no parameters to denote deleting all entities
+ * Count methods must accept as parameters, one of the following:
+ *  - no parameters to denote counting all entities
  *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entity to be deleted
+ *  - individual properties (by name and type) of the entities to be counted
  *
- * Create methods must return either:
- *  - a boolean denoting whether or not something was actually deleted
- *  - an int denoting the number of items deleted
+ * Create methods must return:
+ *  - an int denoting the number of items counted
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
 @Documented
-@GroovyASTTransformationClass(classes = [DeleteTransformer])
-@interface Delete {
+@GroovyASTTransformationClass(classes = [CountTransformer])
+@interface Count {
 
-    /**
-     * Used to specify the deletion criteria portion of the SQL using the Effigy SQL Template language. If no value is specified,
-     * the method parameters will be used as entity properties to build a default criteria statement.
-     */
-    String value() default ''
+  /**
+   * Used to specify the counting criteria portion of the SQL using the Effigy SQL Template language. If no value is specified,
+   * the method parameters will be used as entity properties to build a default criteria statement.
+   */
+  String value() default ''
 }

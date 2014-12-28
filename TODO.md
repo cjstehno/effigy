@@ -58,7 +58,8 @@ List<Person> findByName(String lastName, String firstName, PageBy pageBy)
 @Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy #orderBy')
 List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 
-TODO: Map parameter support for @Delete
+FIXME: @Delete methods need to support map with property fields as input parameter
+FIXME: @Count methods need to support map with property fields as input parameter
 
 @Update()
   update TABLE set (col=val) where
@@ -73,17 +74,6 @@ int update(entity, lastName)
 
 @Update('where @lastName like(:name)')
 int update(entity, name)
-
-
-@Count()
-  select count(@id)...
-  params are placeholders or property names
-
-@Count() - adds where clause based on properites when empty
-int count(id)
-
-@Count('where @lastName=:lastName)
-int count(lastName)
 
 
 @Exists()

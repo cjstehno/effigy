@@ -15,86 +15,49 @@
  */
 
 package com.stehno.effigy.transform
-import com.stehno.effigy.annotation.Repository
+
 import com.stehno.effigy.transform.sql.SqlTemplate
-import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
 import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.warn
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.delete
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * Transformer used to process the @Delete annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-@SuppressWarnings('GStringExpressionWithinString')
-class DeleteTransformer implements ASTTransformation {
-
+class DeleteTransformer extends MethodImplementingTransformation {
 
     private static final String ENTITY_IDS = 'entityIds'
     private static final String ENTITY_ID = 'entityId'
 
     @Override
-    void visit(ASTNode[] nodes, SourceUnit source) {
-        AnnotationNode deleteNode = nodes[0] as AnnotationNode
-        MethodNode methodNode = nodes[1] as MethodNode
-        ClassNode repositoryNode = methodNode.declaringClass
-
-        try {
-            AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
-            if (repositoryAnnot) {
-                ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
-
-                validateReturnType methodNode.returnType
-                implementDeleteMethod repositoryNode, entityNode, methodNode, deleteNode
-
-            } else {
-                warn(
-                    DeleteTransformer,
-                    'Delete annotation may only be applied to methods of an Effigy Repository class - ignoring.'
-                )
-            }
-
-        } catch (ex) {
-            error(
-                DeleteTransformer,
-                'Unable to implement delete method ({}) for ({}): {}',
-                methodNode.name,
-                repositoryNode.name,
-                ex.message
-            )
-            throw ex
-        }
-    }
-
-    private static void validateReturnType(ClassNode returnType) {
+    protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
         returnType in [boolean_TYPE, Boolean_TYPE, Integer_TYPE, int_TYPE]
     }
 
+    @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
-    private static void implementDeleteMethod(ClassNode repoNode, ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode) {
+    protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         try {
             def code = block()
 
-            injectAssociationDeletes entityNode, methodNode, deleteNode, code
+            injectAssociationDeletes entityNode, methodNode, annotationNode, code
 
-            def (wheres, params) = extractParameters(entityNode, methodNode, deleteNode)
+            def (wheres, params) = extractParameters(entityNode, methodNode, annotationNode)
 
             code.addStatement(returnS(
                 updateX(
