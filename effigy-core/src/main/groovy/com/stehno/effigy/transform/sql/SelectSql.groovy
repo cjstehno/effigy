@@ -22,6 +22,8 @@ package com.stehno.effigy.transform.sql
 @SuppressWarnings('ConfusingMethodName')
 class SelectSql {
 
+    private static final String COMMA_SPACE = ', '
+    private static final String SPACE = ' '
     private final froms = []
     private final columns = []
     private final leftOuterJoins = []
@@ -95,13 +97,13 @@ class SelectSql {
     String build() {
         StringBuilder sql = new StringBuilder('select ')
 
-        sql.append(columns.join(', '))
+        sql.append(columns.join(COMMA_SPACE))
 
         sql.append(' from ')
 
-        sql.append(froms.join(', ')).append(' ')
+        sql.append(froms.join(COMMA_SPACE)).append(SPACE)
 
-        sql.append(leftOuterJoins.join(' '))
+        sql.append(leftOuterJoins.join(SPACE))
 
         if (wheres) {
             sql.append(' where ')

@@ -19,6 +19,7 @@ package com.stehno.effigy.transform.sql
 /**
  * Created by cjstehno on 12/28/14.
  */
+@SuppressWarnings('ConfusingMethodName')
 class UpdateSql {
 
     private String table

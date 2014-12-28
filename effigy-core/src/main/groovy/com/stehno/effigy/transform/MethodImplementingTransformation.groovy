@@ -75,7 +75,6 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
                 repositoryNode.name,
                 ex.message
             )
-            ex.printStackTrace()
             throw ex
         }
     }

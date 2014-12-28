@@ -25,9 +25,7 @@ import java.lang.annotation.*
 /**
  * Annotation used to denote an "update" method in an Effigy repository.
  *
- * Update methods must accept an entity object or Map containing entity properties to be updated. Additional parameters provided
- * will be treated as "where" criteria as entity properties or variable replacements, if a sql template is provided.
- * Note: the entity or map parameter, must be the first parameter of the method signature.
+ * Update methods must accept an entity object or Map containing entity properties to be updated.
  *
  * Update methods must return one of the following:
  *  - void

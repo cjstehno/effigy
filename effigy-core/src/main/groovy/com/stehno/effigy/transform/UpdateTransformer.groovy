@@ -57,7 +57,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
     }
 
     @Override
-    @SuppressWarnings('GroovyAssignabilityCheck')
+    @SuppressWarnings(['GroovyAssignabilityCheck', 'GStringExpressionWithinString'])
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         ensureParameters methodNode
 
@@ -221,18 +221,3 @@ class UpdateTransformer extends MethodImplementingTransformation {
         parameters[0].type == MAP_TYPE
     }
 }
-/*
-@Update()
-  update TABLE set (col=val) where
-  params should be entity or properties of entity (where non-entity are used in where clause)
-  return type should be int for update count or boolean for updated/not-updated
-
-@Update
-boolean update(entity)
-
-@Update - will use default where clause based on property name
-int update(entity, lastName)
-
-@Update('where @lastName like(:name)')
-int update(entity, name)
- */

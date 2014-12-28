@@ -64,6 +64,7 @@ class AssociationSaveMethodInjector implements ASTTransformation {
         }
     }
 
+    @SuppressWarnings('GStringExpressionWithinString')
     private static void injectAssociationSaveMethod(ClassNode repositoryNode, ClassNode entityNode, AssociationPropertyModel assoc) {
         def methodName = "save${assoc.propertyName.capitalize()}"
         def methodParams = [param(newClass(entityNode), ENTITY)] as Parameter[]

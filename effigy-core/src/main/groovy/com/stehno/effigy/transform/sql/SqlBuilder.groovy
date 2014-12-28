@@ -25,7 +25,7 @@ class SqlBuilder {
         new SelectSql()
     }
 
-    static DeleteSql delete(){
+    static DeleteSql delete() {
         new DeleteSql()
     }
 

@@ -16,14 +16,14 @@
 
 package com.stehno.effigy.transform.sql
 
-import static com.stehno.effigy.logging.Logger.trace
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.SqlBuilder.select
-
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.EntityPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import org.codehaus.groovy.ast.ClassNode
+
+import static com.stehno.effigy.logging.Logger.trace
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.SqlBuilder.select
 
 /**
  *  FIXME: document
@@ -32,7 +32,9 @@ class RetrievalSql {
 
     private static final String SEPARATOR = '------------------------------'
 
-    static String selectWithoutAssociations(ClassNode entityNode, List<String> whereCriteria = [], String limit = null, String offset = null, List<String> orders = []) {
+    static String selectWithoutAssociations(
+        ClassNode entityNode, List<String> whereCriteria = [], String limit = null, String offset = null, List<String> orders = []
+    ) {
         SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
         sql.wheres(whereCriteria)
