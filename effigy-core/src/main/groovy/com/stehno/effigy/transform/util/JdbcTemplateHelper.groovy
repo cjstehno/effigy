@@ -72,6 +72,10 @@ class JdbcTemplateHelper {
         )
     }
 
+    static Expression queryForObjectX(String sql, Expression handler, List<Expression> params = []) {
+        callX(varX(JDBC_TEMPLATE), 'queryForObject', queryArgs(sql, handler, params))
+    }
+
     static Expression updateX(String sql, List<Expression> params = []) {
         callX(varX(JDBC_TEMPLATE), 'update', updateArgs(sql, params))
     }

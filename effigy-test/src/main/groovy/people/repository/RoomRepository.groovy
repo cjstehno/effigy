@@ -42,4 +42,10 @@ interface RoomRepository {
     int count()
 
     int countByRange(int min, int max)
+
+    boolean exists(long id)
+
+    boolean exists()
+
+    boolean exists(int min, int max)
 }

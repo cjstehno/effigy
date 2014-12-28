@@ -16,10 +16,7 @@
 
 package people.repository
 
-import com.stehno.effigy.annotation.Count
-import com.stehno.effigy.annotation.Create
-import com.stehno.effigy.annotation.Delete
-import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.annotation.*
 import people.entity.Room
 
 /**
@@ -57,4 +54,13 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Count('@capacity >= :min and @capacity <= :max')
     abstract int countByRange(int min, int max)
+
+    @Exists
+    abstract boolean exists(long id)
+
+    @Exists
+    abstract boolean exists()
+
+    @Exists('@capacity >= :min and @capacity <= :max')
+    abstract boolean exists(int min, int max)
 }

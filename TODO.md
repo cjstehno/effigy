@@ -75,10 +75,6 @@ int update(entity, lastName)
 @Update('where @lastName like(:name)')
 int update(entity, name)
 
-
-@Exists()
-  similar to count
-
 support for generic INSERT,UPDATE, DELETE, SELECT statements no based on entities
 @SqlInsert, @SqlUpdate, ...
 

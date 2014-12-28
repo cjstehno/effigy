@@ -94,6 +94,12 @@ class RoomRepositoryTest {
 
         assert countRowsInTable(database.jdbcTemplate, 'rooms') == 3
 
+        assert roomRepository.exists()
+        assert roomRepository.exists(id)
+        assert !roomRepository.exists(23)
+        assert roomRepository.exists(11, 15)
+        assert !roomRepository.exists(2, 5)
+
         assert roomRepository.count() == 3
         assert roomRepository.count(id) == 1
         assert roomRepository.countByRange(11,15) == 2
