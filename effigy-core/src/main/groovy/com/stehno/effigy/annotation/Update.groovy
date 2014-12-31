@@ -37,10 +37,5 @@ import java.lang.annotation.*
 @Documented
 @GroovyASTTransformationClass(classes = [UpdateTransformer, AssociationSaveMethodInjector])
 @interface Update {
-
-    /**
-     * Used to specify the selection criteria portion of the SQL using the Effigy SQL Template language. If no value is specified,
-     * the method parameters will be used as entity properties to build a default criteria statement.
-     */
-    String value() default ''
+    // nothing here
 }

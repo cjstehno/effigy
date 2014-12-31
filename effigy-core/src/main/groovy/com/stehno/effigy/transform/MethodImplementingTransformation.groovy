@@ -15,10 +15,8 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.sql.SqlTemplate
-import com.stehno.effigy.transform.util.AnnotationUtils
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
@@ -26,9 +24,9 @@ import org.codehaus.groovy.transform.ASTTransformation
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.transform.model.EntityModel.entityProperty
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
-
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
@@ -112,7 +110,7 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
     }
 
     private static SqlTemplate extractSqlTemplate(final AnnotationNode node) {
-        String value = AnnotationUtils.extractString(node, 'value')
+        String value = extractString(node, 'value')
         value ? new SqlTemplate(value) : null
     }
 }
