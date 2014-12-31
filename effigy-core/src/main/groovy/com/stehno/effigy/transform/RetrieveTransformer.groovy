@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
+import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -51,16 +52,9 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        /*
-            FIXME: support for
-                limit (static/dynamic)
-                offset (static/dynamic)
-                page (static/dynamic)
-                order (static/dynamic/string)
-         */
-
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
         def orders = extractOrders(annotationNode, entityNode, methodNode)
+        def (offset, offsetParam) = extractOffset(annotationNode, methodNode)
         def (limit, limitParam) = extractLimit(annotationNode, methodNode)
 
         def code = block()
@@ -69,17 +63,21 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         if (limitParam) {
             sqlParams << limitParam
         }
+        if (offsetParam) {
+            sqlParams << offsetParam
+        }
 
         if (hasAssociatedEntities(entityNode)) {
             code.addStatement declS(varX('results'), queryX(
                 // FIXME: needs limit support
+                // FIXME: needs offset support
                 selectWithAssociations(entityNode, wheres, orders),
                 entityCollectionExtractor(entityNode),
                 params
             ))
         } else {
             code.addStatement declS(varX('results'), queryX(
-                selectWithoutAssociations(entityNode, wheres, limit, null, orders),
+                selectWithoutAssociations(entityNode, wheres, limit, offset, orders),
                 entityRowMapper(entityNode),
                 params
             ))
@@ -93,6 +91,26 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         methodNode.modifiers = PUBLIC
         methodNode.code = code
+    }
+
+    // TODO: refactor this and the limit into a shared codebase
+    private static List extractOffset(AnnotationNode annotationNode, MethodNode methodNode) {
+        def offset = null
+        def param = null
+
+        def offsetParam = findOffsetParameter(methodNode)
+
+        Integer offsetValue = extractInteger(annotationNode, 'offset')
+        if (offsetValue > -1) {
+            offset = '?'
+            param = constX(offsetValue)
+
+        } else if (offsetParam) {
+            offset = '?'
+            param = varX(offsetParam.name)
+        }
+
+        [offset, param]
     }
 
     private static List extractLimit(AnnotationNode annotationNode, MethodNode methodNode) {
@@ -116,6 +134,10 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
     private static Parameter findLimitParameter(MethodNode methodNode) {
         methodNode.parameters.find { p -> p.getAnnotations(make(Limit)) && p.type == int_TYPE }
+    }
+
+    private static Parameter findOffsetParameter(MethodNode methodNode) {
+        methodNode.parameters.find { p -> p.getAnnotations(make(Offset)) && p.type == int_TYPE }
     }
 
     private static String extractOrders(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode) {

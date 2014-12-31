@@ -65,5 +65,5 @@ interface RoomRepository {
 
     List<Room> retrieveLimited()
 
-    List<Room> retrieveLimited(int limit)
+    List<Room> retrieveLimited(int offset, int limit)
 }

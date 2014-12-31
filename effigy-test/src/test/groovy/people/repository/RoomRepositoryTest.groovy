@@ -165,10 +165,10 @@ class RoomRepositoryTest {
         rooms = roomRepository.retrieveLimited()
         assert rooms.size() == 2
 
-        rooms = roomRepository.retrieveLimited(2)
-        assert rooms.size() == 2
-
-        rooms = roomRepository.retrieveLimited(1)
+        rooms = roomRepository.retrieveLimited(0, 1)
         assert rooms.size() == 1
+
+        rooms = roomRepository.retrieveLimited(1, 2)
+        assert rooms.size() == 2
     }
 }

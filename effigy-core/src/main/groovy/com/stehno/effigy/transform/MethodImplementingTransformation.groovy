@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
+import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.*
@@ -95,7 +96,7 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
             params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
 
         } else {
-            parameters(methodNode.parameters, ignoreFirst).findAll { p -> !p.getAnnotations(make(Limit)) }.each { mp ->
+            parameters(methodNode.parameters, ignoreFirst).findAll { p -> !p.getAnnotations(make(Limit)) && !p.getAnnotations(make(Offset)) }.each { mp ->
                 wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
                 params << varX(mp.name)
             }

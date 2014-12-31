@@ -115,12 +115,12 @@ class SelectSql {
             sql.append(orders.join(','))
         }
 
-        if (offset) {
-            sql.append(" offset $offset")
-        }
-
         if (limit) {
             sql.append(" limit $limit")
+        }
+
+        if (offset) {
+            sql.append(" offset $offset")
         }
 
         sql.toString()
