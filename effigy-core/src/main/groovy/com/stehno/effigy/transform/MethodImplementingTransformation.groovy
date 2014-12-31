@@ -15,6 +15,8 @@
  */
 
 package com.stehno.effigy.transform
+
+import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.*
@@ -27,6 +29,7 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
+
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
@@ -92,7 +95,7 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
             params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
 
         } else {
-            parameters(methodNode.parameters, ignoreFirst).each { mp ->
+            parameters(methodNode.parameters, ignoreFirst).findAll { p -> !p.getAnnotations(make(Limit)) }.each { mp ->
                 wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
                 params << varX(mp.name)
             }

@@ -62,4 +62,8 @@ interface RoomRepository {
 //    List<Room> retrieveMap(Map map)
 
     List<Room> retrieveAllOrdered()
+
+    List<Room> retrieveLimited()
+
+    List<Room> retrieveLimited(int limit)
 }

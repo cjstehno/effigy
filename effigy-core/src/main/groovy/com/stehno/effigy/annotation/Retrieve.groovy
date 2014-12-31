@@ -30,9 +30,8 @@ import java.lang.annotation.*
  *  - individual properties (by name and type) of the entity to be deleted
  *
  * Additionally the method may except one or more of the following (though only one of each):
- *  PageBy - to populate the offset/limit at runtime (cannot be used with LimitBy)
- *  LimitBy - to populate the limit at runtime (cannot be used with PageBy)
- *  OrderBy - to order the results at runtime
+ *  - an @Limit int property used to limit the query results returned
+ *  - an @Offset int property used to offset the start of the returned results
  *
  * Create methods must return either:
  *  - a Collection (or extension of) of the entity managed by the repository

@@ -84,4 +84,10 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Retrieve(order = '@capacity asc')
     abstract List<Room> retrieveAllOrdered()
+
+    @Retrieve(limit = 2)
+    abstract List<Room> retrieveLimited()
+
+    @Retrieve()
+    abstract List<Room> retrieveLimited(@Limit int limit)
 }

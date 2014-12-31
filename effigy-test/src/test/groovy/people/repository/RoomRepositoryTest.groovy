@@ -161,5 +161,14 @@ class RoomRepositoryTest {
         assert rooms[0].name == 'A'
         assert rooms[1].name == 'C'
         assert rooms[2].name == 'B'
+
+        rooms = roomRepository.retrieveLimited()
+        assert rooms.size() == 2
+
+        rooms = roomRepository.retrieveLimited(2)
+        assert rooms.size() == 2
+
+        rooms = roomRepository.retrieveLimited(1)
+        assert rooms.size() == 1
     }
 }
