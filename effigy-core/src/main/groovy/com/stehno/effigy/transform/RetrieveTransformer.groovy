@@ -44,6 +44,9 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RetrieveTransformer extends MethodImplementingTransformation {
 
+    private static final String RESULTS = 'results'
+    private static final String PLACEHOLDER = '?'
+
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
         returnType == entityNode || returnType.implementsInterface(makeClassSafe(Collection))
@@ -53,7 +56,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
-        def orders = extractOrders(annotationNode, entityNode, methodNode)
+        def orders = extractOrders(annotationNode, entityNode)
         def (offset, offsetParam) = extractOffset(annotationNode, methodNode)
         def (limit, limitParam) = extractLimit(annotationNode, methodNode)
 
@@ -68,7 +71,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         }
 
         if (hasAssociatedEntities(entityNode)) {
-            code.addStatement declS(varX('results'), queryX(
+            code.addStatement declS(varX(RESULTS), queryX(
                 // FIXME: needs limit support
                 // FIXME: needs offset support
                 selectWithAssociations(entityNode, wheres, orders),
@@ -76,7 +79,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
                 params
             ))
         } else {
-            code.addStatement declS(varX('results'), queryX(
+            code.addStatement declS(varX(RESULTS), queryX(
                 selectWithoutAssociations(entityNode, wheres, limit, offset, orders),
                 entityRowMapper(entityNode),
                 params
@@ -84,9 +87,9 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         }
 
         if (methodNode.returnType == entityNode) {
-            code.addStatement(returnS(callX(varX('results'), 'getAt', constX(0))))
+            code.addStatement(returnS(callX(varX(RESULTS), 'getAt', constX(0))))
         } else {
-            code.addStatement(returnS(varX('results')))
+            code.addStatement(returnS(varX(RESULTS)))
         }
 
         methodNode.modifiers = PUBLIC
@@ -102,11 +105,11 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         Integer offsetValue = extractInteger(annotationNode, 'offset')
         if (offsetValue > -1) {
-            offset = '?'
+            offset = PLACEHOLDER
             param = constX(offsetValue)
 
         } else if (offsetParam) {
-            offset = '?'
+            offset = PLACEHOLDER
             param = varX(offsetParam.name)
         }
 
@@ -121,11 +124,11 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         Integer limitValue = extractInteger(annotationNode, 'limit')
         if (limitValue > -1) {
-            limit = '?'
+            limit = PLACEHOLDER
             param = constX(limitValue)
 
         } else if (limitParam) {
-            limit = '?'
+            limit = PLACEHOLDER
             param = varX(limitParam.name)
         }
 
@@ -140,7 +143,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         methodNode.parameters.find { p -> p.getAnnotations(make(Offset)) && p.type == int_TYPE }
     }
 
-    private static String extractOrders(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode) {
+    private static String extractOrders(AnnotationNode annotationNode, ClassNode entityNode) {
         String orders = null
 
         String orderTemplate = extractString(annotationNode, 'order')

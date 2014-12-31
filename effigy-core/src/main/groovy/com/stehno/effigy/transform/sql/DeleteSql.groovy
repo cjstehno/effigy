@@ -25,7 +25,7 @@ class DeleteSql {
     private String from
     private final wheres = []
 
-    DeleteSql from(String value){
+    DeleteSql from(String value) {
         from = value
         this
     }
@@ -42,7 +42,7 @@ class DeleteSql {
         this
     }
 
-    String build(){
+    String build() {
         StringBuilder sql = new StringBuilder('delete from ')
         sql.append(from)
 

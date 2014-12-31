@@ -33,6 +33,7 @@ class JdbcTemplateHelper {
 
     private static final String JDBC_TEMPLATE = 'jdbcTemplate'
     private static final String COLLECTION_ASSOCIATION_EXTRACTOR = 'collectionAssociationExtractor'
+    private static final String QUERY = 'query'
 
     /**
      * Expression used to access the RowMapper accessor method for an entity.
@@ -58,12 +59,12 @@ class JdbcTemplateHelper {
 
     static Statement query(String sql, Expression handler, List<Expression> params = []) {
         returnS(
-            callX(varX(JDBC_TEMPLATE), 'query', queryArgs(sql, handler, params))
+            callX(varX(JDBC_TEMPLATE), QUERY, queryArgs(sql, handler, params))
         )
     }
 
     static Expression queryX(String sql, Expression handler, List<Expression> params = []) {
-        callX(varX(JDBC_TEMPLATE), 'query', queryArgs(sql, handler, params))
+        callX(varX(JDBC_TEMPLATE), QUERY, queryArgs(sql, handler, params))
     }
 
     static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
