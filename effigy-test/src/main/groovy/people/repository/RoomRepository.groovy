@@ -54,4 +54,6 @@ interface RoomRepository {
     int updateRoom(Map map)
 
     List<Room> retrieveAll()
+
+    Room retrieve(long id)
 }

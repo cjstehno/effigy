@@ -34,8 +34,9 @@ import java.lang.annotation.*
  *  LimitBy - to populate the limit at runtime (cannot be used with PageBy)
  *  OrderBy - to order the results at runtime
  *
- * Create methods must return:
+ * Create methods must return either:
  *  - a Collection (or extension of) of the entity managed by the repository
+ *  - a Single instance of the entity managed by the repository
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)

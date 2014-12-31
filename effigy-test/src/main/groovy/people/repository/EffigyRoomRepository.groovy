@@ -72,4 +72,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Retrieve
     abstract List<Room> retrieveAll()
+
+    @Retrieve
+    abstract Room retrieve(long id)
 }

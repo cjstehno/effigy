@@ -143,7 +143,11 @@ class RoomRepositoryTest {
         roomRepository.create('C', 12)
 
         def rooms = roomRepository.retrieveAll()
-
         assert rooms.size() == 3
+
+        def room = roomRepository.retrieve(2)
+        assert room.id == 2
+        assert room.name == 'B'
+        assert room.capacity == 14
     }
 }
