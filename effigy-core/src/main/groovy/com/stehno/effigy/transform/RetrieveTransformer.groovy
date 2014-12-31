@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -25,6 +26,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 import static com.stehno.effigy.transform.model.EntityModel.hasAssociatedEntities
 import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithAssociations
 import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutAssociations
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -51,23 +53,24 @@ class RetrieveTransformer extends MethodImplementingTransformation {
                 page (static/dynamic)
                 order (static/dynamic/string)
          */
+
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
+        def orders = extractOrders(annotationNode, entityNode, methodNode)
 
         def code = block()
 
         if (hasAssociatedEntities(entityNode)) {
-            // FIXME: needs to be supported
-            code.addStatement(declS(varX('results'), queryX(
-                selectWithAssociations(entityNode, wheres),
+            code.addStatement declS(varX('results'), queryX(
+                selectWithAssociations(entityNode, wheres, orders),
                 entityCollectionExtractor(entityNode),
                 params
-            )))
+            ))
         } else {
-            code.addStatement(declS(varX('results'), queryX(
-                selectWithoutAssociations(entityNode, wheres),
+            code.addStatement declS(varX('results'), queryX(
+                selectWithoutAssociations(entityNode, wheres, null, null, orders),
                 entityRowMapper(entityNode),
                 params
-            )))
+            ))
         }
 
         if (methodNode.returnType == entityNode) {
@@ -78,5 +81,18 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         methodNode.modifiers = PUBLIC
         methodNode.code = code
+    }
+
+    private static String extractOrders(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode) {
+        String orders = null
+
+        String orderTemplate = extractString(annotationNode, 'order')
+        if (orderTemplate) {
+            orders = new SqlTemplate(orderTemplate).sql(entityNode)
+        } else {
+            // FIXME: order param
+        }
+
+        orders
     }
 }

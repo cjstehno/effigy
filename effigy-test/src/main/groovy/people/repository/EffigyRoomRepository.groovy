@@ -81,4 +81,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
 //    @Retrieve
 //    abstract List<Room> retrieveMap(Map map)
+
+    @Retrieve(order = '@capacity asc')
+    abstract List<Room> retrieveAllOrdered()
 }

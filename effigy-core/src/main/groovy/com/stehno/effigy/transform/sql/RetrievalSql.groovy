@@ -33,7 +33,7 @@ class RetrievalSql {
     private static final String SEPARATOR = '------------------------------'
 
     static String selectWithoutAssociations(
-        ClassNode entityNode, List<String> whereCriteria = [], String limit = null, String offset = null, List<String> orders = []
+        ClassNode entityNode, List<String> whereCriteria = [], String limit = null, String offset = null, String orders = null
     ) {
         SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
@@ -48,7 +48,7 @@ class RetrievalSql {
         }
 
         if (orders) {
-            sql.orders(orders)
+            sql.order(orders)
         }
 
         def string = sql.build()
@@ -58,7 +58,7 @@ class RetrievalSql {
         string
     }
 
-    static String selectWithAssociations(ClassNode entityNode, List<String> whereCriteria = [], List<String> orders = []) {
+    static String selectWithAssociations(ClassNode entityNode, List<String> whereCriteria = [], String orders = null) {
         SelectSql selectSql = select()
 
         String entityTableName = entityTable(entityNode)
@@ -101,6 +101,8 @@ class RetrievalSql {
         }
 
         selectSql.wheres(whereCriteria)
+
+        selectSql.order(orders)
 
         String sql = selectSql.build()
 

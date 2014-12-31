@@ -155,5 +155,11 @@ class RoomRepositoryTest {
 
 //        rooms = roomRepository.retrieveMap(name:'C', capacity: 12)
 //        assert rooms.size() == 1
+
+        rooms = roomRepository.retrieveAllOrdered()
+        assert rooms.size() == 3
+        assert rooms[0].name == 'A'
+        assert rooms[1].name == 'C'
+        assert rooms[2].name == 'B'
     }
 }

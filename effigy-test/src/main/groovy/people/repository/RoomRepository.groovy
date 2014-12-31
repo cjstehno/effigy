@@ -60,4 +60,6 @@ interface RoomRepository {
     List<Room> retrieveSmall(int min)
 
 //    List<Room> retrieveMap(Map map)
+
+    List<Room> retrieveAllOrdered()
 }
