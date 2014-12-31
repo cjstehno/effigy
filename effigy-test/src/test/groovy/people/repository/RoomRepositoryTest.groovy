@@ -149,5 +149,11 @@ class RoomRepositoryTest {
         assert room.id == 2
         assert room.name == 'B'
         assert room.capacity == 14
+
+        def smalls = roomRepository.retrieveSmall(13)
+        assert smalls.size() == 2
+
+//        rooms = roomRepository.retrieveMap(name:'C', capacity: 12)
+//        assert rooms.size() == 1
     }
 }

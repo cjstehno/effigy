@@ -67,6 +67,7 @@ List<Person> findByName(String lastName, String firstName, OrderBy orderBy)
 FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
+FIXME: @Retrieve methods need to support map with property fields as input parameters
 
 support for generic INSERT,UPDATE, DELETE, SELECT statements no based on entities
 @SqlInsert, @SqlUpdate, ...

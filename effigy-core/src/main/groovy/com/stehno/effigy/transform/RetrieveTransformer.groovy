@@ -44,6 +44,13 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
+        /*
+            FIXME: support for
+                limit (static/dynamic)
+                offset (static/dynamic)
+                page (static/dynamic)
+                order (static/dynamic/string)
+         */
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
 
         def code = block()
