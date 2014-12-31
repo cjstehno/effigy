@@ -42,11 +42,20 @@ Person retrieve(id)
 @Retrieve()
 List<Person> retrieveAll()
 
-@Retrieve('where #firstName=:firstName and #lastName=:lastName limit=:limit')
+@Retrieve('where @firstName=:firstName and @lastName=:lastName limit=:limit')
 List<Person> findByName(String lastName, String firstName, int limit)
 
-@Retrieve('where #firstName=:firstName and #lastName=:lastName #pageBy')
-List<Person> findByName(String lastName, String firstName, PageBy pageBy)
+
+static offset, limit and ordering
+@Retrieve(value='@firstName=:firstName and @lastName=:lastName', offset=0, limit=10, order="@lastName desc, @firstName desc")
+List<Person> findByName(String lastName, String firstName)
+
+@Retrieve(value='@firstName=:firstName and @lastName=:lastName')
+List<Person> findByName(String lastName, String firstName, PageBy pageBy, OrderBy orderBy) - populates the offset, limit and order at runtime
+List<Person> findByName(String lastName, String firstName, Limit limit, OrderBy orderBy) - populates the limit and order at runtime
+List<Person> findByName(Map props, Limit limit, OrderBy orderBy) - populates the limit and order at runtime
+
+
 
 @Retrieve('where @firstName=:firstName and @lastName=:lastName #pageBy order by @lastName, @firstName desc')
 List<Person> findByName(String lastName, String firstName, PageBy pageBy)

@@ -52,4 +52,6 @@ interface RoomRepository {
     boolean update(Room room)
 
     int updateRoom(Map map)
+
+    List<Room> retrieveAll()
 }

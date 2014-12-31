@@ -135,4 +135,15 @@ class RoomRepositoryTest {
 
         assert roomRepository.countByRange(99, 101) == 1
     }
+
+    @Test
+    void retrieveAll() {
+        roomRepository.create('A', 10)
+        roomRepository.create('B', 14)
+        roomRepository.create('C', 12)
+
+        def rooms = roomRepository.retrieveAll()
+
+        assert rooms.size() == 3
+    }
 }

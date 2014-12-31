@@ -69,4 +69,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
 
     @Update
     abstract int updateRoom(Map map)
+
+    @Retrieve
+    abstract List<Room> retrieveAll()
 }
