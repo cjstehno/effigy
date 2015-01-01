@@ -140,7 +140,7 @@ class RoomRepositoryTest {
     void retrieveAll() {
         roomRepository.create('A', 10)
         roomRepository.create('B', 14)
-        roomRepository.create('C', 12)
+        def idC = roomRepository.create('C', 12)
 
         def rooms = roomRepository.retrieveAll()
         assert rooms.size() == 3
@@ -170,5 +170,10 @@ class RoomRepositoryTest {
 
         rooms = roomRepository.retrieveLimited(1, 2)
         assert rooms.size() == 2
+
+        def one = roomRepository.retrieveOne(idC)
+        assert one.id == idC
+        assert one.name == 'C'
+        assert one.capacity == 12
     }
 }

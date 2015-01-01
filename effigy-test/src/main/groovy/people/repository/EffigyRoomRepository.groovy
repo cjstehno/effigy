@@ -76,6 +76,9 @@ abstract class EffigyRoomRepository implements RoomRepository {
     @Retrieve
     abstract Room retrieve(long id)
 
+    @Retrieve('#id = :entityId')
+    abstract Room retrieveOne(long entityId)
+
     @Retrieve('@capacity <= :min')
     abstract List<Room> retrieveSmall(int min)
 

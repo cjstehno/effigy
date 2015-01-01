@@ -57,6 +57,8 @@ interface RoomRepository {
 
     Room retrieve(long id)
 
+    Room retrieveOne(long entityId)
+
     List<Room> retrieveSmall(int min)
 
 //    List<Room> retrieveMap(Map map)
