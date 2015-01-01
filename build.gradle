@@ -1,5 +1,5 @@
 subprojects {
-    version = '0.0.1'
+    version = '0.0.2'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'
