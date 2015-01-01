@@ -20,8 +20,6 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
@@ -35,7 +33,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 /**
  * Transformer used to process the @Delete annotation.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class DeleteTransformer extends MethodImplementingTransformation {
 
     private static final String ENTITY_IDS = 'entityIds'

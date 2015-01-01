@@ -23,7 +23,7 @@ import java.lang.annotation.*
  * parameter should be an Integer or int.
  */
 @Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
 @interface Offset {
 }

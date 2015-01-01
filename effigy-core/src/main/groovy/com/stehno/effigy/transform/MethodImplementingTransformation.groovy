@@ -18,15 +18,15 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
-import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.sql.SqlTemplate
-import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
 
 import static com.stehno.effigy.logging.Logger.error
+import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.model.EntityModel.entityProperty
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
@@ -34,34 +34,22 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
-abstract class MethodImplementingTransformation implements ASTTransformation {
+abstract class MethodImplementingTransformation {
 
-    @Override
-    void visit(ASTNode[] nodes, SourceUnit source) {
-        AnnotationNode annotationNode = nodes[0] as AnnotationNode
-        MethodNode methodNode = nodes[1] as MethodNode
-        ClassNode repositoryNode = methodNode.declaringClass
-
+    void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+        trace getClass(), 'Implementing method ({}) for repository ({})', methodNode.name, repoNode.name
         try {
-            AnnotationNode repositoryAnnot = repositoryNode.getAnnotations(make(Repository))[0]
-            if (repositoryAnnot) {
-                ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
-
-                if (isValidReturnType(methodNode.returnType, entityNode)) {
-                    implementMethod annotationNode, repositoryNode, entityNode, methodNode
-
-                } else {
-                    error(
-                        getClass(),
-                        'Return type for method ({}) is not valid for the provided annotation ({}).',
-                        methodNode.name,
-                        annotationNode.classNode.nameWithoutPackage
-                    )
-                    throw new EffigyTransformationException()
-                }
+            if (isValidReturnType(methodNode.returnType, entityNode)) {
+                implementMethod annotationNode, repoNode, entityNode, methodNode
 
             } else {
-                error getClass(), 'Repository method annotations may only be applied to methods of an Effigy Repository class - ignoring.'
+                error(
+                    getClass(),
+                    'Return type for repository ({}) method ({}) is not valid for the provided annotation ({}).',
+                    repoNode.name,
+                    methodNode.name,
+                    annotationNode.classNode.nameWithoutPackage
+                )
                 throw new EffigyTransformationException()
             }
 
@@ -74,9 +62,10 @@ abstract class MethodImplementingTransformation implements ASTTransformation {
                 'Unable to implement {} method ({}) for ({}): {}',
                 annotationNode.classNode.nameWithoutPackage,
                 methodNode.name,
-                repositoryNode.name,
+                repoNode.name,
                 ex.message
             )
+            ex.printStackTrace()
             throw ex
         }
     }

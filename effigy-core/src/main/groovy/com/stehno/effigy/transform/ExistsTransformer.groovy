@@ -22,8 +22,6 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.tools.GeneralUtils
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
@@ -37,7 +35,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS
 /**
  * Transformer used to process the @Exists annotations.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class ExistsTransformer extends MethodImplementingTransformation {
 
     @Override

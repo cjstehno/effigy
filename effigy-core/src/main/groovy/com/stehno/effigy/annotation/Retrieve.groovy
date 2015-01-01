@@ -16,9 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.RetrieveTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -38,9 +35,9 @@ import java.lang.annotation.*
  *  - a Single instance of the entity managed by the repository
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [RetrieveTransformer])
+//@GroovyASTTransformationClass(classes = [RetrieveTransformer])
 @interface Retrieve {
 
     /**

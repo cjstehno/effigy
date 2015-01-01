@@ -16,9 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.DeleteTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -34,9 +31,9 @@ import java.lang.annotation.*
  *  - an int denoting the number of items deleted
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [DeleteTransformer])
+//@GroovyASTTransformationClass(classes = [DeleteTransformer])
 @interface Delete {
 
     /**

@@ -23,8 +23,6 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static com.stehno.effigy.transform.model.EntityModel.hasAssociatedEntities
 import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithAssociations
@@ -33,15 +31,13 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static java.lang.reflect.Modifier.PUBLIC
-import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 /**
  * Transformer used to process the @Retrieve annotations.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RetrieveTransformer extends MethodImplementingTransformation {
 
     private static final String RESULTS = 'results'
@@ -49,7 +45,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
-        returnType == entityNode || returnType.implementsInterface(makeClassSafe(Collection))
+        returnType == OBJECT_TYPE || returnType == entityNode || returnType.implementsInterface(makeClassSafe(Collection))
     }
 
     @Override

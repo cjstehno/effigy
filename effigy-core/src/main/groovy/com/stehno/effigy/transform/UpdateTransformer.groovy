@@ -26,8 +26,6 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.update
@@ -43,7 +41,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 /**
  * Transformer used to process the @Update annotations.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class UpdateTransformer extends MethodImplementingTransformation {
 
     private static final String ENTITY = 'entity'

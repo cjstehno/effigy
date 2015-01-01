@@ -20,8 +20,6 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.expr.ClassExpression
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.lang.reflect.Modifier
 
@@ -34,7 +32,6 @@ import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
 /**
  * Transformer used to process the @Count annotations.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class CountTransformer extends MethodImplementingTransformation {
 
     @Override

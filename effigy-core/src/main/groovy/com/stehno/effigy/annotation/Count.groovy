@@ -16,9 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.CountTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -33,14 +30,14 @@ import java.lang.annotation.*
  *  - an int denoting the number of items counted
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [CountTransformer])
+//@GroovyASTTransformationClass(classes = [CountTransformer])
 @interface Count {
 
-  /**
-   * Used to specify the counting criteria portion of the SQL using the Effigy SQL Template language. If no value is specified,
-   * the method parameters will be used as entity properties to build a default criteria statement.
-   */
-  String value() default ''
+    /**
+     * Used to specify the counting criteria portion of the SQL using the Effigy SQL Template language. If no value is specified,
+     * the method parameters will be used as entity properties to build a default criteria statement.
+     */
+    String value() default ''
 }

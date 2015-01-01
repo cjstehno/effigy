@@ -26,8 +26,6 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.stmt.EmptyStatement
-import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
@@ -43,7 +41,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 /**
  * Transformer used to process the @Create annotation.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 @SuppressWarnings('GStringExpressionWithinString')
 class CreateTransformer extends MethodImplementingTransformation {
 
@@ -54,7 +51,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
-        identifier(entityNode).type == returnType
+        returnType == OBJECT_TYPE || identifier(entityNode).type == returnType
     }
 
     @Override
@@ -104,7 +101,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             declS(varX('keys'), ctorX(make(GeneratedKeyHolder))),
 
-            versioner ? codeS('${entity}.$name = 0', names: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
+            versioner ? codeS('${entity}.$name = 0', name: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
 
             declS(varX('factory'), ctorX(make(PreparedStatementCreatorFactory), args(
                 constX(

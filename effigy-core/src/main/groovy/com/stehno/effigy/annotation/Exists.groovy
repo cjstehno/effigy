@@ -16,9 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.ExistsTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -33,9 +30,9 @@ import java.lang.annotation.*
  *  - a boolean to denote existence
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [ExistsTransformer])
+//@GroovyASTTransformationClass(classes = [ExistsTransformer])
 @interface Exists {
 
     /**

@@ -16,10 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.AssociationSaveMethodInjector
-import com.stehno.effigy.transform.CreateTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -33,9 +29,9 @@ import java.lang.annotation.*
  * Create methods must return the identity type for the entity.
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [CreateTransformer, AssociationSaveMethodInjector])
+//@GroovyASTTransformationClass(classes = [CreateTransformer, AssociationSaveMethodInjector])
 @interface Create {
     // nothing to see here
 }

@@ -16,10 +16,6 @@
 
 package com.stehno.effigy.annotation
 
-import com.stehno.effigy.transform.AssociationSaveMethodInjector
-import com.stehno.effigy.transform.UpdateTransformer
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-
 import java.lang.annotation.*
 
 /**
@@ -33,9 +29,9 @@ import java.lang.annotation.*
  *  - an int value representing the number of entities
  */
 @Target(ElementType.METHOD)
-@Retention(RetentionPolicy.SOURCE)
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-@GroovyASTTransformationClass(classes = [UpdateTransformer, AssociationSaveMethodInjector])
+//@GroovyASTTransformationClass(classes = [UpdateTransformer, AssociationSaveMethodInjector])
 @interface Update {
     // nothing here
 }

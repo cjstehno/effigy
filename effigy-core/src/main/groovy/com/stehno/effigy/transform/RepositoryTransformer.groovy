@@ -32,8 +32,11 @@ import org.springframework.stereotype.Repository
 import java.lang.reflect.Modifier
 
 import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.logging.Logger.trace
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 
 /**
  * Transformer used for processing the EffigyRepository annotation.
@@ -41,17 +44,46 @@ import static org.codehaus.groovy.ast.ClassHelper.make
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {
 
+    private static final Map<Class, MethodImplementingTransformation> TRANSFORMERS = [
+        Create  : new CreateTransformer(),
+        Retrieve: new RetrieveTransformer(),
+        Update  : new UpdateTransformer(),
+        Delete  : new DeleteTransformer(),
+        Count   : new CountTransformer(),
+        Exists  : new ExistsTransformer()
+    ]
+
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        ClassNode repositoryNode = nodes[1] as ClassNode
+        ClassNode repoNode = nodes[1] as ClassNode
 
-        repositoryNode.allDeclaredMethods.each { method ->
-            println "METHOD(${repositoryNode.name}): ${method.name}"
+        AnnotationNode repoAnnotation = repoNode.getAnnotations(make(com.stehno.effigy.annotation.Repository))[0]
+        ClassNode entityNode = extractClass(repoAnnotation, 'forEntity')
+
+        removeAbstract repoNode
+        applyRepositoryAnnotation repoNode
+        injectJdbcTemplate repoNode
+
+        getAllMethods(repoNode).each { method ->
+            AnnotationNode annot = method.annotations.find { a ->
+                a.classNode.nameWithoutPackage in ['Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists']
+            }
+
+            if (annot) {
+                boolean myMethod = repoNode.hasMethod(method.name, method.parameters)
+                println "MYMETHOD(${repoNode.name}):${method.name} -> ${myMethod}"
+
+                trace(
+                    RepositoryTransformer,
+                    'Found CRUD annotation ({}) on method ({}) of repository ({}).',
+                    annot.classNode.nameWithoutPackage,
+                    method.name,
+                    repoNode.name
+                )
+
+                TRANSFORMERS[annot.classNode.nameWithoutPackage].visit(repoNode, entityNode, annot, method)
+            }
         }
-
-        removeAbstract repositoryNode
-        applyRepositoryAnnotation repositoryNode
-        injectJdbcTemplate repositoryNode
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
