@@ -44,45 +44,47 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {
 
-    private static final Map<Class, MethodImplementingTransformation> TRANSFORMERS = [
-        Create  : new CreateTransformer(),
-        Retrieve: new RetrieveTransformer(),
-        Update  : new UpdateTransformer(),
-        Delete  : new DeleteTransformer(),
-        Count   : new CountTransformer(),
-        Exists  : new ExistsTransformer()
+    private static final Map<Class, List<RepositoryMethodVisitor>> TRANSFORMERS = [
+        Create  : [new AssociationSaveMethodInjector(), new CreateTransformer()],
+        Retrieve: [new RetrieveTransformer()],
+        Update  : [new AssociationSaveMethodInjector(), new UpdateTransformer()],
+        Delete  : [new DeleteTransformer()],
+        Count   : [new CountTransformer()],
+        Exists  : [new ExistsTransformer()]
     ]
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
-        ClassNode repoNode = nodes[1] as ClassNode
+        try {
+            ClassNode repoNode = nodes[1] as ClassNode
 
-        AnnotationNode repoAnnotation = repoNode.getAnnotations(make(com.stehno.effigy.annotation.Repository))[0]
-        ClassNode entityNode = extractClass(repoAnnotation, 'forEntity')
+            AnnotationNode repoAnnotation = repoNode.getAnnotations(make(com.stehno.effigy.annotation.Repository))[0]
+            ClassNode entityNode = extractClass(repoAnnotation, 'forEntity')
 
-        removeAbstract repoNode
-        applyRepositoryAnnotation repoNode
-        injectJdbcTemplate repoNode
+            removeAbstract repoNode
+            applyRepositoryAnnotation repoNode
+            injectJdbcTemplate repoNode
 
-        getAllMethods(repoNode).each { method ->
-            AnnotationNode annot = method.annotations.find { a ->
-                a.classNode.nameWithoutPackage in ['Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists']
+            getAllMethods(repoNode).each { method ->
+                AnnotationNode annot = method.annotations.find { a ->
+                    a.classNode.nameWithoutPackage in ['Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists']
+                }
+
+                if (annot) {
+                    trace(
+                        RepositoryTransformer,
+                        'Found CRUD annotation ({}) on method ({}) of repository ({}).',
+                        annot.classNode.nameWithoutPackage,
+                        method.name,
+                        repoNode.name
+                    )
+
+                    TRANSFORMERS[annot.classNode.nameWithoutPackage]*.visit(repoNode, entityNode, annot, method)
+                }
             }
 
-            if (annot) {
-                boolean myMethod = repoNode.hasMethod(method.name, method.parameters)
-                println "MYMETHOD(${repoNode.name}):${method.name} -> ${myMethod}"
-
-                trace(
-                    RepositoryTransformer,
-                    'Found CRUD annotation ({}) on method ({}) of repository ({}).',
-                    annot.classNode.nameWithoutPackage,
-                    method.name,
-                    repoNode.name
-                )
-
-                TRANSFORMERS[annot.classNode.nameWithoutPackage].visit(repoNode, entityNode, annot, method)
-            }
+        } catch (ex) {
+            ex.printStackTrace()
         }
     }
 

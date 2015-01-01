@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -26,6 +25,7 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.stmt.EmptyStatement
+import org.codehaus.groovy.ast.stmt.Statement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
@@ -37,7 +37,6 @@ import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 /**
  * Transformer used to process the @Create annotation.
  */
@@ -137,8 +136,23 @@ class CreateTransformer extends MethodImplementingTransformation {
             ),
         )
 
-        methodNode.modifiers = PUBLIC
-        methodNode.code = statement
+        updateMethod repoNode, methodNode, statement
+    }
+
+    protected void updateMethod(ClassNode repoNode, MethodNode methodNode, Statement code) {
+        if (isDeclaredMethod(repoNode, methodNode)) {
+            methodNode.modifiers = PUBLIC
+            methodNode.code = code
+        } else {
+            repoNode.addMethod(new MethodNode(
+                methodNode.name,
+                PUBLIC,
+                methodNode.returnType,
+                methodNode.parameters,
+                methodNode.exceptions,
+                code
+            ))
+        }
     }
 
     private static void injectComponentSaveMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {

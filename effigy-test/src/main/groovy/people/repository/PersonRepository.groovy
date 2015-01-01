@@ -1,12 +1,25 @@
 package people.repository
 
-import com.stehno.effigy.repository.CrudOperations
 import people.entity.Person
 
 /**
  * Created by cjstehno on 11/26/2014.
  */
-interface PersonRepository extends CrudOperations<Person, Long> {
+interface PersonRepository {
+
+    Long create(Person person)
+
+    int count()
+
+    Person retrieve(long id)
+
+    List<Person> retrieveAll()
+
+    boolean delete(long id)
+
+    boolean deleteAll()
+
+    boolean update(Person person)
 
     List<Person> findByMarried(boolean married)
 

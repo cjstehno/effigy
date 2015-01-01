@@ -16,17 +16,20 @@
 
 package people.repository
 
+import com.stehno.effigy.annotation.Create
 import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.annotation.Retrieve
-import com.stehno.effigy.repository.CrudRepository
 import people.entity.Job
 
 /**
  * Created by cjstehno on 12/14/2014.
  */
 @Repository(forEntity = Job)
-abstract class EffigyJobRepository extends CrudRepository<Job, Long> implements JobRepository {
+abstract class EffigyJobRepository implements JobRepository {
 
-    @Retrieve('@title like(?)')
-    abstract List<Job> findByTitle(String title)
+    @Create
+    abstract Long create(Job job)
+
+    @Retrieve
+    abstract List<Job> retrieve(long id)
 }

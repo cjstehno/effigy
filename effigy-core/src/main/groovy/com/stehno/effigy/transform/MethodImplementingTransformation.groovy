@@ -34,8 +34,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
-abstract class MethodImplementingTransformation {
+abstract class MethodImplementingTransformation implements RepositoryMethodVisitor {
 
+    @Override
     void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         trace getClass(), 'Implementing method ({}) for repository ({})', methodNode.name, repoNode.name
         try {
@@ -73,6 +74,10 @@ abstract class MethodImplementingTransformation {
     abstract protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode)
 
     abstract protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode)
+
+    protected static boolean isDeclaredMethod(ClassNode repoNode, MethodNode methodNode) {
+        repoNode.hasDeclaredMethod(methodNode.name, methodNode.parameters)
+    }
 
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected static List extractParameters(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode, boolean ignoreFirst = false) {

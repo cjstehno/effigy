@@ -16,24 +16,22 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.annotation.Repository
 import com.stehno.effigy.transform.model.AssociationPropertyModel
-import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.control.CompilePhase
-import org.codehaus.groovy.control.SourceUnit
-import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.associations
 import static com.stehno.effigy.transform.model.EntityModel.identifier
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
 import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
@@ -41,26 +39,14 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
  * Created by cjstehno on 12/28/14.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-class AssociationSaveMethodInjector implements ASTTransformation {
+class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
 
     private static final String ENTITY = 'entity'
 
     @Override
-    void visit(ASTNode[] nodes, SourceUnit source) {
-        MethodNode methodNode = nodes[1] as MethodNode
-        ClassNode repoNode = methodNode.declaringClass
-
-        AnnotationNode repositoryAnnot = repoNode.getAnnotations(make(Repository))[0]
-        if (repositoryAnnot) {
-            ClassNode entityNode = extractClass(repositoryAnnot, 'forEntity')
-
-            associations(entityNode).each { AssociationPropertyModel ap ->
-                injectAssociationSaveMethod repoNode, entityNode, ap
-            }
-
-        } else {
-            error getClass(), 'Repository method annotations may only be applied to methods of an Effigy Repository class.'
-            throw new EffigyTransformationException()
+    void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+        associations(entityNode).each { AssociationPropertyModel ap ->
+            injectAssociationSaveMethod repoNode, entityNode, ap
         }
     }
 

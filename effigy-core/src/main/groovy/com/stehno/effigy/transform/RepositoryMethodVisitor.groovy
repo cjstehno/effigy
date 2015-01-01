@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package people.repository
+package com.stehno.effigy.transform
 
-import people.entity.Job
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
 
 /**
- * Created by cjstehno on 12/14/2014.
+ * Created by cjstehno on 1/1/15.
  */
-interface JobRepository {
+interface RepositoryMethodVisitor {
 
-    Long create(Job job)
-
-    List<Job> retrieve(long id)
-
+    void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode)
 }

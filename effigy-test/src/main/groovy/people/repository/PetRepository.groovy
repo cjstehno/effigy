@@ -1,13 +1,18 @@
 package people.repository
 
-import com.stehno.effigy.repository.CrudOperations
 import people.entity.Animal
 import people.entity.Pet
 
 /**
- * Created by cjstehno on 11/28/2014.
+ * Simple repository for managing pets in the database.
  */
-interface PetRepository extends CrudOperations<Pet, Long> {
+interface PetRepository {
+
+    Long create(Pet pet)
+
+    List<Pet> retrieve(long id)
+
+    boolean delete(long id)
 
     List<Pet> findByAnimal(Animal animal)
 }
