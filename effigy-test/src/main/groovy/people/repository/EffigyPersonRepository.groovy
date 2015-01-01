@@ -1,19 +1,22 @@
 package people.repository
 
-import com.stehno.effigy.annotation.CrudOperations
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.annotation.Retrieve
+import com.stehno.effigy.repository.CrudRepository
 import people.entity.Person
 
 /**
  * Created by cjstehno on 11/26/2014.
  */
 @Repository(forEntity = Person)
-@CrudOperations
-abstract class EffigyPersonRepository implements PersonRepository {
+abstract class EffigyPersonRepository extends CrudRepository<Person, Long> implements PersonRepository {
 
+    @Retrieve
     abstract List<Person> findByLastName(String lastName)
 
-    List<Person> findBySomething(String something) {
-        throw new UnsupportedOperationException('This is not valid')
-    }
+    @Retrieve
+    abstract List<Person> findByMarried(boolean married)
+
+    @Retrieve(limit = 2)
+    abstract List<Person> findByFirstName(String firstName)
 }

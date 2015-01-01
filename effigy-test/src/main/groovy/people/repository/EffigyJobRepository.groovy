@@ -16,13 +16,13 @@
 
 package people.repository
 
-import com.stehno.effigy.annotation.CrudOperations
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.repository.CrudRepository
 import people.entity.Job
 
 /**
  * Created by cjstehno on 12/14/2014.
  */
-@Repository(forEntity = Job) @CrudOperations
-abstract class EffigyJobRepository implements JobRepository {
+@Repository(forEntity = Job)
+abstract class EffigyJobRepository extends CrudRepository<Job, Long> implements JobRepository {
 }

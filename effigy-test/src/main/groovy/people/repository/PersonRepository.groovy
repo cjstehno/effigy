@@ -1,6 +1,5 @@
 package people.repository
 
-import com.stehno.effigy.annotation.Limited
 import com.stehno.effigy.repository.CrudOperations
 import people.entity.Person
 
@@ -11,6 +10,7 @@ interface PersonRepository extends CrudOperations<Person, Long> {
 
     List<Person> findByMarried(boolean married)
 
-    @Limited(2)
+    List<Person> findByLastName(String lastName)
+
     List<Person> findByFirstName(String firstName)
 }

@@ -16,10 +16,6 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
-import static org.codehaus.groovy.ast.ClassHelper.make
-
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -35,6 +31,10 @@ import org.springframework.stereotype.Repository
 
 import java.lang.reflect.Modifier
 
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
+import static org.codehaus.groovy.ast.ClassHelper.make
+
 /**
  * Transformer used for processing the EffigyRepository annotation.
  */
@@ -44,6 +44,10 @@ class RepositoryTransformer implements ASTTransformation {
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode repositoryNode = nodes[1] as ClassNode
+
+        repositoryNode.allDeclaredMethods.each { method ->
+            println "METHOD(${repositoryNode.name}): ${method.name}"
+        }
 
         removeAbstract repositoryNode
         applyRepositoryAnnotation repositoryNode
