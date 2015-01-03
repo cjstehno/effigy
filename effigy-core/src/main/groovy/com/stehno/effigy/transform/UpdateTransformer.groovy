@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -23,21 +22,23 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
+import org.codehaus.groovy.syntax.Types
 
+import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.update
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.updateX
 import static java.lang.reflect.Modifier.PROTECTED
-import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
+import static org.codehaus.groovy.syntax.Token.newSymbol
 /**
  * Transformer used to process the @Update annotations.
  */
@@ -97,7 +98,8 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
             if (versioner) {
                 wheres << "${versioner.columnName} = ?"
-                sqlParams << propX(varX(entityVar), versioner.propertyName)
+                // minus one since we need the old version in the where clause
+                sqlParams << new BinaryExpression(propX(varX(entityVar), versioner.propertyName), newSymbol(Types.MINUS, -1, -1), constX(1))
             }
         }
 
@@ -110,7 +112,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
         if (versioner) {
             code.addStatement(codeS(
                 '''
-                ${entity}.${versioner.propertyName} = (${entity}.${versioner.propertyName} ?: 0) + 1
+                ${entity}.${versioner.propertyName} = ${entity}.${versioner.propertyName} + 1
                 ''',
                 entity: entityVar,
                 versioner: versioner
@@ -119,11 +121,15 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
         code.addStatement(declS(varX('count'), updateX(sql(entityNode, wheres), sqlParams)))
 
+        // FIXME: should throw more explicit exception
         code.addStatement(codeS('''
-                $o2m
-                $o2o
-
-                count
+                if( count ){
+                    $o2m
+                    $o2o
+                    return count
+                } else {
+                    throw new Exception('Update failed')
+                }
             ''',
             o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                 "save${o2m.propertyName.capitalize()}(${entityVar})"
@@ -133,8 +139,9 @@ class UpdateTransformer extends MethodImplementingTransformation {
             }.join(NEWLINE)
         ))
 
-        methodNode.modifiers = PUBLIC
-        methodNode.code = code
+        updateMethod repoNode, methodNode, code
+
+        debug UpdateTransformer, 'Implemented repository ({}) Update method ({})', repoNode.name, methodNode.name
     }
 
     private static String sql(ClassNode entityNode, List<String> wheres) {
@@ -149,7 +156,11 @@ class UpdateTransformer extends MethodImplementingTransformation {
             }
         }
 
-        update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
+        String sql = update().table(entityTable(entityNode)).sets(setters).wheres(wheres).build()
+
+        debug UpdateTransformer, 'Sql({}:Update): {}', entityNode.name, sql
+
+        sql
     }
 
     private static List extractEntitySetters(ClassNode entityNode, String entityVar) {

@@ -21,8 +21,6 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.expr.ClassExpression
 
-import java.lang.reflect.Modifier
-
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObject
@@ -44,8 +42,7 @@ class CountTransformer extends MethodImplementingTransformation {
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
 
-        methodNode.modifiers = Modifier.PUBLIC
-        methodNode.code = queryForObject(
+        updateMethod repoNode, methodNode, queryForObject(
             select().column('count(*)').from(entityTable(entityNode)).wheres(wheres).build(),
             new ClassExpression(Integer_TYPE),
             params

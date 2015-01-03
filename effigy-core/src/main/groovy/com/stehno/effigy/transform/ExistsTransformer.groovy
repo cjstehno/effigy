@@ -23,8 +23,6 @@ import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.tools.GeneralUtils
 
-import java.lang.reflect.Modifier
-
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObjectX
@@ -47,8 +45,7 @@ class ExistsTransformer extends MethodImplementingTransformation {
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
 
-        methodNode.modifiers = Modifier.PUBLIC
-        methodNode.code = returnS(new BinaryExpression(
+        updateMethod repoNode, methodNode, returnS(new BinaryExpression(
             queryForObjectX(
                 select().column('count(*)').from(entityTable(entityNode)).wheres(wheres).limit('1').build(),
                 new ClassExpression(Integer_TYPE),

@@ -1,341 +1,166 @@
+/*
+ * Copyright (c) 2014 Christopher J. Stehno
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package people.repository
 
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.springframework.test.jdbc.JdbcTestUtils
 import people.DatabaseEnvironment
-import people.entity.*
+import people.entity.Address
+import people.entity.Person
 
+/**
+ * Created by cjstehno on 1/1/15.
+ */
 class PersonRepositoryTest {
 
     @Rule public DatabaseEnvironment database = new DatabaseEnvironment()
 
     private static final Map PERSON_A = [
-        firstName : 'John',
-        middleName: 'Q',
-        lastName  : 'Public',
-        birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
-        married   : false
+        firstName: 'John', middleName: 'Q', lastName: 'Public', birthDate: new Date(), married: false,
+        home     : new Address('123 E West St', 'Apt 15', 'Plainview', 'OH', '12345'),
+        work     : new Address('4242 Empire Dr', 'Ste 1234', 'Masterplan', 'OH', '45643')
     ]
+
     private static final Map PERSON_B = [
-        firstName : 'Abe',
-        middleName: 'A',
-        lastName  : 'Ableman',
-        birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
-        married   : true
+        firstName: 'John', middleName: 'M', lastName: 'Smith', birthDate: new Date(), married: true,
+        work     : new Address('8296 E First St', 'Ste 34', 'Blahville', 'NE', '85643')
+    ]
+
+    private static final Map PERSON_C = [
+        firstName: 'Jane', middleName: 'Y', lastName: 'Smith', birthDate: new Date(), married: true
     ]
 
     private PersonRepository personRepository
-    private PetRepository petRepository
-    private JobRepository jobRepository
 
     @Before void before() {
         personRepository = new EffigyPersonRepository(
             jdbcTemplate: database.jdbcTemplate
         )
-        petRepository = new EffigyPetRepository(
-            jdbcTemplate: database.jdbcTemplate
-        )
-        jobRepository = new EffigyJobRepository(
-            jdbcTemplate: database.jdbcTemplate
-        )
     }
 
     @Test void create() {
-        Person personA = new Person(PERSON_A)
+        def (idA, idB, idC) = createThree()
+        assert idA == 1
+        assert idB == 2
+        assert idC == 3
+    }
 
-        def id = personRepository.create(personA)
-
-        assert id == 1
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
-        assert personRepository.count() == 1
-
-        def result = personRepository.retrieve(1)
-        assert result == personA
-
-        Person personB = new Person(PERSON_B)
-
-        def idB = personRepository.create(personB)
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
-        assert personRepository.count() == 2
+    @Test void retrieveAll() {
+        def (idA, idB, idC) = createThree()
 
         def people = personRepository.retrieveAll()
-        assert people.size() == 2
+        assert people.size() == 3
 
-        assert !personRepository.delete(100)
+        assert people[0].id == idA
+        assert people[0].version == 1
+        assertProperties(PERSON_A, people[0])
 
-        assert personRepository.delete(1)
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
-        assert personRepository.count() == 1
+        assert people[1].id == idB
+        assert people[1].version == 1
+        assertProperties(PERSON_B, people[1])
 
-        assert personRepository.deleteAll()
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
-        assert personRepository.count() == 0
+        assert people[2].id == idC
+        assert people[2].version == 1
+        assertProperties(PERSON_C, people[2])
+    }
+
+    @Test void retrieve() {
+        def (idA, idB, idC) = createThree()
+
+        def person = personRepository.retrieve(idA)
+        assertProperties(PERSON_A, person)
+
+        person = personRepository.retrieve(idB)
+        assertProperties(PERSON_B, person)
+
+        person = personRepository.retrieve(idC)
+        assertProperties(PERSON_C, person)
     }
 
     @Test void update() {
-        Person personA = new Person(PERSON_A)
+        def id = personRepository.create(new Person(PERSON_C))
 
-        def id = personRepository.create(personA)
+        Person person = personRepository.retrieve(id)
+        println person
 
-        assert personA == personRepository.retrieve(id)
+        person.lastName = 'Jones'
+        person.married = false
 
-        Person personB = new Person(PERSON_B + [id: id])
+        assert personRepository.update(person)
 
-        personRepository.update(personB)
-
-        assert personB == personRepository.retrieve(id)
+        person = personRepository.retrieve(id)
+        assertProperties(person, firstName: 'Jane', middleName: 'Y', lastName: 'Jones', married: false, version: 2)
     }
 
-    @Test void createWithPet() {
-        Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
-        Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
+    @Test void delete() {
+        def (idA, idB, idC) = createThree()
 
-        Person personA = new Person(PERSON_A)
-        personA.pets << petA
-        personA.pets << petB
-
-        def id = personRepository.create(personA)
-        assert id
-
-        def idB = personRepository.create(new Person(PERSON_B))
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
-
-        Person retrieved = personRepository.retrieve(id)
-
-        assert retrieved.pets.size() == 2
-        assert retrieved.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
-        assert retrieved.pets.find { p -> p.name == 'Fester' }.animal == Animal.SNAKE
-
-        def people = personRepository.retrieveAll()
-        assert people.size() == 2
-
-        // delete non-pet person
         assert personRepository.delete(idB)
 
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 1
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
+        assert personRepository.countAll() == 2
+        assert personRepository.count(idA) == 1
+        assert personRepository.count(idB) == 0
+        assert personRepository.count(idC) == 1
 
-        assert personRepository.delete(id)
+        assert personRepository.exists(idA)
+        assert !personRepository.exists(idB)
+        assert personRepository.exists(idC)
 
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
-    }
-
-    @Test void createWithPetAndUpdate() {
-        Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
-        Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
-
-        Person personA = new Person(PERSON_A)
-        personA.pets << petA
-        personA.pets << petB
-
-        def id = personRepository.create(personA)
-
-        Person retrieved = personRepository.retrieve(id)
-
-        assert retrieved.pets.size() == 2
-        assert retrieved.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
-        assert retrieved.pets.find { p -> p.name == 'Fester' }.animal == Animal.SNAKE
-
-        retrieved.lastName = 'Jones'
-        retrieved.married = true
-        retrieved.pets.remove(petB)
-
-        personRepository.update(retrieved)
-
-        def updated = personRepository.retrieve(id)
-        assert updated.married
-        assert updated.lastName == 'Jones'
-
-        assert updated.pets.size() == 1
-        assert updated.pets.find { p -> p.name == 'Chester' }.animal == Animal.CAT
+        assert personRepository.retrieve(idA)
+        assert !personRepository.retrieve(idB)
+        assert personRepository.retrieve(idC)
     }
 
     @Test void deleteAll() {
-        Pet petA = petRepository.retrieve(petRepository.create(new Pet(name: 'Chester', animal: Animal.CAT)))
-        Pet petB = petRepository.retrieve(petRepository.create(new Pet(name: 'Fester', animal: Animal.SNAKE)))
+        def (idA, idB, idC) = createThree()
 
-        Person personA = new Person(PERSON_A)
-        personA.pets << petA
-        personA.pets << petB
+        assert personRepository.countAll() == 3
+        assert personRepository.count(idA) == 1
+        assert personRepository.count(idB) == 1
+        assert personRepository.count(idC) == 1
 
-        personRepository.create(personA)
-        personRepository.create(new Person(PERSON_B))
+        assert personRepository.deleteAll()
 
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 2
+        assert personRepository.countAll() == 0
+        assert personRepository.count(idA) == 0
+        assert personRepository.count(idB) == 0
+        assert personRepository.count(idC) == 0
 
-        personRepository.deleteAll()
+        assert !personRepository.exists(idA)
+        assert !personRepository.exists(idB)
+        assert !personRepository.exists(idC)
 
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'pets') == 2
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'peoples_pets') == 0
+        assert !personRepository.retrieve(idA)
+        assert !personRepository.retrieve(idB)
+        assert !personRepository.retrieve(idC)
     }
 
-    @Test void createWithAddress() {
-        Person personA = new Person(PERSON_A)
-        personA.home = new Address('2121 Redbird Lane', 'Apartment 2', 'Glenview', 'OH', '84134')
-
-        def id = personRepository.create(personA)
-        assert id
-
-        def retrieved = personRepository.retrieve(id)
-
-        assert retrieved.firstName == 'John'
-        assert retrieved.middleName == 'Q'
-        assert retrieved.lastName == 'Public'
-        assert !retrieved.married
-        assert retrieved.home.line1 == '2121 Redbird Lane'
-        assert retrieved.home.line2 == 'Apartment 2'
-        assert retrieved.home.city == 'Glenview'
-        assert retrieved.home.state == 'OH'
-        assert retrieved.home.zip == '84134'
-
-        retrieved.married = true
-        retrieved.home = new Address('2121 Redbird Lane', 'Apartment 4', 'Cleavland', 'OH', '84134')
-
-        personRepository.update(retrieved)
-
-        retrieved = personRepository.retrieve(id)
-
-        assert retrieved.firstName == 'John'
-        assert retrieved.middleName == 'Q'
-        assert retrieved.lastName == 'Public'
-        assert retrieved.married
-        assert retrieved.home.line1 == '2121 Redbird Lane'
-        assert retrieved.home.line2 == 'Apartment 4'
-        assert retrieved.home.city == 'Cleavland'
-        assert retrieved.home.state == 'OH'
-        assert retrieved.home.zip == '84134'
-
-        assert personRepository.delete(retrieved.id)
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
+    private static void assertProperties(Map props, Person entity) {
+        props.each { k, v ->
+            assert entity[k] == v
+        }
     }
 
-    @Test void createWithEmployer() {
-        Person personA = new Person(PERSON_A)
-        personA.home = new Address('2121 Redbird Lane', 'Apartment 2', 'Glenview', 'OH', '84134')
-        personA.work = new Address('8888 Highspeed Rd', 'Bldg 2345', 'Sunnydale', 'CA', '90210')
-
-        def id = personRepository.create(personA)
-        assert id
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 1
-
-        def retrieved = personRepository.retrieve(id)
-
-        assert retrieved.firstName == 'John'
-        assert retrieved.middleName == 'Q'
-        assert retrieved.lastName == 'Public'
-        assert !retrieved.married
-        assert retrieved.home.line1 == '2121 Redbird Lane'
-        assert retrieved.home.line2 == 'Apartment 2'
-        assert retrieved.home.city == 'Glenview'
-        assert retrieved.home.state == 'OH'
-        assert retrieved.home.zip == '84134'
-        assert retrieved.work.line1 == '8888 Highspeed Rd'
-        assert retrieved.work.line2 == 'Bldg 2345'
-        assert retrieved.work.city == 'Sunnydale'
-        assert retrieved.work.state == 'CA'
-        assert retrieved.work.zip == '90210'
-
-        retrieved.work = new Address('8888 Highspeed Rd', 'Bldg 8675309', 'Sunnydale', 'CA', '90210')
-
-        personRepository.update(retrieved)
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 1
-
-        retrieved = personRepository.retrieve(id)
-
-        assert retrieved.firstName == 'John'
-        assert retrieved.middleName == 'Q'
-        assert retrieved.lastName == 'Public'
-        assert !retrieved.married
-        assert retrieved.home.line1 == '2121 Redbird Lane'
-        assert retrieved.home.line2 == 'Apartment 2'
-        assert retrieved.home.city == 'Glenview'
-        assert retrieved.home.state == 'OH'
-        assert retrieved.home.zip == '84134'
-        assert retrieved.work.line1 == '8888 Highspeed Rd'
-        assert retrieved.work.line2 == 'Bldg 8675309'
-        assert retrieved.work.city == 'Sunnydale'
-        assert retrieved.work.state == 'CA'
-        assert retrieved.work.zip == '90210'
-
-        assert personRepository.delete(id)
-
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'people') == 0
-        assert JdbcTestUtils.countRowsInTable(database.jdbcTemplate, 'employers') == 0
-    }
-
-    @Test void createWithJob() {
-        def jobId = jobRepository.create(new Job(title: 'Software Engr'))
-        def otherJobId = jobRepository.create(new Job(title: 'Taco Vendor'))
-
-        def person = new Person(PERSON_A)
-        person.job = jobRepository.retrieve(jobId)
-
-        def personId = personRepository.create(person)
-
-        person = personRepository.retrieve(personId)
-
-        assert person.firstName == 'John'
-        assert person.middleName == 'Q'
-        assert person.lastName == 'Public'
-        assert !person.married
-        assert person.job.title == 'Software Engr'
-
-        person.job = jobRepository.retrieve(otherJobId)
-
-        personRepository.update(person)
-
-        def retrieved = personRepository.retrieve(personId)
-
-        assert retrieved.firstName == 'John'
-        assert retrieved.middleName == 'Q'
-        assert retrieved.lastName == 'Public'
-        assert !retrieved.married
-        assert retrieved.job.title == 'Taco Vendor'
-    }
-
-    @Test void finders() {
-        def idA = personRepository.create(new Person(PERSON_A))
-        def idB = personRepository.create(new Person(PERSON_B))
-        def idC = personRepository.create(new Person(
-            firstName : 'John',
-            middleName: 'F',
-            lastName  : 'Private',
-            birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married   : false
-        ))
-        def idD = personRepository.create(new Person(
-            firstName : 'John',
-            middleName: 'M',
-            lastName  : 'Smith',
-            birthDate : Date.parse('MM/dd/yyyy', '05/28/1970'),
-            married   : false
-        ))
-
-        def marriedPeople = personRepository.findByMarried(true)
-        assert marriedPeople.size() == 1
-        assert marriedPeople[0].id == idB
-
-        def publics = personRepository.findByLastName('Public')
-        assert publics.size() == 1
-        assert publics[0].id == idA
-
-        def johns = personRepository.findByFirstName('John')
-        assert johns.size() == 2
-        assert johns.every { it.firstName == 'John' }
+    private List createThree() {
+        [
+            personRepository.create(new Person(PERSON_A)),
+            personRepository.create(new Person(PERSON_B)),
+            personRepository.create(new Person(PERSON_C))
+        ]
     }
 }

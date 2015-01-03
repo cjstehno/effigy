@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.sql.SqlTemplate
@@ -30,11 +29,9 @@ import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutAssociat
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
-import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
-
 /**
  * Transformer used to process the @Retrieve annotations.
  */
@@ -88,8 +85,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
             code.addStatement(returnS(varX(RESULTS)))
         }
 
-        methodNode.modifiers = PUBLIC
-        methodNode.code = code
+        updateMethod repoNode, methodNode, code
     }
 
     // TODO: refactor this and the limit into a shared codebase

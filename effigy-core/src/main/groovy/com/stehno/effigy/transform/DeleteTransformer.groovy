@@ -15,21 +15,19 @@
  */
 
 package com.stehno.effigy.transform
-
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.ForStatement
 
-import java.lang.reflect.Modifier
-
+import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SqlBuilder.delete
 import static com.stehno.effigy.transform.sql.SqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * Transformer used to process the @Delete annotation.
  */
@@ -59,41 +57,49 @@ class DeleteTransformer extends MethodImplementingTransformation {
             )
         ))
 
-        methodNode.modifiers = Modifier.PUBLIC
-        methodNode.code = code
+        updateMethod repoNode, methodNode, code
     }
 
     private static void injectAssociationDeletes(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
         if (hasAssociatedEntities(entityNode)) {
+            debug DeleteTransformer, 'Associations({}:{})', entityNode.name, methodNode.name
+
+
             injectEntityIdSelection(entityNode, methodNode, deleteNode, code)
 
             def closureCode = block()
 
             associations(entityNode).each { ap ->
+                debug DeleteTransformer, '- Association({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
+
                 def sql = delete().from(ap.joinTable).where("${ap.joinTable}.${ap.entityColumn}=?")
                 closureCode.addStatement(stmt(updateX(sql.build(), [varX(ENTITY_ID)])))
             }
 
             components(entityNode).each { ap ->
+                debug DeleteTransformer, '- Component({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
+
                 def sql = delete().from(ap.lookupTable).where("${ap.lookupTable}.${ap.entityColumn}=?")
+                debug DeleteTransformer, '- Component({}:{}): {} -> {}', entityNode.name, methodNode.name, ap.propertyName, sql
+
                 closureCode.addStatement(stmt(updateX(sql.build(), [varX(ENTITY_ID)])))
             }
 
-            code.addStatement(stmt(callX(varX(ENTITY_IDS), 'each', closureX(params(param(OBJECT_TYPE, ENTITY_ID)), closureCode))))
+            code.addStatement(new ForStatement(param(OBJECT_TYPE, ENTITY_ID), varX(ENTITY_IDS), closureCode))
         }
     }
 
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void injectEntityIdSelection(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
         def (wheres, params) = extractParameters(deleteNode, entityNode, methodNode)
+        def ident = identifier(entityNode)
+
+        String sql = select().column(ident.columnName).from(entityTable(entityNode)).wheres(wheres).build()
+        debug DeleteTransformer, 'Sql({}:Delete): {}', entityNode.name, sql
 
         code.addStatement(declS(
             varX(ENTITY_IDS),
-            queryX(
-                select().column(identifier(entityNode).columnName).from(entityTable(entityNode)).wheres(wheres).build(),
-                singleColumnRowMapper(),
-                params
-            )
+            queryX(sql, singleColumnRowMapper(ident.type), params)
         ))
     }
 }

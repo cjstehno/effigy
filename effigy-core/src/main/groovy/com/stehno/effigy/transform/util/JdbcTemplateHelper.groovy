@@ -81,8 +81,8 @@ class JdbcTemplateHelper {
         callX(varX(JDBC_TEMPLATE), 'update', updateArgs(sql, params))
     }
 
-    static Expression singleColumnRowMapper() {
-        ctorX(makeClassSafe(SingleColumnRowMapper))
+    static Expression singleColumnRowMapper(ClassNode requiredType) {
+        ctorX(makeClassSafe(SingleColumnRowMapper), args(classX(requiredType.typeClass)))
     }
 
     private static ArgumentListExpression updateArgs(String sql, List<Expression> params) {

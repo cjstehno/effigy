@@ -84,18 +84,20 @@ class SqlTemplate {
     String sql(ClassNode entityNode) {
         String sql = text.replaceAll(VARIABLE_PATTERN, '?')
 
+        String tableName = entityTable(entityNode)
+
         // TODO: pull this out into more configurable form - could support more macros
         macroNames().each { macro ->
             if (macro.equalsIgnoreCase('#id')) {
-                sql = sql.replace(macro, identifier(entityNode).columnName)
+                sql = sql.replace(macro, "${tableName}.${identifier(entityNode).columnName}")
 
             } else if (macro.equalsIgnoreCase('#version')) {
-                sql = sql.replace(macro, versioner(entityNode).columnName)
+                sql = sql.replace(macro, "${tableName}.${versioner(entityNode).columnName}")
             }
         }
 
         propertyNames().each { String pname ->
-            sql = sql.replaceAll(pname, entityProperty(entityNode, pname[1..-1]).columnName)
+            sql = sql.replaceAll(pname, "${tableName}.${entityProperty(entityNode, pname[1..-1]).columnName}")
         }
 
         sql

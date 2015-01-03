@@ -1,10 +1,26 @@
+/*
+ * Copyright (c) 2014 Christopher J. Stehno
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package people.repository
 
 import com.stehno.effigy.annotation.*
 import people.entity.Person
 
 /**
- * Created by cjstehno on 11/26/2014.
+ * Effigy-based implementation of the PersonRepository interface.
  */
 @Repository(forEntity = Person)
 abstract class EffigyPersonRepository implements PersonRepository {
@@ -12,30 +28,35 @@ abstract class EffigyPersonRepository implements PersonRepository {
     @Create
     abstract Long create(Person person)
 
-    @Count
-    abstract int count()
-
-    @Retrieve
-    abstract Person retrieve(long id)
-
     @Retrieve
     abstract List<Person> retrieveAll()
 
-    @Delete
-    abstract boolean delete(long id)
-
-    @Delete
-    abstract boolean deleteAll()
+    @Retrieve
+    abstract Person retrieve(Long id)
 
     @Update
     abstract boolean update(Person person)
 
-    @Retrieve
-    abstract List<Person> findByLastName(String lastName)
+    @Delete
+    abstract boolean delete(Long id)
 
-    @Retrieve
-    abstract List<Person> findByMarried(boolean married)
+    @Delete
+    abstract boolean deleteAll()
 
-    @Retrieve(limit = 2)
-    abstract List<Person> findByFirstName(String firstName)
+    @Count
+    abstract int count(Long id)
+
+    @Count
+    abstract int countAll()
+
+    @Exists
+    abstract boolean exists(Long id)
+
+    /*
+    add:
+        finders
+
+        pets
+        jobs
+     */
 }

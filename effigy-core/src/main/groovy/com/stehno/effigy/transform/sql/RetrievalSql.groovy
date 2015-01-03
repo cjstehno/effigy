@@ -102,7 +102,9 @@ class RetrievalSql {
 
         selectSql.wheres(whereCriteria)
 
-        selectSql.order(orders)
+        if (orders) {
+            selectSql.order(orders)
+        }
 
         String sql = selectSql.build()
 

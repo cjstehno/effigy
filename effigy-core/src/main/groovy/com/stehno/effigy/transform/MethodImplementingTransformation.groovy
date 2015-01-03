@@ -23,11 +23,14 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.stmt.Statement
 
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.model.EntityModel.entityProperty
+import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 
@@ -75,6 +78,22 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
 
     abstract protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode)
 
+    protected void updateMethod(ClassNode repoNode, MethodNode methodNode, Statement code) {
+        if (isDeclaredMethod(repoNode, methodNode)) {
+            methodNode.modifiers = PUBLIC
+            methodNode.code = code
+        } else {
+            repoNode.addMethod(new MethodNode(
+                methodNode.name,
+                PUBLIC,
+                methodNode.returnType,
+                methodNode.parameters,
+                methodNode.exceptions,
+                code
+            ))
+        }
+    }
+
     protected static boolean isDeclaredMethod(ClassNode repoNode, MethodNode methodNode) {
         repoNode.hasDeclaredMethod(methodNode.name, methodNode.parameters)
     }
@@ -91,7 +110,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
 
         } else {
             parameters(methodNode.parameters, ignoreFirst).findAll { p -> !p.getAnnotations(make(Limit)) && !p.getAnnotations(make(Offset)) }.each { mp ->
-                wheres << "${entityProperty(entityNode, mp.name).columnName}=?"
+                wheres << "${entityTable(entityNode)}.${entityProperty(entityNode, mp.name).columnName}=?"
                 params << varX(mp.name)
             }
         }
