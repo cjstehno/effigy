@@ -41,8 +41,5 @@ interface PersonRepository {
 
     int countAll()
 
-    /*
-    need to test other retrieves
-    limit offset, order, etc
-     */
+    List<Person> findTwo()
 }

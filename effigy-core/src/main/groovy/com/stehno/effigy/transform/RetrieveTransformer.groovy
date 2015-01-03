@@ -55,23 +55,21 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         def code = block()
 
-        def sqlParams = params
-        if (limitParam) {
-            sqlParams << limitParam
-        }
-        if (offsetParam) {
-            sqlParams << offsetParam
-        }
-
         if (hasAssociatedEntities(entityNode)) {
             code.addStatement declS(varX(RESULTS), queryX(
-                // FIXME: needs limit support
-                // FIXME: needs offset support
                 selectWithAssociations(entityNode, wheres, orders),
-                entityCollectionExtractor(entityNode),
+                entityCollectionExtractor(entityNode, limitParam),
                 params
             ))
+
         } else {
+            if (limitParam) {
+                params << limitParam
+            }
+            if (offsetParam) {
+                params << offsetParam
+            }
+
             code.addStatement declS(varX(RESULTS), queryX(
                 selectWithoutAssociations(entityNode, wheres, limit, offset, orders),
                 entityRowMapper(entityNode),

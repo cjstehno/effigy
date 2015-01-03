@@ -23,6 +23,9 @@ import people.DatabaseEnvironment
 import people.entity.Address
 import people.entity.Person
 
+import static org.springframework.test.jdbc.JdbcTestUtils.countRowsInTable
+import static people.entity.Animal.*
+
 /**
  * Created by cjstehno on 1/1/15.
  */
@@ -46,11 +49,11 @@ class PersonRepositoryTest {
     ]
 
     private PersonRepository personRepository
+    private PetRepository petRepository
 
     @Before void before() {
-        personRepository = new EffigyPersonRepository(
-            jdbcTemplate: database.jdbcTemplate
-        )
+        personRepository = new EffigyPersonRepository(jdbcTemplate: database.jdbcTemplate)
+        petRepository = new EffigyPetRepository(jdbcTemplate: database.jdbcTemplate)
     }
 
     @Test void create() {
@@ -71,11 +74,11 @@ class PersonRepositoryTest {
         assertProperties(PERSON_A, people[0])
 
         assert people[1].id == idB
-        assert people[1].version == 1
+        assert people[1].version == 2
         assertProperties(PERSON_B, people[1])
 
         assert people[2].id == idC
-        assert people[2].version == 1
+        assert people[2].version == 2
         assertProperties(PERSON_C, people[2])
     }
 
@@ -124,6 +127,8 @@ class PersonRepositoryTest {
         assert personRepository.retrieve(idA)
         assert !personRepository.retrieve(idB)
         assert personRepository.retrieve(idC)
+
+        assertRowCount 'peoples_pets', 1
     }
 
     @Test void deleteAll() {
@@ -148,6 +153,21 @@ class PersonRepositoryTest {
         assert !personRepository.retrieve(idA)
         assert !personRepository.retrieve(idB)
         assert !personRepository.retrieve(idC)
+
+        assertRowCount 'peoples_pets', 0
+    }
+
+    @Test void findTwo() {
+        def (idA, idB, idC) = createThree()
+
+        def two = personRepository.findTwo()
+        assert two.size() == 2
+
+        assert two[0].id == idC
+        assertProperties(PERSON_C, two[0])
+
+        assert two[1].id == idB
+        assertProperties(PERSON_B, two[1])
     }
 
     private static void assertProperties(Map props, Person entity) {
@@ -157,10 +177,33 @@ class PersonRepositoryTest {
     }
 
     private List createThree() {
-        [
-            personRepository.create(new Person(PERSON_A)),
-            personRepository.create(new Person(PERSON_B)),
-            personRepository.create(new Person(PERSON_C))
-        ]
+        def petA = petRepository.retrieve(petRepository.create(name: 'Felix', animal: CAT))
+        def petB = petRepository.retrieve(petRepository.create(name: 'Spot', animal: DOG))
+        def petC = petRepository.retrieve(petRepository.create(name: 'Nicodemus', animal: RODENT))
+
+        assert petRepository.countAll() == 3
+
+        def idA = personRepository.create(new Person(PERSON_A))
+
+        def idB = personRepository.create(new Person(PERSON_B))
+        Person personB = personRepository.retrieve(idB)
+        personB.pets.add(petA)
+        personB.pets.add(petB)
+        assert personRepository.update(personB)
+
+        assertRowCount 'peoples_pets', 2
+
+        def idC = personRepository.create(new Person(PERSON_C))
+        Person personC = personRepository.retrieve(idC)
+        personC.pets.add(petC)
+        assert personRepository.update(personC)
+
+        assertRowCount 'peoples_pets', 3
+
+        [idA, idB, idC]
+    }
+
+    private void assertRowCount(String table, int count) {
+        assert countRowsInTable(database.jdbcTemplate, table) == count
     }
 }

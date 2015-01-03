@@ -52,11 +52,15 @@ abstract class EffigyPersonRepository implements PersonRepository {
     @Exists
     abstract boolean exists(Long id)
 
-    /*
+    @Retrieve(limit = 2, order = '#id desc')
+    abstract List<Person> findTwo()
+
+    /* FIXME: support
     add:
         finders
 
-        pets
+    need to test other retrieves
+    limit offset, order, etc
         jobs
      */
 }

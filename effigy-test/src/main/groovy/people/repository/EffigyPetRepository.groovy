@@ -16,8 +16,10 @@
 
 package people.repository
 
+import com.stehno.effigy.annotation.Count
 import com.stehno.effigy.annotation.Create
 import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.annotation.Retrieve
 import people.entity.Pet
 
 /**
@@ -28,4 +30,13 @@ abstract class EffigyPetRepository implements PetRepository {
 
     @Create
     abstract Long create(Map map)
+
+    @Retrieve
+    abstract Pet retrieve(Long id)
+
+    @Count
+    abstract int count(Long id)
+
+    @Count
+    abstract int countAll()
 }

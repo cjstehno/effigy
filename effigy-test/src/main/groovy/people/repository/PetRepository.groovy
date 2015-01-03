@@ -16,6 +16,8 @@
 
 package people.repository
 
+import people.entity.Pet
+
 /**
  * Created by cjstehno on 1/3/15.
  */
@@ -23,4 +25,9 @@ interface PetRepository {
 
     Long create(Map map)
 
+    Pet retrieve(Long id)
+
+    int count(Long id)
+
+    int countAll()
 }
