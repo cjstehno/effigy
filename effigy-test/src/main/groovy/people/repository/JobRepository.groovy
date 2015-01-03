@@ -16,36 +16,16 @@
 
 package people.repository
 
-import com.stehno.effigy.annotation.Limit
-import com.stehno.effigy.annotation.Offset
-import people.entity.Person
+import people.entity.Job
 
 /**
- * Created by cjstehno on 1/1/15.
+ * Created by cjstehno on 1/3/15.
  */
-interface PersonRepository {
+interface JobRepository {
 
-    Long create(Person person)
+    Long create(Map map)
 
-    List<Person> retrieveAll()
-
-    Person retrieve(Long id)
-
-    boolean update(Person person)
-
-    boolean delete(Long id)
-
-    boolean deleteAll()
-
-    boolean exists(Long id)
+    Job retrieve(Long jobId)
 
     int count(Long id)
-
-    int countAll()
-
-    List<Person> findTwo()
-
-    List<Person> findPaged(@Offset int offset, @Limit int limit)
-
-    List<Person> findByLastName(String lastName)
 }

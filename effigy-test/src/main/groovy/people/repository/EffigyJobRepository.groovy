@@ -16,36 +16,26 @@
 
 package people.repository
 
-import com.stehno.effigy.annotation.Limit
-import com.stehno.effigy.annotation.Offset
-import people.entity.Person
+import com.stehno.effigy.annotation.Count
+import com.stehno.effigy.annotation.Create
+import com.stehno.effigy.annotation.Repository
+import com.stehno.effigy.annotation.Retrieve
+import people.entity.Job
 
 /**
- * Created by cjstehno on 1/1/15.
+ * Created by cjstehno on 1/3/15.
  */
-interface PersonRepository {
+@Repository(forEntity = Job)
+abstract class EffigyJobRepository implements JobRepository {
 
-    Long create(Person person)
+    // FIXME: this broke when I converted the id to primitive - figure out why
 
-    List<Person> retrieveAll()
+    @Create
+    abstract Long create(Map map)
 
-    Person retrieve(Long id)
+    @Retrieve('#id = :jobId')
+    abstract Job retrieve(Long jobId)
 
-    boolean update(Person person)
-
-    boolean delete(Long id)
-
-    boolean deleteAll()
-
-    boolean exists(Long id)
-
-    int count(Long id)
-
-    int countAll()
-
-    List<Person> findTwo()
-
-    List<Person> findPaged(@Offset int offset, @Limit int limit)
-
-    List<Person> findByLastName(String lastName)
+    @Count
+    abstract int count(Long id)
 }

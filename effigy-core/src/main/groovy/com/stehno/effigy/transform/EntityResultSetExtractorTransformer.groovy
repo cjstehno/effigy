@@ -241,7 +241,11 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                     <% assocs.each { ap-> %>
                         def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
                         if( ${ap.propertyName}Value ){
-                            entity.${ap.propertyName} << ${ap.propertyName}Value
+                            if( entity.${ap.propertyName} instanceof Collection ){
+                                entity.${ap.propertyName} << ${ap.propertyName}Value
+                            } else {
+                                entity.${ap.propertyName} = ${ap.propertyName}Value
+                            }
                         }
                     <% } %>
                     <% compos.each { ap-> %>

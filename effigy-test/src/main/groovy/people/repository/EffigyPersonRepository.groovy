@@ -58,10 +58,6 @@ abstract class EffigyPersonRepository implements PersonRepository {
     @Retrieve(order = '@lastName asc, @firstName asc')
     abstract List<Person> findPaged(@Offset int offset, @Limit int limit)
 
-    /* FIXME: support
-    add:
-        finders
-
-        jobs
-     */
+    @Retrieve
+    abstract List<Person> findByLastName(String lastName)
 }

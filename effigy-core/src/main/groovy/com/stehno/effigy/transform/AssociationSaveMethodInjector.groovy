@@ -58,6 +58,7 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
         if (!repositoryNode.hasMethod(methodName, methodParams)) {
             info AssociationSaveMethodInjector, 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
             try {
+                // FIXME: pre-compile the collection vs single entity stuff
                 def statement = codeS(
                     '''
                         int expects = 0
@@ -72,12 +73,22 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
 
                         jdbcTemplate.update('delete from $assocTable where $tableEntIdName=?', ent.${entityIdName})
 
-                        entity.${name}.each { itm->
-                            count += jdbcTemplate.update(
-                                'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
-                                ent.${entityIdName},
-                                itm.${assocIdName}
-                            )
+                        if( ent.${name} ){
+                            if( entity.${name} instanceof Collection ){
+                                entity.${name}?.each { itm->
+                                    count += jdbcTemplate.update(
+                                        'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
+                                        ent.${entityIdName},
+                                        itm.${assocIdName}
+                                    )
+                                }
+                            } else {
+                                count += jdbcTemplate.update(
+                                    'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
+                                    ent.${entityIdName},
+                                    ent.${name}.${assocIdName}
+                                )
+                            }
                         }
 
                         if( count != expects ){

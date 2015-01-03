@@ -50,10 +50,12 @@ class PersonRepositoryTest {
 
     private PersonRepository personRepository
     private PetRepository petRepository
+    private JobRepository jobRepository
 
     @Before void before() {
         personRepository = new EffigyPersonRepository(jdbcTemplate: database.jdbcTemplate)
         petRepository = new EffigyPetRepository(jdbcTemplate: database.jdbcTemplate)
+        jobRepository = new EffigyJobRepository(jdbcTemplate: database.jdbcTemplate)
     }
 
     @Test void create() {
@@ -72,14 +74,20 @@ class PersonRepositoryTest {
         assert people[0].id == idA
         assert people[0].version == 1
         assertProperties(PERSON_A, people[0])
+        assert !people[0].job
+        assert !people[0].pets
 
         assert people[1].id == idB
         assert people[1].version == 2
         assertProperties(PERSON_B, people[1])
+        assert people[1].job.title == 'Big Kahuna'
+        assert people[1].pets.size() == 2
 
         assert people[2].id == idC
         assert people[2].version == 2
         assertProperties(PERSON_C, people[2])
+        assert !people[2].job
+        assert people[2].pets.size() == 1
     }
 
     @Test void retrieve() {
@@ -186,6 +194,16 @@ class PersonRepositoryTest {
         assertProperties(PERSON_B, page[0])
     }
 
+    @Test void findByLastName() {
+        def (idA, idB, idC) = createThree()
+
+        def people = personRepository.findByLastName('Smith')
+        assert people.size() == 2
+
+        people = personRepository.findByLastName('Public')
+        assert people.size() == 1
+    }
+
     private static void assertProperties(Map props, Person entity) {
         props.each { k, v ->
             assert entity[k] == v
@@ -197,14 +215,20 @@ class PersonRepositoryTest {
         def petB = petRepository.retrieve(petRepository.create(name: 'Spot', animal: DOG))
         def petC = petRepository.retrieve(petRepository.create(name: 'Nicodemus', animal: RODENT))
 
+        def jobA = jobRepository.retrieve(jobRepository.create(title: 'Big Kahuna'))
+        def jobB = jobRepository.retrieve(jobRepository.create(title: 'Nobody'))
+
         assert petRepository.countAll() == 3
+
+        assert jobRepository.count(jobA.id) == 1
+        assert jobRepository.count(jobB.id) == 1
 
         def idA = personRepository.create(new Person(PERSON_A))
 
         def idB = personRepository.create(new Person(PERSON_B))
         Person personB = personRepository.retrieve(idB)
-        personB.pets.add(petA)
-        personB.pets.add(petB)
+        personB.pets.addAll([petA, petB])
+        personB.job = jobA
         assert personRepository.update(personB)
 
         assertRowCount 'peoples_pets', 2
