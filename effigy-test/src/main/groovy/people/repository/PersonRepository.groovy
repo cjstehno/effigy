@@ -16,6 +16,8 @@
 
 package people.repository
 
+import com.stehno.effigy.annotation.Limit
+import com.stehno.effigy.annotation.Offset
 import people.entity.Person
 
 /**
@@ -42,4 +44,6 @@ interface PersonRepository {
     int countAll()
 
     List<Person> findTwo()
+
+    List<Person> findPaged(@Offset int offset, @Limit int limit)
 }

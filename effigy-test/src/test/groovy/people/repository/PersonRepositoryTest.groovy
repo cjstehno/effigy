@@ -170,6 +170,22 @@ class PersonRepositoryTest {
         assertProperties(PERSON_B, two[1])
     }
 
+    @Test void findPaged() {
+        def (idA, idB, idC) = createThree()
+
+        def page = personRepository.findPaged(0, 1)
+        assert page.size() == 1
+        assertProperties(PERSON_A, page[0])
+
+        page = personRepository.findPaged(1, 1)
+        assert page.size() == 1
+        assertProperties(PERSON_C, page[0])
+
+        page = personRepository.findPaged(2, 1)
+        assert page.size() == 1
+        assertProperties(PERSON_B, page[0])
+    }
+
     private static void assertProperties(Map props, Person entity) {
         props.each { k, v ->
             assert entity[k] == v

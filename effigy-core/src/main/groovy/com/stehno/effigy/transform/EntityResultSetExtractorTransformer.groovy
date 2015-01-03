@@ -53,6 +53,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
     private static final String PRIMARY_ROW_MAPPER = 'primaryRowMapper'
     private static final String ENTITY = 'entity'
     private static final String LIMIT = 'limit'
+    private static final String OFFSET = 'offset'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -279,10 +280,11 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             'collectionAssociationExtractor',
             Modifier.PUBLIC | Modifier.STATIC,
             newClass(extractorClassNode),
-            [param(Integer_TYPE, LIMIT, constX(null))] as Parameter[],
+            params(param(Integer_TYPE, OFFSET, constX(null)), param(Integer_TYPE, LIMIT, constX(null))),
             [] as ClassNode[],
             returnS(ctorX(newClass(extractorClassNode), args(new MapExpression([
                 new MapEntryExpression(constX('entityIdentifier'), constX(identifier(entityClassNode).propertyName)),
+                new MapEntryExpression(constX(OFFSET), varX(OFFSET)),
                 new MapEntryExpression(constX(LIMIT), varX(LIMIT))
             ]))))
         ))

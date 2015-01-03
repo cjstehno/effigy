@@ -58,7 +58,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         if (hasAssociatedEntities(entityNode)) {
             code.addStatement declS(varX(RESULTS), queryX(
                 selectWithAssociations(entityNode, wheres, orders),
-                entityCollectionExtractor(entityNode, limitParam),
+                entityCollectionExtractor(entityNode, offsetParam, limitParam),
                 params
             ))
 

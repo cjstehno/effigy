@@ -23,6 +23,7 @@ import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 import java.sql.SQLException
 
+import static java.lang.Integer.MAX_VALUE
 import static java.lang.Math.min
 
 /**
@@ -37,6 +38,11 @@ abstract class EffigyCollectionAssociationResultSetExtractor<T> implements Resul
      * Limit the number of results returned by the extractor, leave null to retrieve all results.
      */
     Integer limit
+
+    /**
+     * Offset the start of the returned results.
+     */
+    Integer offset
 
     @Override
     T extractData(final ResultSet rs) throws SQLException, DataAccessException {
@@ -57,11 +63,10 @@ abstract class EffigyCollectionAssociationResultSetExtractor<T> implements Resul
         def results = entities.values() as List
 
         // TODO: this is not very efficient - should be able to cut the limit before processing all records(?)
-        if (limit) {
-            results[0..(min(limit, results.size()) - 1)] as List
-        } else {
-            entities.values() as List
-        }
+        int start = offset ?: 0
+        int end = start + min(limit ?: MAX_VALUE, results.size())
+
+        results.subList(start, end)
     }
 
     /**

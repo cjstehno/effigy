@@ -45,9 +45,13 @@ class JdbcTemplateHelper {
         callX(classX(newClass(entityNode)), 'rowMapper')
     }
 
-    static Expression entityCollectionExtractor(ClassNode entityNode, Expression limitX = null) {
-        if (limitX) {
-            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR, args(limitX))
+    static Expression entityCollectionExtractor(ClassNode entityNode, Expression offsetX = null, Expression limitX = null) {
+        if (limitX && offsetX) {
+            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR, args(offsetX, limitX))
+        } else if (limitX) {
+            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR, args(constX(null), limitX))
+        } else if (offsetX) {
+            callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR, args(offsetX, constX(null)))
         } else {
             callX(classX(newClass(entityNode)), COLLECTION_ASSOCIATION_EXTRACTOR)
         }

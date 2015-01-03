@@ -55,12 +55,13 @@ abstract class EffigyPersonRepository implements PersonRepository {
     @Retrieve(limit = 2, order = '#id desc')
     abstract List<Person> findTwo()
 
+    @Retrieve(order = '@lastName asc, @firstName asc')
+    abstract List<Person> findPaged(@Offset int offset, @Limit int limit)
+
     /* FIXME: support
     add:
         finders
 
-    need to test other retrieves
-    limit offset, order, etc
         jobs
      */
 }
