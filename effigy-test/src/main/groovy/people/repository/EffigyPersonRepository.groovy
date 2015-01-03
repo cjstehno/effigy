@@ -22,7 +22,7 @@ import people.entity.Person
 /**
  * Effigy-based implementation of the PersonRepository interface.
  */
-@Repository(forEntity = Person)
+@Repository(Person)
 abstract class EffigyPersonRepository implements PersonRepository {
 
     @Create

@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -28,6 +29,7 @@ import static com.stehno.effigy.transform.sql.SqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * Transformer used to process the @Delete annotation.
  */

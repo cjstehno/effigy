@@ -22,7 +22,7 @@ import people.entity.Room
 /**
  * Effigy-based implementation of the RoomRepository.
  */
-@Repository(forEntity = Room)
+@Repository(Room)
 abstract class EffigyRoomRepository implements RoomRepository {
 
     @Create

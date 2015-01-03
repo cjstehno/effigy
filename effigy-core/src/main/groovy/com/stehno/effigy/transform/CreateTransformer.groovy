@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -35,6 +36,7 @@ import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+
 /**
  * Transformer used to process the @Create annotation.
  */

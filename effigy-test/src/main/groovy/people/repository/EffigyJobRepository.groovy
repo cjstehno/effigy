@@ -25,7 +25,7 @@ import people.entity.Job
 /**
  * Created by cjstehno on 1/3/15.
  */
-@Repository(forEntity = Job)
+@Repository(Job)
 abstract class EffigyJobRepository implements JobRepository {
 
     // FIXME: this broke when I converted the id to primitive - figure out why

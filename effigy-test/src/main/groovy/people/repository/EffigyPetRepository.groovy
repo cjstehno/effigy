@@ -25,7 +25,7 @@ import people.entity.Pet
 /**
  * Created by cjstehno on 1/3/15.
  */
-@Repository(forEntity = Pet)
+@Repository(Pet)
 abstract class EffigyPetRepository implements PetRepository {
 
     @Create

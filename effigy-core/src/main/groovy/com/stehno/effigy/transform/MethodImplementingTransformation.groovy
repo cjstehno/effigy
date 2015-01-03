@@ -69,7 +69,6 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
                 repoNode.name,
                 ex.message
             )
-            ex.printStackTrace()
             throw ex
         }
     }

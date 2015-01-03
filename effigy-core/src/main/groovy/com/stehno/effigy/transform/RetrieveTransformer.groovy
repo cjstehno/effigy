@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.sql.SqlTemplate
@@ -32,6 +33,7 @@ import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+
 /**
  * Transformer used to process the @Retrieve annotations.
  */
@@ -139,9 +141,9 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         String orderTemplate = extractString(annotationNode, 'order')
         if (orderTemplate) {
             orders = new SqlTemplate(orderTemplate).sql(entityNode)
-        } else {
-            // FIXME: support for runtime order param
-        }
+        } /*else {
+            FIXME: support for runtime order param
+        }*/
 
         orders
     }

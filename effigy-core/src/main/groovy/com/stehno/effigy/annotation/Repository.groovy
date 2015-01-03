@@ -30,10 +30,8 @@ import java.lang.annotation.*
 @GroovyASTTransformationClass(classes = [RepositoryTransformer])
 @interface Repository {
 
-    // FIXME: either change forEntity to value or make it an alias to simplify the annotation
-
     /**
      * The entity type handled by the repository (must be annotated with @Effigy)
      */
-    Class forEntity()
+    Class value()
 }

@@ -59,7 +59,7 @@ class RepositoryTransformer implements ASTTransformation {
             ClassNode repoNode = nodes[1] as ClassNode
 
             AnnotationNode repoAnnotation = repoNode.getAnnotations(make(com.stehno.effigy.annotation.Repository))[0]
-            ClassNode entityNode = extractClass(repoAnnotation, 'forEntity')
+            ClassNode entityNode = extractClass(repoAnnotation, 'value')
 
             removeAbstract repoNode
             applyRepositoryAnnotation repoNode

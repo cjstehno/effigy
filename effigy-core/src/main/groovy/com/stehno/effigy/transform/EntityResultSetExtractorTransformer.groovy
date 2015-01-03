@@ -55,6 +55,25 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
     private static final String LIMIT = 'limit'
     private static final String OFFSET = 'offset'
 
+    private static final String ASSOCIATION_EXTRACTION_SOURCE = '''
+        <% assocs.each { ap-> %>
+            def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+            if( ${ap.propertyName}Value ){
+                if( entity.${ap.propertyName} instanceof Collection ){
+                    entity.${ap.propertyName} << ${ap.propertyName}Value
+                } else {
+                    entity.${ap.propertyName} = ${ap.propertyName}Value
+                }
+            }
+        <% } %>
+        <% compos.each { ap-> %>
+            def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
+            if( ${ap.propertyName}Value ){
+                entity.${ap.propertyName} = ${ap.propertyName}Value
+            }
+        <% } %>
+    '''
+
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
@@ -126,24 +145,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 [param(makeClassSafe(ResultSet), RS), param(OBJECT_TYPE, ENTITY)] as Parameter[],
                 [] as ClassNode[],
                 codeS(
-                    '''
-                    <% assocs.each { ap-> %>
-                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
-                        if( ${ap.propertyName}Value ){
-                            if( entity.${ap.propertyName} instanceof Collection ){
-                                entity.${ap.propertyName} << ${ap.propertyName}Value
-                            } else {
-                                entity.${ap.propertyName} = ${ap.propertyName}Value
-                            }
-                        }
-                    <% } %>
-                    <% compos.each { ap-> %>
-                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
-                        if( ${ap.propertyName}Value ){
-                            entity.${ap.propertyName} = ${ap.propertyName}Value
-                        }
-                    <% } %>
-                    ''',
+                    ASSOCIATION_EXTRACTION_SOURCE,
                     assocs: associations(entityNode),
                     compos: components(entityNode)
                 )
@@ -237,24 +239,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
                 [param(makeClassSafe(ResultSet), RS), param(OBJECT_TYPE, ENTITY)] as Parameter[],
                 [] as ClassNode[],
                 codeS(
-                    '''
-                    <% assocs.each { ap-> %>
-                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
-                        if( ${ap.propertyName}Value ){
-                            if( entity.${ap.propertyName} instanceof Collection ){
-                                entity.${ap.propertyName} << ${ap.propertyName}Value
-                            } else {
-                                entity.${ap.propertyName} = ${ap.propertyName}Value
-                            }
-                        }
-                    <% } %>
-                    <% compos.each { ap-> %>
-                        def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
-                        if( ${ap.propertyName}Value ){
-                            entity.${ap.propertyName} = ${ap.propertyName}Value
-                        }
-                    <% } %>
-                    ''',
+                    ASSOCIATION_EXTRACTION_SOURCE,
                     assocs: associations(entityNode),
                     compos: components(entityNode)
                 )
