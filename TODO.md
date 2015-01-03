@@ -4,7 +4,6 @@
 * Add association support for Map type in entities
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
-* Rename the extractors to "extractor" and "collectionExtractor"
 * Add support for @Transient fields - to be ignored by Effigy inspections
 
 FIXME: @Delete methods need to support map with property fields as input parameter

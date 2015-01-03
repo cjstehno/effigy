@@ -35,6 +35,7 @@ import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
+import static java.lang.reflect.Modifier.PRIVATE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 
@@ -105,10 +106,7 @@ class RepositoryTransformer implements ASTTransformation {
     }
 
     private static void injectJdbcTemplate(ClassNode repositoryClassNode) {
-        FieldNode jdbcTemplateFieldNode = new FieldNode(
-            'jdbcTemplate', Modifier.PRIVATE, new ClassNode(JdbcTemplate), repositoryClassNode, new EmptyExpression()
-        )
-
+        FieldNode jdbcTemplateFieldNode = new FieldNode('jdbcTemplate', PRIVATE, make(JdbcTemplate), repositoryClassNode, new EmptyExpression())
         jdbcTemplateFieldNode.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
 
         repositoryClassNode.addField(jdbcTemplateFieldNode)
