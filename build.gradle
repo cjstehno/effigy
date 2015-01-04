@@ -29,6 +29,14 @@ subprojects {
     test {
         jvmArgs '-Xverify:none'
     }
+    
+    publishing {
+	publications {
+	    mavenJava(MavenPublication) {
+		from components.java
+	    }
+	}
+    }    
 
     codenarc {
         toolVersion = '0.22'
