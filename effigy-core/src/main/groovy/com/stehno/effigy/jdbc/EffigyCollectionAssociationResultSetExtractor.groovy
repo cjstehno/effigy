@@ -32,6 +32,9 @@ import static java.lang.Math.min
  */
 abstract class EffigyCollectionAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
 
+    /**
+     * The name of the identifier property for the entity.
+     */
     String entityIdentifier
 
     /**

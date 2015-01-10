@@ -26,6 +26,9 @@ import java.sql.SQLException
  */
 abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
 
+    /**
+     * The column name prefix to be used in column data retrieval. Defaults to an empty string.
+     */
     String prefix = ''
 
     @Override

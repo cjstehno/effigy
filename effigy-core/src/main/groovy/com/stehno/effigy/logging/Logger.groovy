@@ -18,6 +18,12 @@ package com.stehno.effigy.logging
 
 /**
  * Static logging mechanism for logging during AST transformation activity.
+ *
+ * The default logging level is WARN, which may be changed by setting the "effigy.logging" system property to a value of TRACE, DEBUG, INFO, WARN,
+ * ERROR, ALL, or OFF.
+ *
+ * The log messages are written to the console during compilation - note that this logging will only occur during the compilation such that if no
+ * compilation occurs, not logging will be written (e.g. in the case where class files already exist and the source has not been modified).
  */
 class Logger {
 
@@ -29,9 +35,8 @@ class Logger {
 
     private static Level level
 
-    // TODO: turn this down to WARN once dev settles down
     static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'TRACE').toUpperCase())
+        level = Level.valueOf(System.getProperty('effigy.logging', 'WARN').toUpperCase())
     }
 
     static void info(Class clazz, String msg, Object... args) {

@@ -32,7 +32,6 @@ import java.lang.annotation.*
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-//@GroovyASTTransformationClass(classes = [CountTransformer])
 @interface Count {
 
     /**

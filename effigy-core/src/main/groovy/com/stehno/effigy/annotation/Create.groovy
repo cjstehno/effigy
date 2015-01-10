@@ -31,7 +31,6 @@ import java.lang.annotation.*
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-//@GroovyASTTransformationClass(classes = [CreateTransformer, AssociationSaveMethodInjector])
 @interface Create {
     // nothing to see here
 }

@@ -14,6 +14,9 @@ FIXME: @Retrieve support for runtime sort order param
 FIXME: @Retrieve support limit with association queries
 FIXME: @Retrieve support offset with association queries
 
+Clean up the groovydoc format so that its readable - also generate docs for site
+(is there groovydoc markdown parser?)
+
 support for generic INSERT,UPDATE, DELETE, SELECT statements no based on entities
 @SqlInsert, @SqlUpdate, ...
 
