@@ -115,8 +115,12 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             codeS(
                 '''
+                    factory.returnGeneratedKeys = true
+                    factory.setGeneratedKeysColumnNames('$idCol')
+
                     def paramValues = [$values] as Object[]
                     jdbcTemplate.update(factory.newPreparedStatementCreator(paramValues), keys)
+
                     ${entity}.${idName} = keys.key
 
                     $o2m
@@ -127,6 +131,7 @@ class CreateTransformer extends MethodImplementingTransformation {
                 entity: entityVar,
                 values: values.join(COMMA),
                 idName: identifier(entityNode).propertyName,
+                idCol: identifier(entityNode).columnName,
                 o2m: associations(entityNode).collect { AssociationPropertyModel o2m ->
                     "save${o2m.propertyName.capitalize()}($entityVar)"
                 }.join(NEWLINE),
