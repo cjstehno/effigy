@@ -252,6 +252,12 @@ class EntityModel {
             case 'java.lang.Long':
             case 'long':
                 return Types.BIGINT
+            case 'java.lang.Double':
+            case 'double':
+                return Types.DOUBLE
+            case 'java.lang.Float':
+            case 'float':
+                return Types.FLOAT
             case 'java.lang.Short':
             case 'short':
                 return Types.TINYINT
