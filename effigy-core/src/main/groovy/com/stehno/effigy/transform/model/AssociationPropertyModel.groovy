@@ -33,4 +33,7 @@ class AssociationPropertyModel implements EntityPropertyModel {
     String joinTable
     String entityColumn
     String assocColumn
+
+    // TODO: is there a better place for this?
+    String mapKeyProperty
 }

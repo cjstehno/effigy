@@ -24,6 +24,7 @@ import java.sql.Types
 
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 
 /**
@@ -133,15 +134,26 @@ class EntityModel {
                 String entityTableName = entityTable(entityNode)
                 String assocTableName = entityTable(associatedType)
 
+                // TODO: find a better way to do this
+                String mapKey = null
+                if (assoc.type.isDerivedFrom(MAP_TYPE)) {
+                    def mappedAnno = assoc.getAnnotations(make(Mapped))[0]
+                    if (mappedAnno) {
+                        mapKey = extractString(mappedAnno, 'keyProperty')
+                    } else {
+                        mapKey = identifier(associatedType).propertyName
+                    }
+                }
+
                 return new AssociationPropertyModel(
                     propertyName: assoc.name,
                     type: assoc.type,
                     associatedType: associatedType,
                     joinTable: extractString(annotationNode, 'joinTable', "${entityTableName}_${assoc.name}"),
                     entityColumn: extractString(annotationNode, ENTITY_COLUMN, "${entityTableName}_id"),
-                    assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id")
+                    assocColumn: extractString(annotationNode, 'assocColumn', "${assocTableName}_id"),
+                    mapKeyProperty: mapKey
                 )
-
             }
 
             // handle naked entity type (1-1 association)

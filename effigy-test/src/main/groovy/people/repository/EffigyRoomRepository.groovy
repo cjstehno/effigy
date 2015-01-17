@@ -26,16 +26,16 @@ import people.entity.Room
 abstract class EffigyRoomRepository implements RoomRepository {
 
     @Create
-    abstract long create(Room room)
+    abstract Long create(Room room)
 
     @Create
-    abstract long create(String name, int capacity)
+    abstract Long create(String name, int capacity)
 
     @Create
-    abstract long create(Map<String, Object> map)
+    abstract Long create(Map<String, Object> map)
 
     @Delete
-    abstract boolean delete(long id)
+    abstract boolean delete(Long id)
 
     @Delete
     abstract int deleteAll()
@@ -47,7 +47,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
     abstract int deleteSmall(int min)
 
     @Count
-    abstract int count(long id)
+    abstract int count(Long id)
 
     @Count
     abstract int count()
@@ -56,7 +56,7 @@ abstract class EffigyRoomRepository implements RoomRepository {
     abstract int countByRange(int min, int max)
 
     @Exists
-    abstract boolean exists(long id)
+    abstract boolean exists(Long id)
 
     @Exists
     abstract boolean exists()
@@ -74,10 +74,10 @@ abstract class EffigyRoomRepository implements RoomRepository {
     abstract List<Room> retrieveAll()
 
     @Retrieve
-    abstract Room retrieve(long id)
+    abstract Room retrieve(Long id)
 
     @Retrieve('#id = :entityId')
-    abstract Room retrieveOne(long entityId)
+    abstract Room retrieveOne(Long entityId)
 
     @Retrieve('@capacity <= :min')
     abstract List<Room> retrieveSmall(int min)

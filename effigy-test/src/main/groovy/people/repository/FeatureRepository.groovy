@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package people.entity
+package people.repository
 
-import com.stehno.effigy.annotation.Association
-import com.stehno.effigy.annotation.Entity
-import com.stehno.effigy.annotation.Id
-import com.stehno.effigy.annotation.Mapped
-import groovy.transform.Canonical
+import people.entity.Feature
 
 /**
- * Created by cjstehno on 12/26/14.
+ * Created by cjstehno on 1/17/15.
  */
-@Entity @Canonical
-class Room {
+interface FeatureRepository {
 
-    @Id Long id
-    String name
-    int capacity
+    Long create(Feature feature)
 
-    @Association @Mapped(keyProperty = 'type')
-    Map<Feature.Type, Feature> features = [:]
+    Feature retrieve(Long id)
+
+    List<Feature> retrieveAll()
 }

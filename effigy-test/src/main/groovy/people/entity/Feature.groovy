@@ -16,22 +16,21 @@
 
 package people.entity
 
-import com.stehno.effigy.annotation.Association
 import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
-import com.stehno.effigy.annotation.Mapped
-import groovy.transform.Canonical
 
 /**
- * Created by cjstehno on 12/26/14.
+ * Created by cjstehno on 1/17/15.
  */
-@Entity @Canonical
-class Room {
+@Entity
+class Feature {
+
+    static enum Type {
+        PROJECTOR, TV, BEER
+    }
 
     @Id Long id
+    Feature.Type type
     String name
-    int capacity
-
-    @Association @Mapped(keyProperty = 'type')
-    Map<Feature.Type, Feature> features = [:]
 }
+

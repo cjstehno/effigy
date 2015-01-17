@@ -1,7 +1,6 @@
 
 # Things to do
 
-* Add association support for Map type in entities
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
 * Add support for @Transient fields - to be ignored by Effigy inspections
@@ -14,15 +13,18 @@ FIXME: @Retrieve support for runtime sort order param
 FIXME: @Retrieve support limit with association queries
 FIXME: @Retrieve support offset with association queries
 
-@Association
-@Mapped(keyProperty='scale')
-Map<Scale,Image> images = [:]
+FIXME: there are issues with primitive long id fields
+FIXME: mapped assocations require an instance of their collection by default - should allow null by default
+
+////
 
 @Association
 @Collected(ordering=[@ListOrdering(property='lastName', direction=DESC)])
 List<Person> owner = []
 
 refactor the sql builder to combine sql and params
+
+/////
 
 consider removing the version/id updates on create - since other fields may be updated by sql and not transferred, it's probably best to just leave
 everything to the client to call a retrieve method

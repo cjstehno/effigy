@@ -20,6 +20,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import people.DatabaseEnvironment
+import people.entity.Feature
 import people.entity.Room
 
 import static org.springframework.test.jdbc.JdbcTestUtils.countRowsInTable
@@ -30,10 +31,12 @@ class RoomRepositoryTest {
     public DatabaseEnvironment database = new DatabaseEnvironment()
 
     private RoomRepository roomRepository
+    private FeatureRepository featureRepository
 
     @Before
     void before() {
         roomRepository = new EffigyRoomRepository(jdbcTemplate: database.jdbcTemplate)
+        featureRepository = new EffigyFeatureRepository(jdbcTemplate: database.jdbcTemplate)
     }
 
     @Test
@@ -112,15 +115,29 @@ class RoomRepositoryTest {
 
     @Test
     void updateWithEntity() {
-        def idA = roomRepository.create(new Room(name: 'A', capacity: 10))
+        def featureA = featureRepository.retrieve(featureRepository.create(new Feature(type: Feature.Type.PROJECTOR, name: 'Sony Projector')))
+        def featureB = featureRepository.retrieve(featureRepository.create(new Feature(type: Feature.Type.BEER, name: 'Kegerator')))
+
+        def idA = roomRepository.create(new Room(name: 'A', capacity: 10, features: [(featureA.type): featureA, (featureB.type): featureB]))
+        def roomA = roomRepository.retrieve(idA)
 
         assert idA
         assert roomRepository.count(idA) == 1
         assert roomRepository.exists(idA)
 
-        assert roomRepository.update(new Room(id: idA, name: 'X', capacity: 100))
+        assert roomA
+        assert roomA.features.size() == 2
+        assert roomA.features[featureA.type].name == featureA.name
+        assert roomA.features[featureB.type].name == featureB.name
+
+        assert roomRepository.update(new Room(id: idA, name: 'X', capacity: 100, features: [(featureA.type): featureA]))
 
         assert roomRepository.countByRange(99, 101) == 1
+
+        roomA = roomRepository.retrieve(idA)
+
+        assert roomA.features.size() == 1
+        assert roomA.features[featureA.type].name == featureA.name
     }
 
     @Test
@@ -138,23 +155,38 @@ class RoomRepositoryTest {
 
     @Test
     void retrieveAll() {
+        def featureA = featureRepository.retrieve(featureRepository.create(new Feature(type: Feature.Type.PROJECTOR, name: 'Sony Projector')))
+        def featureB = featureRepository.retrieve(featureRepository.create(new Feature(type: Feature.Type.BEER, name: 'Kegerator')))
+
         roomRepository.create('A', 10)
-        roomRepository.create('B', 14)
+
+        def idB = roomRepository.create(new Room(
+            name: 'B',
+            capacity: 14,
+            features: [
+                (featureA.type): featureA,
+                (featureB.type): featureB
+            ]
+        ))
+
         def idC = roomRepository.create('C', 12)
 
         def rooms = roomRepository.retrieveAll()
         assert rooms.size() == 3
 
-        def room = roomRepository.retrieve(2)
+        def room = roomRepository.retrieve(idB)
         assert room.id == 2
         assert room.name == 'B'
         assert room.capacity == 14
+        assert room.features.size() == 2
+        assert room.features[featureA.type].name == featureA.name
+        assert room.features[featureB.type].name == featureB.name
 
         def smalls = roomRepository.retrieveSmall(13)
         assert smalls.size() == 2
 
-//        rooms = roomRepository.retrieveMap(name:'C', capacity: 12)
-//        assert rooms.size() == 1
+        //        rooms = roomRepository.retrieveMap(name:'C', capacity: 12)
+        //        assert rooms.size() == 1
 
         rooms = roomRepository.retrieveAllOrdered()
         assert rooms.size() == 3

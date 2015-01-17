@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package people.entity
+package com.stehno.effigy.annotation
 
-import com.stehno.effigy.annotation.Association
-import com.stehno.effigy.annotation.Entity
-import com.stehno.effigy.annotation.Id
-import com.stehno.effigy.annotation.Mapped
-import groovy.transform.Canonical
+import java.lang.annotation.*
 
 /**
- * Created by cjstehno on 12/26/14.
+ * Augments a Map property annotated with the @Association annotation to enable additional meta configuration.
  */
-@Entity @Canonical
-class Room {
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@interface Mapped {
 
-    @Id Long id
-    String name
-    int capacity
-
-    @Association @Mapped(keyProperty = 'type')
-    Map<Feature.Type, Feature> features = [:]
+    /**
+     * Specifies the property whose value is to be used as the map key. If this annotation is not used, the entity id will be used.
+     */
+    String keyProperty()
 }

@@ -55,12 +55,16 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
     private static final String LIMIT = 'limit'
     private static final String OFFSET = 'offset'
 
+    // FIXME: it would be nice if this code was a bit more baked in - this generates "bad" code for maps
+    // - groovy doesn't care since its never executed, but need to clean it up
     private static final String ASSOCIATION_EXTRACTION_SOURCE = '''
         <% assocs.each { ap-> %>
             def ${ap.propertyName}Value = ${ap.propertyName}RowMapper().mapRow(rs,0)
             if( ${ap.propertyName}Value ){
                 if( entity.${ap.propertyName} instanceof Collection ){
                     entity.${ap.propertyName} << ${ap.propertyName}Value
+                } else if( entity.${ap.propertyName} instanceof Map ){
+                    entity.${ap.propertyName}[${ap.propertyName}Value.${ap.mapKeyProperty}] = ${ap.propertyName}Value
                 } else {
                     entity.${ap.propertyName} = ${ap.propertyName}Value
                 }

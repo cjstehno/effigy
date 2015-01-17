@@ -62,7 +62,7 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
                 def statement = codeS(
                     '''
                         int expects = 0
-                        if( entity.${name} instanceof Collection ){
+                        if( entity.${name} instanceof Collection || entity.${name} instanceof Map ){
                             expects = entity.${name}?.size() ?: 0
                         } else {
                             expects = entity.${name} != null ? 1 : 0
@@ -82,6 +82,15 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
                                         itm.${assocIdName}
                                     )
                                 }
+                            } else if( entity.${name} instanceof Map ){
+                                entity.${name}?.each { key,itm->
+                                    count += jdbcTemplate.update(
+                                        'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',
+                                        ent.${entityIdName},
+                                        itm.${assocIdName}
+                                    )
+                                }
+
                             } else {
                                 count += jdbcTemplate.update(
                                     'insert into $assocTable ($tableEntIdName,$tableAssocIdName) values (?,?)',

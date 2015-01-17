@@ -50,3 +50,15 @@ CREATE TABLE rooms (
   name     VARCHAR(25)           NOT NULL,
   capacity BIGINT                NOT NULL
 );
+
+CREATE TABLE features (
+  id   BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  type VARCHAR(10)           NOT NULL,
+  name VARCHAR(25)           NOT NULL
+);
+
+CREATE TABLE rooms_features (
+  rooms_id    BIGINT REFERENCES rooms (id),
+  features_id BIGINT REFERENCES features (id),
+  UNIQUE (rooms_id, features_id)
+);
