@@ -42,6 +42,8 @@ Should Effigy provide any kind of validation and/or validation hooks?
     number(min,max,range)
     (are there already spring annotations for thsi stuff)
 
+support for result caching - basically integrate with the spring caching mechanism (optional)
+
 //////////////////////////////
 
 @SqlSelect (transform - any method of @Repository annotated class)
