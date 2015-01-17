@@ -14,6 +14,19 @@ FIXME: @Retrieve support for runtime sort order param
 FIXME: @Retrieve support limit with association queries
 FIXME: @Retrieve support offset with association queries
 
+@Association
+@Mapped(keyProperty='scale')
+Map<Scale,Image> images = [:]
+
+@Association
+@Collected(ordering=[@ListOrdering(property='lastName', direction=DESC)])
+List<Person> owner = []
+
+refactor the sql builder to combine sql and params
+
+consider removing the version/id updates on create - since other fields may be updated by sql and not transferred, it's probably best to just leave
+everything to the client to call a retrieve method
+
 Clean up the groovydoc format so that its readable - also generate docs for site
 (is there groovydoc markdown parser?)
 
@@ -79,3 +92,33 @@ String sql = select.sql()
 def params = select.params()
 
 so that I dont have to keep track of where params are injected and used by the sql. Also, the different builders might be able to share more base/delegate code.
+
+///////////
+
+Enhanced property handling in the sql template language - need ability to do sql template operations on embedded/component and maybe associations
+
+@property.@property
+@name.@firstName
+
+:entity.@name.@lastName - sql gets the ? while the param gets the property lookup
+
+
+///////////////
+
+documentation
+
+Introduction
+    What it is
+    What it isnt
+
+Getting started
+    environment & requirements
+    setup for development
+    setup for use
+
+Entities
+    id, version, column... all annots
+
+Repositories
+    crud annotations
+    generic sql annotations
