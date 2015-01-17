@@ -31,3 +31,6 @@ run the following in the `effigy-guide` directory:
     gaidenw build
 
 The `effigy-guide/build` directory will contain the generated guide.
+
+
+**Site:** http://cjstehno.github.io/effigy
