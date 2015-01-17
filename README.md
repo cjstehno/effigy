@@ -17,3 +17,17 @@ Effigy is NOT a full-blown ORM.
 
 Effigy is inspired by JPA and Spring-Data JPA and the desire to have similar functionality with simple JDBC-based projects.
 
+## Build
+
+Effigy uses Gradle, so just run:
+
+    gradlew build
+
+## User Guide
+
+The User Guide is built using [Gaiden](http://kobo.github.io/gaiden), separate from the standard Gradle build. If you want to generate the User Guide
+run the following in the `effigy-guide` directory:
+
+    gaidenw build
+
+The `effigy-guide/build` directory will contain the generated guide.

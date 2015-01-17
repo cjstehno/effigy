@@ -107,22 +107,3 @@ Enhanced property handling in the sql template language - need ability to do sql
 :entity.@name.@lastName - sql gets the ? while the param gets the property lookup
 
 
-///////////////
-
-documentation
-
-Introduction
-    What it is
-    What it isnt
-
-Getting started
-    environment & requirements
-    setup for development
-    setup for use
-
-Entities
-    id, version, column... all annots
-
-Repositories
-    crud annotations
-    generic sql annotations

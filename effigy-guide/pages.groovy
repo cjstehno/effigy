@@ -1,1 +1,5 @@
 "README.md"
+"Introduction.md"
+"GettingStarted.md"
+"Entities.md"
+"Repositories.md"

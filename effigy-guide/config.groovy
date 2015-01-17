@@ -1,11 +1,13 @@
 // The title of this document
-//title = "Gaiden"
+title = "Effigy"
 
 // The version of this document
-//version = ""
+version = "1.0"
 
 // The path of source files directory
 //sourceDirectoryPath = "."
 
 // The path of directory to be outputted a document
 //outputDirectoryPath = "build"
+
+numbering = false
