@@ -26,7 +26,7 @@ import java.lang.annotation.*
  *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
  *  - individual properties (by name and type) of the entities to be counted
  *
- * Create methods must return:
+ * Count methods must return:
  *  - an int denoting the number of items counted
  */
 @Target(ElementType.METHOD)

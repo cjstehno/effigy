@@ -26,7 +26,7 @@ import java.lang.annotation.*
  *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
  *  - individual properties (by name and type) of the entity to be deleted
  *
- * Create methods must return either:
+ * Delete methods must return either:
  *  - a boolean denoting whether or not something was actually deleted
  *  - an int denoting the number of items deleted
  */
