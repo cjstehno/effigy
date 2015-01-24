@@ -1,0 +1,251 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Repositories - Effigy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/highlight.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/my.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <i class="fa fa-bars sidebar-toggle"></i>
+        <span class="title"><a href="index.html">Effigy</a></span>
+      </div>
+      <div class="sidebar">
+        <ul>
+          <li class="unnumbered visible">
+            <a href="index.html" data-alt-hash="effigy-user-guide">Effigy User Guide</a>
+            <ul>
+              <li class="unnumbered visible"><a href="index.html#license">License</a></li>
+              <li class="unnumbered visible"><a href="index.html#relevant-links">Relevant Links</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="Introduction.html" data-alt-hash="introduction">Introduction</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Introduction.html#what-effigy-is">What Effigy Is</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#what-effigy-is-not">What Effigy Is Not</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#why-effigy-exists">Why Effigy Exists</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#how-the-sausage-is-made">How the Sausage Is Made</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible"><a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a></li>
+          <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
+          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
+          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+          <li class="unnumbered visible">
+            <a href="Entities.html" data-alt-hash="entities">Entities</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Entities.html#entity">@Entity</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#column">@Column</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#id">@Id</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#version">@Version</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#embedded">@Embedded</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#component">@Component</a></li>
+              <li class="unnumbered visible">
+                <a href="Entities.html#association">@Association</a>
+                <ul>
+                  <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="Repositories.html" data-alt-hash="repositories">Repositories</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Repositories.html#repository">@Repository</a></li>
+              <li class="unnumbered visible">
+                <a href="Repositories.html#crud-annotations">CRUD Annotations</a>
+                <ul>
+                  <li class="unnumbered visible"><a href="Repositories.html#create">@Create</a></li>
+                  <li class="unnumbered visible">
+                    <a href="Repositories.html#retrieve">@Retrieve</a>
+                    <ul>
+                      <li class="unnumbered invisible"><a href="Repositories.html#offset">@Offset</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#limit">@Limit</a></li>
+                    </ul>
+                  </li>
+                  <li class="unnumbered visible"><a href="Repositories.html#update">@Update</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#delete">@Delete</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#exists">@Exists</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#count">@Count</a></li>
+                </ul>
+              </li>
+              <li class="unnumbered visible"><a href="Repositories.html#sql-annotations">SQL Annotations</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="content">
+        <div class="content-handle"></div>
+        <div class="content-container">
+          <div class="content-nav content-nav-top">
+            <a class="prev-page" href="Entities.html">
+            <i class="fa fa-angle-left"></i>
+            Entities
+            </a>
+          </div>
+          <div class="page-toc">
+            <ul>
+              <li class="unnumbered visible">
+                <a href="#repositories">Repositories</a>
+                <ul>
+                  <li class="unnumbered visible"><a href="#repository">@Repository</a></li>
+                  <li class="unnumbered visible">
+                    <a href="#crud-annotations">CRUD Annotations</a>
+                    <ul>
+                      <li class="unnumbered visible"><a href="#create">@Create</a></li>
+                      <li class="unnumbered visible">
+                        <a href="#retrieve">@Retrieve</a>
+                        <ul>
+                          <li class="unnumbered visible"><a href="#offset">@Offset</a></li>
+                          <li class="unnumbered visible"><a href="#limit">@Limit</a></li>
+                        </ul>
+                      </li>
+                      <li class="unnumbered visible"><a href="#update">@Update</a></li>
+                      <li class="unnumbered visible"><a href="#delete">@Delete</a></li>
+                      <li class="unnumbered visible"><a href="#exists">@Exists</a></li>
+                      <li class="unnumbered visible"><a href="#count">@Count</a></li>
+                    </ul>
+                  </li>
+                  <li class="unnumbered visible"><a href="#sql-annotations">SQL Annotations</a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div class="main-content">
+            <h1 id="repositories">Repositories</h1>
+            <p>Repositories in Effigy are denoted using the <code>@Repository</code> annotation. The Effigy framework may be used without any defined repositories; however, they do provide additional functionality related to entities.</p>
+            <h2 id="repository">@Repository</h2>
+            <p>The <code>@Repository</code> annotation is applied to a class that is to be used as a repository for an Effigy entity. The required <code>value</code> property of the annotation is used to specify the type of entity being managed by the repository. The type specified must be annotated with the <code>@Entity</code> annotation.</p>
+            <p>When the <code>@Repository</code> annotation is applied to a repository class, the SpringFramework <code>@org.springframework.stereotype.Repository</code> annotation will be added to the compiled class This allows Spring component scanning to pick up Effigy repositories without any extra configuration.</p>
+            <p>The annotation also injects a field for a Spring <code>JdbcTemplate</code> instance into the class, with the signature:</p>
+            <pre><code class="nohighlight">@Autowired private JdbcTemplate jdbcTemplate
+</code></pre>
+            <p>This allows the Spring auto-wiring to inject the configured Spring <code>JdbcTemplate</code> used by the project. This is the <code>JdbcTemplate</code> instance which will be used by the operations in the repository.</p>
+            <h2 id="crud-annotations">CRUD Annotations</h2>
+            <p>Classes annotated with <code>@Repository</code> are allowed to create their own data access methods and even use the Effigy-built <code>RowMapper</code>s and <code>ResultSetExtractor</code>s; however, Effigy also provides a set of helper annotations which allow simple generation of common CRUD operations.</p>
+            <p>All of the CRUD operations provided by the annotations will properly handle all features of an Effigy entity (assocations, components, embedded objects, etc).</p>
+            <p>If these annotations are used, the class should be defined as <code>abstract</code> and the annotated methods should also be <code>abstract</code> - these limitations may be relaxed in future releases. Also note that these suggestions are mainly required to make your IDE happy so you may want to experiment for your own needs.</p>
+            <h3 id="create">@Create</h3>
+            <p>The <code>@Create</code> annotation is used to denote that a method is used to create and persist new entities.</p>
+            <p>A &ldquo;create&rdquo; method must accept as parameters, one of the following:</p>
+            <ul>
+              <li>an object of the entity type containing the data for the entity being created</li>
+              <li>a Map&lt;String,Object&gt; instance containing the properties corresponding to an entity object</li>
+              <li>individual properties of the entity to be created - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>A &ldquo;create&rdquo; method must return the identity type for the entity.</p>
+            <h3 id="retrieve">@Retrieve</h3>
+            <p>The <code>@Retrieve</code> annotation is used to denote a &ldquo;retrieve&rdquo; method in an Effigy repository.</p>
+            <p>A &ldquo;retrieve&rdquo; method must accept as parameters, one of the following:</p>
+            <ul>
+              <li>no parameters, to denote the retrieval of all entities of the managed type</li>
+              <li>a Map&lt;String,Object&gt; object containing the properties corresponding to an entity - the parameter name and type must match the target property of the entity.</li>
+              <li>individual properties of the entity to be deleted - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>Additionally, a &ldquo;retrieve&rdquo; method may except either or both of the following (though only one of each):</p>
+            <ul>
+              <li>a <code>@Limit</code> annotated <code>int</code> parameter used to limit the query results returned</li>
+              <li>an <code>@Offset</code> annotated <code>int</code> parameter used to offset the start of the returned results</li>
+            </ul>
+            <p>A &ldquo;create&rdquo; method must return one of the following:</p>
+            <ul>
+              <li>a <code>Collection</code> (or extension of) of the entity managed by the repository</li>
+              <li>a single instance of the entity managed by the repository</li>
+            </ul>
+            <p>The <code>@Retrieve</code> annotation also supports additional optional properties:</p>
+            <p>The <code>value</code> property is used to specify the retrieval criteria portion of the SQL using the Effigy SQL Template language. If no value is specified, the method parameters will be used as entity properties to build a default criteria statement.</p>
+            <p>The <code>offset</code> properety is used to define the select offset value to be used. Unlike the <code>@Offset</code> annotation, the value of the offset provided will be compiled into the code, rather than determined at runtime.</p>
+            <p>The <code>limit</code> properety is used to define the select limit value to be used. Unlike the <code>@Limit</code> annotation, the value of the limit provided will be compiled into the code, rather than determined at runtime.</p>
+            <p>The <code>order</code> properety is used to define the ordering Sql Template used by the query, basically just the order by clause, for example:</p>
+            <pre><code class="nohighlight">@Retrieve(order=&#39;@lastName asc, @firstName asc&#39;)
+Collection&lt;Person&gt; findPeople()
+</code></pre>
+            <p>See the SQL Template documentation for more information about the sytax.</p>
+            <h4 id="offset">@Offset</h4>
+            <p>The <code>@Offset</code> annotation is used to annotate an <code>int</code> parameter of a method annotated with the <code>@Retrieve</code> annotation. It denotes that the provided value will be used as the runtime-determined offset of the query results. </p>
+            <h4 id="limit">@Limit</h4>
+            <p>The <code>@Limit</code> annotation is used to annotate an <code>int</code> parameter of a method annotated with the <code>@Retrieve</code> annotation. It denotes that the provided value will be used as the runtime-determined limit of the query results. </p>
+            <h3 id="update">@Update</h3>
+            <p>The <code>@Update</code> annotation is used to denote is used to update existing entities in the database.</p>
+            <p>An &ldquo;update&rdquo; method must accept one of the following: </p>
+            <ul>
+              <li>an entity instance</li>
+              <li>a Map&lt;String,Object&gt; containing entity properties to be updated - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>An &ldquo;update&rdquo; method must have a return type of one of the following:</p>
+            <ul>
+              <li>void</li>
+              <li>a boolean denoting whether or not a change was made (based on updated row count)</li>
+              <li>an int value representing the number of entities (updated row count)</li>
+            </ul>
+            <h3 id="delete">@Delete</h3>
+            <p>The <code>@Delete</code> annotation is used to denote a delete method in an Effigy repository.</p>
+            <p>A &ldquo;delete&rdquo; method must accept as parameters, one of the following:</p>
+            <ul>
+              <li>no parameters to denote deleting all entities</li>
+              <li>a Map&lt;String,Object&gt; containing the properties corresponding to an entity object - the parameter name and type must match the target property of the entity.</li>
+              <li>individual properties of the entity to be deleted - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>A &ldquo;delete&rdquo; methods must return either:</p>
+            <ul>
+              <li>a boolean denoting whether or not something was actually deleted (based on deleted row count)</li>
+              <li>an int denoting the number of items deleted (deleted row count)</li>
+            </ul>
+            <p>The <code>@Delete</code> annotation also supports a <code>value</code> property which accepts a String containing an Effigy SQL Template. The template value is used to specify the deletion criteria portion of the SQL (basically the where clause). If no value is specified, the method parameters will be used as entity properties to build a default criteria statement. An example would be:</p>
+            <pre><code class="nohighlight">@Delete(&#39;@age &lt;= :minAge or @age &gt;= :maxAge&#39;)
+abstract int deleteOutsideAgeRange(int minAge, int maxAge)
+</code></pre>
+            <p>which would delete all entities whose &ldquo;age&rdquo; property value falls outside the specified min and max values. See the SQL Template documentation for more details about syntax and supported functionality.</p>
+            <h3 id="exists">@Exists</h3>
+            <p>The <code>@Exists</code> annotation is used denote an &ldquo;exists&rdquo; method in an Effigy repository.</p>
+            <p>An &ldquo;exists&rdquo; methods must accept as parameters, one of the following:</p>
+            <ul>
+              <li>no parameters, which will determine whether or not there are any instances of the target entity type</li>
+              <li>a Map&lt;String,Object&gt; containing the properties corresponding to an entity - the parameter name and type must match the target property of the entity.</li>
+              <li>individual properties of the entity - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>An &ldquo;exists&rdquo; method must return:</p>
+            <ul>
+              <li>a boolean to denote existence</li>
+            </ul>
+            <p>The <code>@Exists</code> annotation also supports a <code>value</code> property which accepts a String containing an Effigy SQL Template. The template value is used to specify the search criteria portion of the SQL (basically the where clause). If no value is specified, the method parameters will be used as entity properties to build a default criteria statement. See the SQL Template documentation for more details.</p>
+            <h3 id="count">@Count</h3>
+            <p>The <code>@Count</code> annotation is used to denote a &ldquo;count&rdquo; method in an Effigy repository.</p>
+            <p>A &ldquo;count&rdquo; method must accept as parameters, one of the following:</p>
+            <ul>
+              <li>no parameters to denote counting all entities</li>
+              <li>a Map&lt;String,Object&gt; containing the properties corresponding to an entity object - the parameter name and type must match the target property of the entity.</li>
+              <li>individual properties of the entity - the parameter name and type must match the target property of the entity.</li>
+            </ul>
+            <p>A &ldquo;count&rdquo; method must return and int denoting the number of items counted.</p>
+            <p>The <code>@Count</code> annotation also provides an optional <code>value</code> property, which is used to specify the counting criteria portion of the SQL using the Effigy SQL Template language. If no value is specified, the method parameters will be used as entity properties to build a default criteria statement. See the SQL Template documentation for more details about syntax and supported functionality.</p>
+            <h2 id="sql-annotations">SQL Annotations</h2>
+            <blockquote>
+              <p>TBD: pending functionality</p>
+            </blockquote>
+          </div>
+          <div class="content-nav content-nav-bottom">
+            <a class="prev-page" href="Entities.html">
+            <i class="fa fa-angle-left"></i>
+            Entities
+            </a>
+          </div>
+          <div class="footer">
+            <p class="version text-muted">Version 1.0</p>
+            <p class="credit text-muted">Powered by <a href="https://github.com/kobo/gaiden">Gaiden</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/highlight.js"></script>
+    <script src="js/application.js"></script>
+    <script src="js/my.js"></script>
+  </body>
+</html>
