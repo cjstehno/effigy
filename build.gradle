@@ -20,7 +20,7 @@ subprojects {
     }
 
     dependencies {
-        compile 'org.codehaus.groovy:groovy-all:2.3.7'
+        compile 'org.codehaus.groovy:groovy-all:2.4.0'
 
         testCompile 'junit:junit:4.11'
         testCompile 'org.mockito:mockito-all:1.9.5'

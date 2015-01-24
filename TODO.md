@@ -1,6 +1,8 @@
 
 # Things to do
 
+- the site should have the readme info as the first page - basically the site should be the user guide
+
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
 * Add support for @Transient fields - to be ignored by Effigy inspections
@@ -109,3 +111,12 @@ Enhanced property handling in the sql template language - need ability to do sql
 :entity.@name.@lastName - sql gets the ? while the param gets the property lookup
 
 
+
+
+* ability to create and retrieve entity
+    Job job = jobRepository.create(attributes:[user:'admin'])
+* support for large text/CLOB/BLOB fields
+* ability to supply custom field serializer/deserializer @Column(handlerName='', handlerClass='') - stateless class to read/write value (name allows to pull from spring)
+    - I dont think this would be something Id want at runtime, just compile time
+
+Come up with a better way to test the functionality
