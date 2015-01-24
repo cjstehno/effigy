@@ -5,6 +5,8 @@
 * Add support for collection fields without annotations
 * Add support for @Transient fields - to be ignored by Effigy inspections
 
+* Add support for the retrieve(create()) use case - maybe if the return type of a @Create is the Entity type bake this into the generated code
+
 FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
