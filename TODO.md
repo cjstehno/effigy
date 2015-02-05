@@ -1,7 +1,9 @@
 
 # Things to do
 
-- the site should have the readme info as the first page - basically the site should be the user guide
+> This is just notes to myself - don't try to figure it out :-)
+
+- Add more examples to the documentation
 
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
@@ -120,3 +122,39 @@ Enhanced property handling in the sql template language - need ability to do sql
     - I dont think this would be something Id want at runtime, just compile time
 
 Come up with a better way to test the functionality
+
+/////////////////////////
+
+Person
+    Name (first, middle, last)
+    dob
+    married
+    gender (male|female)
+    EmploymentInfo (title, salary) 1:1
+    Map<label, Address> addresses
+    List<Appointment> appointments
+
+Appointment
+    start
+    end
+    description
+    Set<Person> attendees
+    Room room
+
+Room
+    name
+    capacity
+
+
+@SelectSql('select a,b,c from foo where d=:bar')
+@RowMapper('somethingMapper') - will inject code to autowire in the somethingMapper bean
+@RowMapper(SomethingMapper) - will inject code to use the SomethingMapper class
+List<Something> findSomething(int bar)
+
+
+! retrieve based on association criteria
+! allow set qualifier for jdbctemplate name
+! allow for cascade operations on associations (create, update, delete)?
+
+! get current alpha version on my bintray sandbox
+! add more sql information to docs
