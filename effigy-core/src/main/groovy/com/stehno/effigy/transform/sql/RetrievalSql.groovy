@@ -23,7 +23,7 @@ import org.codehaus.groovy.ast.ClassNode
 
 import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.SqlBuilder.select
+import static com.stehno.effigy.transform.sql.SelectSql.select
 
 /**
  *  FIXME: document

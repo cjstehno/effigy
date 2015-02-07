@@ -25,6 +25,10 @@ class DeleteSql {
     private String from
     private final wheres = []
 
+    static DeleteSql delete() {
+        new DeleteSql()
+    }
+
     DeleteSql from(String value) {
         from = value
         this

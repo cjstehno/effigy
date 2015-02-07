@@ -31,7 +31,7 @@ import org.codehaus.groovy.syntax.Types
 
 import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.SqlBuilder.update
+import static com.stehno.effigy.transform.sql.UpdateSql.update
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.updateX

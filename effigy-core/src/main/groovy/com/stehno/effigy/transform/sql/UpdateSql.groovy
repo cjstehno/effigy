@@ -26,6 +26,10 @@ class UpdateSql {
     private final sets = []
     private final wheres = []
 
+    static UpdateSql update() {
+        new UpdateSql()
+    }
+
     UpdateSql table(String table) {
         this.table = table
         this

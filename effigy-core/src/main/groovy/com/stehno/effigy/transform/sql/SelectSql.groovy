@@ -32,6 +32,10 @@ class SelectSql {
     private String offset
     private final orders = []
 
+    static SelectSql select() {
+        new SelectSql()
+    }
+
     SelectSql columns(List<String> columnNames) {
         columns.addAll(columnNames)
         this
