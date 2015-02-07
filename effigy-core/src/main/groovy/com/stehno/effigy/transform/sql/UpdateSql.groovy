@@ -17,13 +17,14 @@
 package com.stehno.effigy.transform.sql
 
 /**
- * Created by cjstehno on 12/28/14.
+ * Sql builder for working with update sql statements. For internal use.
  */
 @SuppressWarnings('ConfusingMethodName')
 class UpdateSql {
 
     private String table
     private final sets = []
+
     private final wheres = []
 
     static UpdateSql update() {

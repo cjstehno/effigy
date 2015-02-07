@@ -30,9 +30,6 @@ class SelectSql implements Predicated<SelectSql> {
     private final columns = []
     private final leftOuterJoins = []
 
-    private final wheres = []
-    private final params = []
-
     private String limit
     private Expression limitParam
 
@@ -48,7 +45,7 @@ class SelectSql implements Predicated<SelectSql> {
     @Override
     List<Expression> getParams() {
         def result = []
-        result.addAll(params)
+        result.addAll(getWhereParams())
         if (limitParam) result.add(limitParam)
         if (offsetParam) result.add(offsetParam)
         result
@@ -81,28 +78,6 @@ class SelectSql implements Predicated<SelectSql> {
 
     SelectSql leftOuterJoin(String joinTable, String tableA, String tableAId, String tableB, String tableBId) {
         leftOuterJoins << "LEFT OUTER JOIN $joinTable on $tableA.$tableAId=$tableB.$tableBId"
-        this
-    }
-
-    SelectSql wheres(List<String> criteria, List<Expression> paramXs) {
-        if (criteria) {
-            wheres.addAll(criteria)
-            params.addAll(paramXs)
-        }
-        this
-    }
-
-    SelectSql where(String criteria, List<Expression> paramXs) {
-        if (criteria) {
-            wheres.add(criteria)
-            params.addAll(paramXs)
-        }
-        this
-    }
-
-    SelectSql where(String criteria, Expression paramX) {
-        wheres << criteria
-        params << paramX
         this
     }
 
@@ -164,19 +139,4 @@ class SelectSql implements Predicated<SelectSql> {
 
         sql.toString()
     }
-}
-
-interface Parametized {
-
-    List<Expression> getParams()
-}
-
-// TODO: could this be done with traits?
-interface Predicated<T> extends Parametized {
-
-    T wheres(List<String> criteria, List<Expression> params)
-
-    T where(String criteria, Expression param)
-
-    T where(String criteria, List<Expression> paramXs)
 }

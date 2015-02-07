@@ -15,9 +15,6 @@
  */
 
 package com.stehno.effigy.transform.sql
-
-import org.codehaus.groovy.ast.expr.Expression
-
 /**
  * Builder used to build "delete" sql queries. For internal use.
  */
@@ -25,43 +22,13 @@ import org.codehaus.groovy.ast.expr.Expression
 class DeleteSql implements Predicated<DeleteSql> {
 
     private String from
-    private final wheres = []
-    private final params = []
 
     static DeleteSql delete() {
         new DeleteSql()
     }
 
-    @Override
-    List<Expression> getParams() {
-        params.asImmutable()
-    }
-
     DeleteSql from(String value) {
         from = value
-        this
-    }
-
-    @Override
-    DeleteSql wheres(List<String> criteria, List<Expression> paramXs) {
-        if (criteria) {
-            wheres.addAll(criteria)
-            params.addAll(paramXs)
-        }
-        this
-    }
-
-    @Override
-    DeleteSql where(String criteria, Expression paramX) {
-        wheres << criteria
-        params << paramX
-        this
-    }
-
-    @Override
-    DeleteSql where(String criteria, List<Expression> paramXs) {
-        wheres << criteria
-        params.addAll(paramXs)
         this
     }
 
