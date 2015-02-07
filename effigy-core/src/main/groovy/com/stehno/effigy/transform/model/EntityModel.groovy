@@ -244,7 +244,7 @@ class EntityModel {
         return StringUtils.camelCaseToUnderscore(field.name)
     }
 
-    // FIXME: need to expand the support here
+    // FIXME: need to expand the support here (and allow for custom conversions)
     private static int sqlType(final FieldNode fieldNode) {
         if (fieldNode.type.enum) {
             return Types.VARCHAR

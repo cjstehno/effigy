@@ -19,7 +19,6 @@ import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.sql.Predicated
 import com.stehno.effigy.transform.sql.SqlTemplate
-import groovy.transform.Immutable
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -130,13 +129,4 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
         String value = extractString(node, 'value')
         value ? new SqlTemplate(value) : null
     }
-}
-
-// TODO: move this out once refactoring is done
-@Immutable(knownImmutableClasses = [AnnotationNode, ClassNode, MethodNode])
-class AnnotatedMethod {
-
-    AnnotationNode annotation
-    ClassNode entity
-    MethodNode method
 }
