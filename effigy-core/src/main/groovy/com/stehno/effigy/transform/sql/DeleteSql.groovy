@@ -17,7 +17,7 @@
 package com.stehno.effigy.transform.sql
 
 /**
- * Created by cjstehno on 12/26/14.
+ * Builder used to build "delete" sql queries. For internal use.
  */
 @SuppressWarnings('ConfusingMethodName')
 class DeleteSql {

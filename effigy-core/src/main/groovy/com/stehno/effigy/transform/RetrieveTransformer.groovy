@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.stmt.Statement
 
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.SelectSql.select
@@ -57,82 +58,89 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         def code = block()
 
         if (hasAssociatedEntities(entityNode)) {
-            SelectSql sql = select()
-
-            String entityTableName = entityTable(entityNode)
-
-            // add entity columns
-            entityProperties(entityNode).each { p ->
-                addColumns(sql, p, entityTableName, entityTableName)
-            }
-
-            // add association cols
-            associations(entityNode).each { ap ->
-                String associatedTable = entityTable(ap.associatedType)
-
-                entityProperties(ap.associatedType).each { p ->
-                    addColumns(sql, p, associatedTable, ap.propertyName)
-                }
-            }
-
-            // add component cols
-            components(entityNode).each { ap ->
-                entityProperties(ap.type).each { p ->
-                    sql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
-                }
-            }
-
-            sql.from(entityTableName)
-
-            def entityIdentifier = identifier(entityNode)
-
-            associations(entityNode).each { ap ->
-                String associatedTable = entityTable(ap.associatedType)
-                IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
-
-                sql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
-                sql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
-            }
-
-            components(entityNode).each { ap ->
-                sql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
-            }
-
-            applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
-            applyOrders(sql, annotationNode, entityNode)
-
-            code.addStatement declS(varX(RESULTS), queryX(
-                sql.build(),
-                entityCollectionExtractor(
-                    entityNode,
-                    extractPagination(annotationNode, methodNode, Offset),
-                    extractPagination(annotationNode, methodNode, Limit)
-                ),
-                sql.params
-            ))
-
+            code.addStatement generateSelectWithAssociations(entityNode, annotationNode, methodNode)
         } else {
-            SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
-
-            applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
-            applyOrders(sql, annotationNode, entityNode)
-            applyPagination(sql, annotationNode, methodNode, Offset)
-            applyPagination(sql, annotationNode, methodNode, Limit)
-
-            code.addStatement declS(varX(RESULTS), queryX(
-                sql.build(),
-                entityRowMapper(entityNode),
-                sql.params
-            ))
+            code.addStatement generateSelectWithoutAssociations(entityNode, annotationNode, methodNode)
         }
 
         if (methodNode.returnType == entityNode) {
-            code.addStatement(returnS(callX(varX(RESULTS), 'getAt', constX(0))))
+            code.addStatement returnS(callX(varX(RESULTS), 'getAt', constX(0)))
         } else {
-            code.addStatement(returnS(varX(RESULTS)))
+            code.addStatement returnS(varX(RESULTS))
         }
 
         updateMethod repoNode, methodNode, code
+    }
+
+    private Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+        SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
+
+        applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
+        applyOrders(sql, annotationNode, entityNode)
+        applyPagination(sql, annotationNode, methodNode, Offset)
+        applyPagination(sql, annotationNode, methodNode, Limit)
+
+        declS(varX(RESULTS), queryX(
+            sql.build(),
+            entityRowMapper(entityNode),
+            sql.params
+        ))
+    }
+
+    private Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+        SelectSql sql = select()
+
+        String entityTableName = entityTable(entityNode)
+
+        // add entity columns
+        entityProperties(entityNode).each { p ->
+            addColumns(sql, p, entityTableName, entityTableName)
+        }
+
+        // add association cols
+        associations(entityNode).each { ap ->
+            String associatedTable = entityTable(ap.associatedType)
+
+            entityProperties(ap.associatedType).each { p ->
+                addColumns(sql, p, associatedTable, ap.propertyName)
+            }
+        }
+
+        // add component cols
+        components(entityNode).each { ap ->
+            entityProperties(ap.type).each { p ->
+                sql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
+            }
+        }
+
+        sql.from(entityTableName)
+
+        def entityIdentifier = identifier(entityNode)
+
+        associations(entityNode).each { ap ->
+            String associatedTable = entityTable(ap.associatedType)
+            IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
+
+            sql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+            sql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
+        }
+
+        components(entityNode).each { ap ->
+            sql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+        }
+
+        applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
+        applyOrders(sql, annotationNode, entityNode)
+
+        declS(varX(RESULTS), queryX(
+            sql.build(),
+            entityCollectionExtractor(
+                entityNode,
+                extractPagination(annotationNode, methodNode, Offset),
+                extractPagination(annotationNode, methodNode, Limit)
+            ),
+            sql.params
+        ))
     }
 
     private static void addColumns(SelectSql selectSql, EntityPropertyModel p, String table, String prefix) {
