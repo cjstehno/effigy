@@ -15,10 +15,11 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
+import com.stehno.effigy.transform.sql.Predicated
 import com.stehno.effigy.transform.sql.SqlTemplate
+import groovy.transform.Immutable
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -33,7 +34,6 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
-
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */
@@ -97,6 +97,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
         repoNode.hasDeclaredMethod(methodNode.name, methodNode.parameters)
     }
 
+    // TODO: this should be removable after the refactoring
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected static List extractParameters(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode, boolean ignoreFirst = false) {
         def wheres = []
@@ -117,6 +118,30 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
         [wheres, params]
     }
 
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    protected static void applyParameters(Predicated<?> predicatedSql, AnnotatedMethod annotatedMethod) {
+        boolean ignoreFirst = false
+        // FIXME: remove this if not needed
+
+        SqlTemplate template = extractSqlTemplate(annotatedMethod.annotation)
+        if (template) {
+            predicatedSql.where(
+                template.sql(annotatedMethod.entity),
+                template.variableNames().collect { vn -> varX(vn[1..-1]) }
+            )
+
+        } else {
+            parameters(annotatedMethod.method.parameters, ignoreFirst).findAll { p ->
+                !p.getAnnotations(make(Limit)) && !p.getAnnotations(make(Offset))
+            }.each { mp ->
+                predicatedSql.where(
+                    "${entityTable(annotatedMethod.entity)}.${entityProperty(annotatedMethod.entity, mp.name).columnName}=?",
+                    varX(mp.name)
+                )
+            }
+        }
+    }
+
     private static List parameters(Parameter[] params, boolean ignoreFirst) {
         if (ignoreFirst) {
             (params as List).tail()
@@ -129,4 +154,13 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
         String value = extractString(node, 'value')
         value ? new SqlTemplate(value) : null
     }
+}
+
+// TODO: move this out once refactoring is done
+@Immutable(knownImmutableClasses = [AnnotationNode, ClassNode, MethodNode])
+class AnnotatedMethod {
+
+    AnnotationNode annotation
+    ClassNode entity
+    MethodNode method
 }

@@ -18,15 +18,19 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
+import com.stehno.effigy.transform.model.EmbeddedPropertyModel
+import com.stehno.effigy.transform.model.EntityPropertyModel
+import com.stehno.effigy.transform.model.IdentifierPropertyModel
+import com.stehno.effigy.transform.sql.SelectSql
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.Expression
 
-import static com.stehno.effigy.transform.model.EntityModel.hasAssociatedEntities
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithAssociations
-import static com.stehno.effigy.transform.sql.RetrievalSql.selectWithoutAssociations
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.sql.SelectSql.select
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
@@ -50,32 +54,75 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
-        def orders = extractOrders(annotationNode, entityNode)
-        def (offset, offsetParam) = extractOffset(annotationNode, methodNode)
-        def (limit, limitParam) = extractLimit(annotationNode, methodNode)
-
         def code = block()
 
         if (hasAssociatedEntities(entityNode)) {
+            SelectSql sql = select()
+
+            String entityTableName = entityTable(entityNode)
+
+            // add entity columns
+            entityProperties(entityNode).each { p ->
+                addColumns(sql, p, entityTableName, entityTableName)
+            }
+
+            // add association cols
+            associations(entityNode).each { ap ->
+                String associatedTable = entityTable(ap.associatedType)
+
+                entityProperties(ap.associatedType).each { p ->
+                    addColumns(sql, p, associatedTable, ap.propertyName)
+                }
+            }
+
+            // add component cols
+            components(entityNode).each { ap ->
+                entityProperties(ap.type).each { p ->
+                    sql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
+                }
+            }
+
+            sql.from(entityTableName)
+
+            def entityIdentifier = identifier(entityNode)
+
+            associations(entityNode).each { ap ->
+                String associatedTable = entityTable(ap.associatedType)
+                IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
+
+                sql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+                sql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
+            }
+
+            components(entityNode).each { ap ->
+                sql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+            }
+
+            applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
+            applyOrders(sql, annotationNode, entityNode)
+
             code.addStatement declS(varX(RESULTS), queryX(
-                selectWithAssociations(entityNode, wheres, orders),
-                entityCollectionExtractor(entityNode, offsetParam, limitParam),
-                params
+                sql.build(),
+                entityCollectionExtractor(
+                    entityNode,
+                    extractPagination(annotationNode, methodNode, Offset),
+                    extractPagination(annotationNode, methodNode, Limit)
+                ),
+                sql.params
             ))
 
         } else {
-            if (limitParam) {
-                params << limitParam
-            }
-            if (offsetParam) {
-                params << offsetParam
-            }
+            SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
+
+            applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
+            applyOrders(sql, annotationNode, entityNode)
+            applyPagination(sql, annotationNode, methodNode, Offset)
+            applyPagination(sql, annotationNode, methodNode, Limit)
 
             code.addStatement declS(varX(RESULTS), queryX(
-                selectWithoutAssociations(entityNode, wheres, limit, offset, orders),
+                sql.build(),
                 entityRowMapper(entityNode),
-                params
+                sql.params
             ))
         }
 
@@ -88,63 +135,54 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         updateMethod repoNode, methodNode, code
     }
 
-    // TODO: refactor this and the limit into a shared codebase
-    private static List extractOffset(AnnotationNode annotationNode, MethodNode methodNode) {
-        def offset = null
-        def param = null
+    private static void addColumns(SelectSql selectSql, EntityPropertyModel p, String table, String prefix) {
+        if (p instanceof EmbeddedPropertyModel) {
+            p.columnNames.each { cn ->
+                selectSql.column(table, cn, "${prefix}_$cn")
+            }
+        } else {
+            selectSql.column(table, p.columnName as String, "${prefix}_${p.columnName}")
+        }
+    }
 
-        def offsetParam = findOffsetParameter(methodNode)
+    // limit and offset - a bit of a hack
+    private static Expression extractPagination(AnnotationNode annotationNode, MethodNode methodNode, Class annoClass) {
+        def annotatedParam = findAnnotatedIntParam(methodNode, annoClass)
 
-        Integer offsetValue = extractInteger(annotationNode, 'offset')
-        if (offsetValue > -1) {
-            offset = PLACEHOLDER
-            param = constX(offsetValue)
+        Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
+        if (value > -1) {
+            return constX(value)
 
-        } else if (offsetParam) {
-            offset = PLACEHOLDER
-            param = varX(offsetParam.name)
+        } else if (annotatedParam) {
+            return varX(annotatedParam.name)
         }
 
-        [offset, param]
+        return null
     }
 
-    private static List extractLimit(AnnotationNode annotationNode, MethodNode methodNode) {
-        def limit = null
-        def param = null
+    // limit and offset - a bit of a hack
+    private static void applyPagination(SelectSql sql, AnnotationNode annotationNode, MethodNode methodNode, Class annoClass) {
+        def param = findAnnotatedIntParam(methodNode, annoClass)
+        Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
 
-        def limitParam = findLimitParameter(methodNode)
+        if (value > -1) {
+            sql.offset(PLACEHOLDER, constX(value))
 
-        Integer limitValue = extractInteger(annotationNode, 'limit')
-        if (limitValue > -1) {
-            limit = PLACEHOLDER
-            param = constX(limitValue)
-
-        } else if (limitParam) {
-            limit = PLACEHOLDER
-            param = varX(limitParam.name)
+        } else if (param) {
+            sql.offset(PLACEHOLDER, varX(param.name))
         }
-
-        [limit, param]
     }
 
-    private static Parameter findLimitParameter(MethodNode methodNode) {
-        methodNode.parameters.find { p -> p.getAnnotations(make(Limit)) && p.type == int_TYPE }
+    private static Parameter findAnnotatedIntParam(MethodNode methodNode, Class annoClass) {
+        methodNode.parameters.find { p -> p.getAnnotations(make(annoClass)) && p.type == int_TYPE }
     }
 
-    private static Parameter findOffsetParameter(MethodNode methodNode) {
-        methodNode.parameters.find { p -> p.getAnnotations(make(Offset)) && p.type == int_TYPE }
-    }
-
-    private static String extractOrders(AnnotationNode annotationNode, ClassNode entityNode) {
-        String orders = null
-
+    private static void applyOrders(SelectSql sql, AnnotationNode annotationNode, ClassNode entityNode) {
         String orderTemplate = extractString(annotationNode, 'order')
         if (orderTemplate) {
-            orders = new SqlTemplate(orderTemplate).sql(entityNode)
+            sql.order(new SqlTemplate(orderTemplate).sql(entityNode))
         } /*else {
             FIXME: support for runtime order param
         }*/
-
-        orders
     }
 }

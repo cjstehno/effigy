@@ -93,15 +93,14 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
     @SuppressWarnings('GroovyAssignabilityCheck')
     private static void injectEntityIdSelection(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
-        def (wheres, params) = extractParameters(deleteNode, entityNode, methodNode)
         def ident = identifier(entityNode)
 
-        String sql = select().column(ident.columnName).from(entityTable(entityNode)).wheres(wheres).build()
+        def sql = select().column(ident.columnName).from(entityTable(entityNode))
+
+        applyParameters(sql, new AnnotatedMethod(deleteNode, entityNode, methodNode))
+
         debug DeleteTransformer, 'Sql({}:Delete): {}', entityNode.name, sql
 
-        code.addStatement(declS(
-            varX(ENTITY_IDS),
-            queryX(sql, singleColumnRowMapper(ident.type), params)
-        ))
+        code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(ident.type), sql.params)))
     }
 }

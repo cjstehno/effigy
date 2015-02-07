@@ -43,13 +43,15 @@ class ExistsTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
+        def sql = select().column('count(*)').from(entityTable(entityNode))
+
+        applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
 
         updateMethod repoNode, methodNode, returnS(new BinaryExpression(
             queryForObjectX(
-                select().column('count(*)').from(entityTable(entityNode)).wheres(wheres).limit('1').build(),
+                sql.limit('1').build(),
                 new ClassExpression(Integer_TYPE),
-                params
+                sql.params
             ),
             GeneralUtils.NE,
             constX(0)

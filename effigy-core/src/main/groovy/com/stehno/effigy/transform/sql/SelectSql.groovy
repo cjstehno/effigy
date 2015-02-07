@@ -16,24 +16,42 @@
 
 package com.stehno.effigy.transform.sql
 
+import org.codehaus.groovy.ast.expr.Expression
+
 /**
  * Builder for select SQL queries. This class should not be used directly, see the SqlBuilder instead.
  */
 @SuppressWarnings('ConfusingMethodName')
-class SelectSql {
+class SelectSql implements Predicated<SelectSql> {
 
     private static final String COMMA_SPACE = ', '
     private static final String SPACE = ' '
     private final froms = []
     private final columns = []
     private final leftOuterJoins = []
+
     private final wheres = []
+    private final params = []
+
     private String limit
+    private Expression limitParam
+
     private String offset
+    private Expression offsetParam
+
     private final orders = []
 
     static SelectSql select() {
         new SelectSql()
+    }
+
+    @Override
+    List<Expression> getParams() {
+        def result = []
+        result.addAll(params)
+        if (limitParam) result.add(limitParam)
+        if (offsetParam) result.add(offsetParam)
+        result
     }
 
     SelectSql columns(List<String> columnNames) {
@@ -66,15 +84,25 @@ class SelectSql {
         this
     }
 
-    SelectSql wheres(List<String> criteria) {
+    SelectSql wheres(List<String> criteria, List<Expression> paramXs) {
         if (criteria) {
             wheres.addAll(criteria)
+            params.addAll(paramXs)
         }
         this
     }
 
-    SelectSql where(String criteria) {
+    SelectSql where(String criteria, List<Expression> paramXs) {
+        if (criteria) {
+            wheres.add(criteria)
+            params.addAll(paramXs)
+        }
+        this
+    }
+
+    SelectSql where(String criteria, Expression paramX) {
         wheres << criteria
+        params << paramX
         this
     }
 
@@ -83,8 +111,15 @@ class SelectSql {
         this
     }
 
-    SelectSql offset(String value) {
+    SelectSql limit(String value, Expression exp) {
+        limit = value
+        limitParam = exp
+        this
+    }
+
+    SelectSql offset(String value, Expression exp) {
         offset = value
+        offsetParam = exp
         this
     }
 
@@ -129,4 +164,18 @@ class SelectSql {
 
         sql.toString()
     }
+}
+
+interface Parametized {
+
+    List<Expression> getParams()
+}
+
+interface Predicated<T> extends Parametized {
+
+    T wheres(List<String> criteria, List<Expression> params)
+
+    T where(String criteria, Expression param)
+
+    T where(String criteria, List<Expression> paramXs)
 }

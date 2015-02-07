@@ -26,7 +26,6 @@ import static com.stehno.effigy.transform.sql.SelectSql.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObject
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
-
 /**
  * Transformer used to process the @Count annotations.
  */
@@ -40,12 +39,15 @@ class CountTransformer extends MethodImplementingTransformation {
     @Override
     @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
+        def sql = select().column('count(*)').from(entityTable(entityNode))
+
+        applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
 
         updateMethod repoNode, methodNode, queryForObject(
-            select().column('count(*)').from(entityTable(entityNode)).wheres(wheres).build(),
+            sql.build(),
             new ClassExpression(Integer_TYPE),
-            params
+            sql.params
         )
     }
 }
+
