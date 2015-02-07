@@ -50,14 +50,10 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
         injectAssociationDeletes entityNode, methodNode, annotationNode, code
 
-        def (wheres, params) = extractParameters(annotationNode, entityNode, methodNode)
+        def sql = delete().from(entityTable(entityNode))
+        applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
 
-        code.addStatement(returnS(
-            updateX(
-                delete().from(entityTable(entityNode)).wheres(wheres).build(),
-                params
-            )
-        ))
+        code.addStatement(returnS(updateX(sql.build(), sql.params)))
 
         updateMethod repoNode, methodNode, code
     }
@@ -74,17 +70,17 @@ class DeleteTransformer extends MethodImplementingTransformation {
             associations(entityNode).each { ap ->
                 debug DeleteTransformer, '- Association({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
 
-                def sql = delete().from(ap.joinTable).where("${ap.joinTable}.${ap.entityColumn}=?")
-                closureCode.addStatement(stmt(updateX(sql.build(), [varX(ENTITY_ID)])))
+                def sql = delete().from(ap.joinTable).where("${ap.joinTable}.${ap.entityColumn}=?", varX(ENTITY_ID))
+
+                closureCode.addStatement(stmt(updateX(sql.build(), sql.params)))
             }
 
             components(entityNode).each { ap ->
                 debug DeleteTransformer, '- Component({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
 
-                def sql = delete().from(ap.lookupTable).where("${ap.lookupTable}.${ap.entityColumn}=?")
-                debug DeleteTransformer, '- Component({}:{}): {} -> {}', entityNode.name, methodNode.name, ap.propertyName, sql
+                def sql = delete().from(ap.lookupTable).where("${ap.lookupTable}.${ap.entityColumn}=?", varX(ENTITY_ID))
 
-                closureCode.addStatement(stmt(updateX(sql.build(), [varX(ENTITY_ID)])))
+                closureCode.addStatement(stmt(updateX(sql.build(), sql.params)))
             }
 
             code.addStatement(new ForStatement(param(OBJECT_TYPE, ENTITY_ID), varX(ENTITY_IDS), closureCode))

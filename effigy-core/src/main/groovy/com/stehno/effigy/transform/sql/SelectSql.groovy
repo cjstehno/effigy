@@ -171,6 +171,7 @@ interface Parametized {
     List<Expression> getParams()
 }
 
+// TODO: could this be done with traits?
 interface Predicated<T> extends Parametized {
 
     T wheres(List<String> criteria, List<Expression> params)
