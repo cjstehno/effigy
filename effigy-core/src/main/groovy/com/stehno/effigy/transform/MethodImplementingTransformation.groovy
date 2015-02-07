@@ -97,32 +97,8 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
         repoNode.hasDeclaredMethod(methodNode.name, methodNode.parameters)
     }
 
-    // TODO: this should be removable after the refactoring
     @SuppressWarnings('GroovyAssignabilityCheck')
-    protected static List extractParameters(AnnotationNode annotationNode, ClassNode entityNode, MethodNode methodNode, boolean ignoreFirst = false) {
-        def wheres = []
-        def params = []
-
-        SqlTemplate template = extractSqlTemplate(annotationNode)
-        if (template) {
-            wheres << template.sql(entityNode)
-            params.addAll(template.variableNames().collect { vn -> varX(vn[1..-1]) })
-
-        } else {
-            parameters(methodNode.parameters, ignoreFirst).findAll { p -> !p.getAnnotations(make(Limit)) && !p.getAnnotations(make(Offset)) }.each { mp ->
-                wheres << "${entityTable(entityNode)}.${entityProperty(entityNode, mp.name).columnName}=?"
-                params << varX(mp.name)
-            }
-        }
-
-        [wheres, params]
-    }
-
-    @SuppressWarnings('GroovyAssignabilityCheck')
-    protected static void applyParameters(Predicated<?> predicatedSql, AnnotatedMethod annotatedMethod) {
-        boolean ignoreFirst = false
-        // FIXME: remove this if not needed
-
+    protected static void applyParameters(Predicated<?> predicatedSql, AnnotatedMethod annotatedMethod, boolean ignoreFirst = false) {
         SqlTemplate template = extractSqlTemplate(annotatedMethod.annotation)
         if (template) {
             predicatedSql.where(

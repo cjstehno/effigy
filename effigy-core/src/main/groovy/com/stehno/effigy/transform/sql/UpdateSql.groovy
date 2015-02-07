@@ -16,19 +16,29 @@
 
 package com.stehno.effigy.transform.sql
 
+import org.codehaus.groovy.ast.expr.Expression
+
 /**
  * Sql builder for working with update sql statements. For internal use.
  */
 @SuppressWarnings('ConfusingMethodName')
-class UpdateSql {
+class UpdateSql implements Predicated<UpdateSql> {
 
     private String table
-    private final sets = []
 
-    private final wheres = []
+    private final sets = []
+    private final setterParams = []
 
     static UpdateSql update() {
         new UpdateSql()
+    }
+
+    @Override
+    List<Expression> getParams() {
+        def result = []
+        if (setterParams) result.addAll(setterParams)
+        result.addAll(getWhereParams())
+        result
     }
 
     UpdateSql table(String table) {
@@ -36,25 +46,15 @@ class UpdateSql {
         this
     }
 
-    UpdateSql sets(List<String> values) {
+    UpdateSql sets(List<String> values, List<Expression> exps) {
         sets.addAll(values)
+        setterParams.addAll(exps)
         this
     }
 
-    UpdateSql set(String value) {
+    UpdateSql set(String value, Expression exp) {
         sets << value
-        this
-    }
-
-    UpdateSql wheres(List<String> criteria) {
-        if (criteria) {
-            wheres.addAll(criteria)
-        }
-        this
-    }
-
-    UpdateSql where(String criteria) {
-        wheres << criteria
+        setterParams << exp
         this
     }
 
