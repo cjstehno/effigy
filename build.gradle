@@ -1,9 +1,9 @@
+
 subprojects {
     version = '0.1.0'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'
-    apply plugin: 'maven-publish'
     apply plugin: 'codenarc'
 
     compileJava {
@@ -29,14 +29,6 @@ subprojects {
     test {
         jvmArgs '-Xverify:none'
     }
-    
-    publishing {
-	publications {
-	    mavenJava(MavenPublication) {
-		from components.java
-	    }
-	}
-    }    
 
     codenarc {
         toolVersion = '0.22'

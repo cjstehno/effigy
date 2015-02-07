@@ -11,7 +11,7 @@ listed.
 
 If you want to develop features or fix bugs in the Effigy library, clone the repository and run:
 
-    gradlew build
+    ./gradlew build
 
 There no extra configuration or dependencies required at this time.
 
@@ -20,9 +20,21 @@ There no extra configuration or dependencies required at this time.
 If you want to use the Effigy library in your project you will need to add the `effigy-core` library as a dependency and then
 read the rest of this guide (and probably the unit tests) to learn how the annotations are used.
 
-Currently, there are no publicly available effigy artifacts - you will need to build it yourself and ensure that you have `mavenLocal()`
-in your dependencies (gradle). You can build and publish the development artifact using:
+Currently only pre-release builds are available on Bintray. You will need to add a reference to the repository; for Gradle, this would be
 
-    gradlew build publishToMavenLocal
+    repositories {
+        maven { url 'http://dl.bintray.com/cjstehno/stehno' }
+    }
+
+Alternately, you can build it yourself and install it locally using `mavenLocal()` in your Gradle dependencies. You can build and publish the
+development artifact using:
+
+    ./gradlew build publishToMavenLocal
+
+Then add it to your dependencies:
+
+    com.stehno.effigy:effigy-core:0.1.0
+
+> The most stable method at this point is to build it yourself, since the current codebase may or may not be reflected in the published build.
 
 
