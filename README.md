@@ -34,3 +34,5 @@ The `effigy-guide/build` directory will contain the generated guide.
 
 
 **Site:** http://cjstehno.github.io/effigy
+
+[![Build Status](https://drone.io/github.com/cjstehno/effigy/status.png)](https://drone.io/github.com/cjstehno/effigy/latest)
