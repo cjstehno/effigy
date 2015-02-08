@@ -26,6 +26,7 @@ import static com.stehno.effigy.transform.sql.SelectSql.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObject
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
+
 /**
  * Transformer used to process the @Count annotations.
  */

@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform.sql
+
 /**
  * Builder used to build "delete" sql queries. For internal use.
  */

@@ -34,9 +34,7 @@ abstract class EffigyAssociationResultSetExtractor<T> implements ResultSetExtrac
         def entity = null
 
         while (rs.next()) {
-            if (!entity) {
-                entity = primaryRowMapper().mapRow(rs, 0)
-            }
+            entity = entity ?: primaryRowMapper().mapRow(rs, 0)
 
             mapAssociations(rs, entity)
         }

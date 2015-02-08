@@ -62,7 +62,6 @@ class DeleteTransformer extends MethodImplementingTransformation {
         if (hasAssociatedEntities(entityNode)) {
             debug DeleteTransformer, 'Associations({}:{})', entityNode.name, methodNode.name
 
-
             injectEntityIdSelection(entityNode, methodNode, deleteNode, code)
 
             def closureCode = block()

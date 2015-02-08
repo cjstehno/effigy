@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.sql.Predicated
@@ -33,6 +34,7 @@ import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
+
 /**
  * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
  */

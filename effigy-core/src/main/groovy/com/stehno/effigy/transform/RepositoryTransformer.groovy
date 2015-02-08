@@ -31,8 +31,7 @@ import org.springframework.stereotype.Repository
 
 import java.lang.reflect.Modifier
 
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.logging.Logger.trace
+import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static java.lang.reflect.Modifier.PRIVATE
@@ -85,7 +84,7 @@ class RepositoryTransformer implements ASTTransformation {
             }
 
         } catch (ex) {
-            ex.printStackTrace()
+            warn RepositoryTransformer, 'Problem transforming repository: {}', ex.message
         }
     }
 
