@@ -33,10 +33,14 @@
               <li class="unnumbered visible"><a href="Introduction.html#how-the-sausage-is-made">How the Sausage Is Made</a></li>
             </ul>
           </li>
-          <li class="unnumbered visible"><a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+          <li class="unnumbered visible">
+            <a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a>
+            <ul>
+              <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+            </ul>
+          </li>
           <li class="unnumbered visible">
             <a href="Entities.html" data-alt-hash="entities">Entities</a>
             <ul>
@@ -46,12 +50,8 @@
               <li class="unnumbered visible"><a href="Entities.html#version">@Version</a></li>
               <li class="unnumbered visible"><a href="Entities.html#embedded">@Embedded</a></li>
               <li class="unnumbered visible"><a href="Entities.html#component">@Component</a></li>
-              <li class="unnumbered visible">
-                <a href="Entities.html#association">@Association</a>
-                <ul>
-                  <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
-                </ul>
-              </li>
+              <li class="unnumbered visible"><a href="Entities.html#association">@Association</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
             </ul>
           </li>
           <li class="unnumbered visible">
@@ -95,26 +95,41 @@
           </div>
           <div class="page-toc">
             <ul>
-              <li class="unnumbered visible"><a href="#getting-started">Getting Started</a></li>
-              <li class="unnumbered visible"><a href="#support-and-requirements">Support and Requirements</a></li>
-              <li class="unnumbered visible"><a href="#setup-for-development">Setup for Development</a></li>
-              <li class="unnumbered visible"><a href="#setup-for-use">Setup for Use</a></li>
+              <li class="unnumbered visible">
+                <a href="#getting-started">Getting Started</a>
+                <ul>
+                  <li class="unnumbered visible"><a href="#support-and-requirements">Support and Requirements</a></li>
+                  <li class="unnumbered visible"><a href="#setup-for-development">Setup for Development</a></li>
+                  <li class="unnumbered visible"><a href="#setup-for-use">Setup for Use</a></li>
+                </ul>
+              </li>
             </ul>
           </div>
           <div class="main-content">
             <h1 id="getting-started">Getting Started</h1>
-            <h1 id="support-and-requirements">Support and Requirements</h1>
+            <h2 id="support-and-requirements">Support and Requirements</h2>
             <p>Effigy is built using <code>Groovy 2.4.0</code> on top of <code>Java 8</code>. The tests are all run against an H2 database and I have also used it to develop under a PostgreSql database. The generated SQL is intended to be standard so the framework should work against any standard SQL database. I would be happy to list any others - if you are using a different database, let me know and it will be listed.</p>
-            <h1 id="setup-for-development">Setup for Development</h1>
+            <h2 id="setup-for-development">Setup for Development</h2>
             <p>If you want to develop features or fix bugs in the Effigy library, clone the repository and run:</p>
-            <pre><code class="nohighlight">gradlew build
+            <pre><code class="nohighlight">./gradlew build
 </code></pre>
             <p>There no extra configuration or dependencies required at this time.</p>
-            <h1 id="setup-for-use">Setup for Use</h1>
+            <h2 id="setup-for-use">Setup for Use</h2>
             <p>If you want to use the Effigy library in your project you will need to add the <code>effigy-core</code> library as a dependency and then read the rest of this guide (and probably the unit tests) to learn how the annotations are used.</p>
-            <p>Currently, there are no publicly available effigy artifacts - you will need to build it yourself and ensure that you have <code>mavenLocal()</code> in your dependencies (gradle). You can build and publish the development artifact using:</p>
-            <pre><code class="nohighlight">gradlew build publishToMavenLocal
+            <p>Currently only pre-release builds are available on Bintray. You will need to add a reference to the repository; for Gradle, this would be</p>
+            <pre><code class="nohighlight">repositories {
+    maven { url &#39;http://dl.bintray.com/cjstehno/stehno&#39; }
+}
 </code></pre>
+            <p>Alternately, you can build it yourself and install it locally using <code>mavenLocal()</code> in your Gradle dependencies. You can build and publish the development artifact using:</p>
+            <pre><code class="nohighlight">./gradlew build publishToMavenLocal
+</code></pre>
+            <p>Then add it to your dependencies:</p>
+            <pre><code class="nohighlight">com.stehno.effigy:effigy-core:0.1.0
+</code></pre>
+            <blockquote>
+              <p>The most stable method at this point is to build it yourself, since the current codebase may or may not be reflected in the published build.</p>
+            </blockquote>
           </div>
           <div class="content-nav content-nav-bottom">
             <a class="prev-page" href="Introduction.html">

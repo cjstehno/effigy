@@ -33,10 +33,14 @@
               <li class="unnumbered visible"><a href="Introduction.html#how-the-sausage-is-made">How the Sausage Is Made</a></li>
             </ul>
           </li>
-          <li class="unnumbered visible"><a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
-          <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+          <li class="unnumbered visible">
+            <a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a>
+            <ul>
+              <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+            </ul>
+          </li>
           <li class="unnumbered visible">
             <a href="Entities.html" data-alt-hash="entities">Entities</a>
             <ul>
@@ -46,12 +50,8 @@
               <li class="unnumbered visible"><a href="Entities.html#version">@Version</a></li>
               <li class="unnumbered visible"><a href="Entities.html#embedded">@Embedded</a></li>
               <li class="unnumbered visible"><a href="Entities.html#component">@Component</a></li>
-              <li class="unnumbered visible">
-                <a href="Entities.html#association">@Association</a>
-                <ul>
-                  <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
-                </ul>
-              </li>
+              <li class="unnumbered visible"><a href="Entities.html#association">@Association</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
             </ul>
           </li>
           <li class="unnumbered visible">
@@ -104,12 +104,8 @@
                   <li class="unnumbered visible"><a href="#version">@Version</a></li>
                   <li class="unnumbered visible"><a href="#embedded">@Embedded</a></li>
                   <li class="unnumbered visible"><a href="#component">@Component</a></li>
-                  <li class="unnumbered visible">
-                    <a href="#association">@Association</a>
-                    <ul>
-                      <li class="unnumbered visible"><a href="#mapped-association">@Mapped Association</a></li>
-                    </ul>
-                  </li>
+                  <li class="unnumbered visible"><a href="#association">@Association</a></li>
+                  <li class="unnumbered visible"><a href="#mapped-association">@Mapped Association</a></li>
                 </ul>
               </li>
             </ul>
@@ -117,17 +113,15 @@
           <div class="main-content">
             <h1 id="entities">Entities</h1>
             <p>Entities in Effigy are defined and configured using annotations, the only required annotation being the <code>@Entity</code> annotation. The others are optional and used to help configure the system to your needs.</p>
-            <blockquote>
-              <p>TBD: Document the expected DDL for each annotation.</p>
-            </blockquote>
             <h2 id="entity">@Entity</h2>
             <p>The <code>@Entity</code> annotation is applied to an entity type, a POGO to denote that the object is an entity to be managed by Effigy.</p>
             <p>The annotation has only one optional property, <code>table</code>, which is used to provide a custom name for the table containing the entity data. By default, if not specified, the table name will be the name of the entity with an &lsquo;s&rsquo; added to the end of it.</p>
             <p>Other than marking an object as an entity, the annotation causes some helper classes to be generated for the entity; a <code>RowMapper</code> and two <code>ResultSetExtractor</code> implementations will be generated for each entity object. Each will be named with the prefix of the class name of the entity. As an example for the entity class <code>Person</code> you would have three new classes:</p>
-            <pre><code class="nohighlight">PersonRowMapper
-PersonAssociationExtractor
-PersonCollectionAssociationExtractor
-</code></pre>
+            <ul>
+              <li><code>PersonRowMapper</code> - maps a single row of the person entity table to a single <code>Person</code> object instance (no associations).</li>
+              <li><code>PersonAssociationExtractor</code> - maps a single row of the person entity table to a single <code>Person</code> object instance (with associations).</li>
+              <li><code>PersonCollectionAssociationExtractor</code> - maps a collection of rows of the person entity table to a collection of <code>Person</code> instances (with associations).</li>
+            </ul>
             <p>Each will be created in the same package as the entity itself. Also helper methods will be added to the entity class to retrieve instances of each of these mappers and extractors. For the example above these would have the following signatures:</p>
             <pre><code class="nohighlight">static PersonRowMapper rowMapper(String prefix=&#39;&#39;)
 static PersonAssociationExtractor associationExtractor()
@@ -138,15 +132,27 @@ static PersonCollectionAssociationExtractor collectionAssociationExtractor(Integ
             <p>The <code>@Column</code> annotation is an optional one applied to the entity properties. It is used to provide an alternate name for the database column associated with the property. By default, if this annotation is not used, the property name will be converted from camel-case to underscore-case (e.g. firstName becomes first_name).</p>
             <h2 id="id">@Id</h2>
             <p>The <code>@Id</code> annotation is applied to an entity property that is to be defined as the unique identifier for an instance of the entity. While an id is not explicitly required by Effigy, you will not benefit from most of the functionality without one. An entity id can be a property of any Object type, though generally a Long is recommended.</p>
-            <p>The generating and management of ids is handled by your code and/or the database itself, Effigy does not take any action to generate ids.</p>
+            <p>The generating and management of ids is handled by your code and/or the database itself, Effigy does not take any action to generate ids. The DDL expected could be something similar to the following:</p>
+            <pre><code class="sql">id BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY
+</code></pre>
             <p>Currently, Effigy does not support multiple properties annotated with the <code>@Id</code> annotation.</p>
             <h2 id="version">@Version</h2>
             <p>The <code>@Version</code> annotation is an optional annotation applied to en entity property that is to be defined as the Optimistic versioning property for the entity. The type of the property must be a Long, long, Integer or int.</p>
-            <p>The generated update methods (see documentation for the <code>@Update</code> annotation) will make use of the version property to determine whether or not the update is allowed, based on the version being updated compared to the version in the database.</p>
+            <p>The generated update methods (see documentation for the <code>@Update</code> annotation) will make use of the version property to determine whether or not the update is allowed, based on the version being updated compared to the version in the database. The DDL expected could be something similar to the following:</p>
+            <pre><code class="sql">version BIGINT NOT NULL,
+</code></pre>
             <p>Currently, Effigy does not support multiple properties annotated with the <code>@Version</code> annotation.</p>
             <h2 id="embedded">@Embedded</h2>
             <p>The <code>@Embedded</code> annotation is used to denote an embedded component property. The properties of the embedded object are mapped to fields of the entity table. The database columns are named as specified by the embedded object property names following the standard name conversion rules, as well as any <code>@Column</code> annotations. Also, a prefix will be prepended to the column names which will be the same as the name of the embedded property in the enclosing entity. The annotation accepts an optional <code>prefix</code> property which allows the prefix to be specified explicitly.</p>
             <p>The type of the embedded object may be an entity; however, it need not be. If the embedded object is an entity, any @Id or @Version annotations will <strong>not</strong> be honored, since the table data is contained in the table for the enclosing entity. The <code>@Column</code> annotation will be honored.</p>
+            <p>The DDL expected for an embedded property is a set of prefixed columns in the main entity table. Consider the <code>Person</code> case, where there is an embedded property <code>Name name</code>, the framework would expect the following:</p>
+            <pre><code class="sql">CREATE TABLE people (
+  -- other fields omitted
+  name_first    VARCHAR(25)           NOT NULL,
+  name_middle   VARCHAR(25)           NOT NULL,
+  name_last     VARCHAR(25)           NOT NULL
+);
+</code></pre>
             <blockquote>
               <p>TBD: support for un-annotated embedded types?</p>
             </blockquote>
@@ -158,6 +164,19 @@ static PersonCollectionAssociationExtractor collectionAssociationExtractor(Integ
               <li>The <code>lookupTable</code> property is used to specify the name of the lookup table used to link the component table with the entity table. If this property is not specified, the table will be named as the table name of the component type.</li>
               <li>The <code>entityColumn</code> property is used to specify the name of the field used to identify the owning entity in the associated table. If this property is not specified, the name will be the table name of the owning entity suffixed with &rsquo;_id&rsquo;.</li>
             </ul>
+            <p>The DDL expected for components is basically a 1-1 lookup table. Consider the case where a <code>Person</code> has a work address component defined as:</p>
+            <pre><code class="groovy">@Component(lookupTable = &#39;employers&#39;) Address work
+</code></pre>
+            <p>This would map the component to an <code>employers</code> table, by the id of the person, such as:</p>
+            <pre><code class="sql">CREATE TABLE employers (
+  people_id BIGINT REFERENCES people (id),
+  line1     VARCHAR(30),
+  line2     VARCHAR(30),
+  city      VARCHAR(20),
+  state     VARCHAR(2),
+  zip       VARCHAR(10)
+);
+</code></pre>
             <blockquote>
               <p>TBD: support for un-annotated component types?</p>
             </blockquote>
@@ -169,13 +188,26 @@ static PersonCollectionAssociationExtractor collectionAssociationExtractor(Integ
               <li>The <code>entityColumn</code> property is used to specify the name of the id column for the owning entity. By default, the entity table name will be used, suffixed with &rsquo;_id&rsquo;.</li>
               <li>The <code>assocColumn</code> property is used to specify the name of the associated entity id. By default, the associated entity table name will be used, suffixed with &rsquo;_id&rsquo;.</li>
             </ul>
+            <p>The DDL expected for associations is that of an association table used to store the relationship between the two entities. Consider a <code>Pet</code> object associated with a <code>Person</code>, the relationship would be defined in the entity as:</p>
+            <pre><code class="groovy">@Association(joinTable = &#39;peoples_pets&#39;, entityColumn = &#39;person_id&#39;, assocColumn = &#39;pet_id&#39;)
+Set&lt;Pet&gt; pets = [] as Set&lt;Pet&gt;
+</code></pre>
+            <p>The DDL required by this association would be something like:</p>
+            <pre><code class="sql">CREATE TABLE peoples_pets (
+  person_id BIGINT REFERENCES people (id),
+  pet_id    BIGINT REFERENCES pets (id),
+  UNIQUE (person_id, pet_id)
+);
+</code></pre>
+            <p>which would contain the relationship information.</p>
             <p>The CRUD annotations used by <code>@Repository</code> annotated classes will properly handle operations with associations, as will the <code>RowMapper</code> and <code>ResultSetExtractor</code> implementations.</p>
             <blockquote>
               <p>TBD: support for un-annotated associations.</p>
             </blockquote>
-            <h3 id="mapped-association">@Mapped Association</h3>
-            <p>Map associations are supported without additional annotations; however, the <code>@Mapped</code> annotation may be added in order to specify the property to be used as the Map key. If the <code>keyProperty</code> is not specified, the map key will be the id property of the associated entity.</p>
+            <h2 id="mapped-association">@Mapped Association</h2>
+            <p>Map associations are supported without additional annotations; however, the <code>@Mapped</code> annotation may be added to a property annotated with <code>@Association</code> in order to specify the property to be used as the Map key. If the <code>keyProperty</code> is not specified, the map key will be the id property of the associated entity.</p>
             <p>Care must be taken when using mapped associations - at this time there is no checking around the type of key used. It is on the developer to ensure that the keys used are unique and defined in such a way that they will be appropriate for use as Map keys.</p>
+            <p>The DDL expected for mapped associations is the same as that for collection associations.</p>
           </div>
           <div class="content-nav content-nav-bottom">
             <a class="prev-page" href="GettingStarted.html">
