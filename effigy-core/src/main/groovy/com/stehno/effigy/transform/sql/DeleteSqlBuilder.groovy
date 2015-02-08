@@ -20,15 +20,15 @@ package com.stehno.effigy.transform.sql
  * Builder used to build "delete" sql queries. For internal use.
  */
 @SuppressWarnings('ConfusingMethodName')
-class DeleteSql implements Predicated<DeleteSql> {
+class DeleteSqlBuilder implements Predicated<DeleteSqlBuilder> {
 
     private String from
 
-    static DeleteSql delete() {
-        new DeleteSql()
+    static DeleteSqlBuilder delete() {
+        new DeleteSqlBuilder()
     }
 
-    DeleteSql from(String value) {
+    DeleteSqlBuilder from(String value) {
         from = value
         this
     }

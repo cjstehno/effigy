@@ -15,9 +15,11 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
+import com.stehno.effigy.transform.model.EntityPropertyModel
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -26,17 +28,19 @@ import org.codehaus.groovy.ast.expr.ListExpression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.stmt.EmptyStatement
+import org.codehaus.groovy.ast.stmt.Statement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
 import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.InsertSql.insert
+import static com.stehno.effigy.transform.sql.InsertSqlBuilder.insert
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+
 /**
  * Transformer used to process the @Create annotation.
  */
@@ -57,23 +61,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
     @Override @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        String entityVar = ENTITY
-        def entityCreator = null
-
-        if (isEntityParameter(methodNode.parameters, entityNode)) {
-            entityVar = methodNode.parameters[0].name
-
-        } else if (isMapParameter(methodNode.parameters)) {
-            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
-
-        } else {
-            MapExpression argMap = new MapExpression()
-            methodNode.parameters.each { mp ->
-                argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
-            }
-
-            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
-        }
+        def (String entityVar, Statement entityCreator) = resolveEntityVariable(entityNode, methodNode)
 
         components(entityNode).each { ap ->
             injectComponentSaveMethod repoNode, entityNode, ap
@@ -81,21 +69,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
         def sql = insert().table(entityTable(entityNode))
 
-        entityProperties(entityNode, false).each { pi ->
-            if (pi instanceof EmbeddedPropertyModel) {
-                pi.fieldNames.eachWithIndex { fn, idx ->
-                    sql.column(pi.columnNames[idx], safePropX(propX(varX(entityVar), pi.propertyName), constX(fn)))
-                }
-
-            } else {
-                if (pi.type.enum) {
-                    sql.column(pi.columnName, safeCallX(propX(varX(entityVar), pi.propertyName), 'name'))
-
-                } else {
-                    sql.column(pi.columnName, propX(varX(entityVar), pi.propertyName))
-                }
-            }
-        }
+        applyEntityProperties(sql, entityNode, entityVar)
 
         def versioner = versioner(entityNode)
 
@@ -104,7 +78,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             declS(varX(KEYS), ctorX(make(GeneratedKeyHolder))),
 
-            versioner ? codeS('${entity}.$name = 1', name: versioner.propertyName, entity: entityVar) : new EmptyStatement(),
+            versioner ? stmt(callX(varX(entityVar), "set${versioner.propertyName.capitalize()}", args(constX(1)))) : new EmptyStatement(),
 
             declS(varX(FACTORY), ctorX(make(PreparedStatementCreatorFactory), args(
                 constX(sql.build()),
@@ -142,6 +116,47 @@ class CreateTransformer extends MethodImplementingTransformation {
         )
 
         updateMethod repoNode, methodNode, statement
+    }
+
+    static List resolveEntityVariable(ClassNode entityNode, MethodNode methodNode) {
+        // TODO: move this someplace better and clean it up a bit
+
+        String entityVar = ENTITY
+        def entityCreator = null
+
+        if (isEntityParameter(methodNode.parameters, entityNode)) {
+            entityVar = methodNode.parameters[0].name
+
+        } else if (isMapParameter(methodNode.parameters)) {
+            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
+
+        } else {
+            MapExpression argMap = new MapExpression()
+            methodNode.parameters.each { mp ->
+                argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
+            }
+
+            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
+        }
+        [entityVar, entityCreator]
+    }
+
+    private List<EntityPropertyModel> applyEntityProperties(sql, ClassNode entityNode, String entityVar) {
+        entityProperties(entityNode, false).each { pi ->
+            if (pi instanceof EmbeddedPropertyModel) {
+                pi.fieldNames.eachWithIndex { fn, idx ->
+                    sql.column(pi.columnNames[idx], safePropX(propX(varX(entityVar), pi.propertyName), constX(fn)))
+                }
+
+            } else {
+                if (pi.type.enum) {
+                    sql.column(pi.columnName, safeCallX(propX(varX(entityVar), pi.propertyName), 'name'))
+
+                } else {
+                    sql.column(pi.columnName, propX(varX(entityVar), pi.propertyName))
+                }
+            }
+        }
     }
 
     private static void injectComponentSaveMethod(ClassNode repositoryNode, ClassNode entityNode, ComponentPropertyModel o2op) {

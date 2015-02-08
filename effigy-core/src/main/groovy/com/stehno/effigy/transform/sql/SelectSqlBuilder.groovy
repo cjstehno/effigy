@@ -22,7 +22,7 @@ import org.codehaus.groovy.ast.expr.Expression
  * Builder for select SQL queries. This class should not be used directly, see the SqlBuilder instead.
  */
 @SuppressWarnings('ConfusingMethodName')
-class SelectSql implements Predicated<SelectSql> {
+class SelectSqlBuilder implements Predicated<SelectSqlBuilder> {
 
     private static final String COMMA_SPACE = ', '
     private static final String SPACE = ' '
@@ -38,8 +38,8 @@ class SelectSql implements Predicated<SelectSql> {
 
     private final orders = []
 
-    static SelectSql select() {
-        new SelectSql()
+    static SelectSqlBuilder select() {
+        new SelectSqlBuilder()
     }
 
     @Override
@@ -51,59 +51,59 @@ class SelectSql implements Predicated<SelectSql> {
         result
     }
 
-    SelectSql columns(List<String> columnNames) {
+    SelectSqlBuilder columns(List<String> columnNames) {
         columns.addAll(columnNames)
         this
     }
 
-    SelectSql column(String name) {
+    SelectSqlBuilder column(String name) {
         columns << name
         this
     }
 
-    SelectSql column(String name, String alias) {
+    SelectSqlBuilder column(String name, String alias) {
         columns << "$name as $alias"
         this
     }
 
-    SelectSql column(String table, String name, String alias) {
+    SelectSqlBuilder column(String table, String name, String alias) {
         columns << "$table.$name as $alias"
         this
     }
 
-    SelectSql from(String table, String alias = null) {
+    SelectSqlBuilder from(String table, String alias = null) {
         froms << "$table${alias ? " as $alias" : ''}"
         this
     }
 
-    SelectSql leftOuterJoin(String joinTable, String tableA, String tableAId, String tableB, String tableBId) {
+    SelectSqlBuilder leftOuterJoin(String joinTable, String tableA, String tableAId, String tableB, String tableBId) {
         leftOuterJoins << "LEFT OUTER JOIN $joinTable on $tableA.$tableAId=$tableB.$tableBId"
         this
     }
 
-    SelectSql limit(String value) {
+    SelectSqlBuilder limit(String value) {
         limit = value
         this
     }
 
-    SelectSql limit(String value, Expression exp) {
+    SelectSqlBuilder limit(String value, Expression exp) {
         limit = value
         limitParam = exp
         this
     }
 
-    SelectSql offset(String value, Expression exp) {
+    SelectSqlBuilder offset(String value, Expression exp) {
         offset = value
         offsetParam = exp
         this
     }
 
-    SelectSql order(String ordering) {
+    SelectSqlBuilder order(String ordering) {
         orders << ordering
         this
     }
 
-    SelectSql orders(List<String> orders) {
+    SelectSqlBuilder orders(List<String> orders) {
         this.orders.addAll(orders)
         this
     }

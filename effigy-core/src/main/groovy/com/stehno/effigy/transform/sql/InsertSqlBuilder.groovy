@@ -21,7 +21,7 @@ import org.codehaus.groovy.ast.expr.Expression
 /**
  * Sql builder for building insert statements.
  */
-class InsertSql {
+class InsertSqlBuilder {
 
     private static final String COMMA = ','
     private String table
@@ -29,18 +29,18 @@ class InsertSql {
     private final columns = []
     private final columnValues = []
 
-    static InsertSql insert() {
-        new InsertSql()
+    static InsertSqlBuilder insert() {
+        new InsertSqlBuilder()
     }
 
     List<Expression> getValues() { columnValues.asImmutable() }
 
-    InsertSql table(String table) {
+    InsertSqlBuilder table(String table) {
         this.table = table
         this
     }
 
-    InsertSql column(String colname, Expression value) {
+    InsertSqlBuilder column(String colname, Expression value) {
         columns << colname
         columnValues << value
         this

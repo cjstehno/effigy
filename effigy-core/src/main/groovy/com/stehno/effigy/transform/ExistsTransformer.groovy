@@ -24,7 +24,7 @@ import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.tools.GeneralUtils
 
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
-import static com.stehno.effigy.transform.sql.SelectSql.select
+import static com.stehno.effigy.transform.sql.SelectSqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObjectX
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX

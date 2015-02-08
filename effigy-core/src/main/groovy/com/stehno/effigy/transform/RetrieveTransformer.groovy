@@ -21,7 +21,7 @@ import com.stehno.effigy.annotation.Offset
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.EntityPropertyModel
 import com.stehno.effigy.transform.model.IdentifierPropertyModel
-import com.stehno.effigy.transform.sql.SelectSql
+import com.stehno.effigy.transform.sql.SelectSqlBuilder
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -30,8 +30,8 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.stmt.Statement
 
+import static SelectSqlBuilder.select
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.SelectSql.select
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
@@ -73,7 +73,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     }
 
     private Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
-        SelectSql sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
+        SelectSqlBuilder sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
         applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
         applyOrders(sql, annotationNode, entityNode)
@@ -88,7 +88,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     }
 
     private Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
-        SelectSql sql = select()
+        SelectSqlBuilder sql = select()
 
         String entityTableName = entityTable(entityNode)
 
@@ -143,7 +143,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         ))
     }
 
-    private static void addColumns(SelectSql selectSql, EntityPropertyModel p, String table, String prefix) {
+    private static void addColumns(SelectSqlBuilder selectSql, EntityPropertyModel p, String table, String prefix) {
         if (p instanceof EmbeddedPropertyModel) {
             p.columnNames.each { cn ->
                 selectSql.column(table, cn, "${prefix}_$cn")
@@ -169,7 +169,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
     }
 
     // limit and offset - a bit of a hack
-    private static void applyPagination(SelectSql sql, AnnotationNode annotationNode, MethodNode methodNode, Class annoClass) {
+    private static void applyPagination(SelectSqlBuilder sql, AnnotationNode annotationNode, MethodNode methodNode, Class annoClass) {
         def param = findAnnotatedIntParam(methodNode, annoClass)
         Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
 
@@ -185,7 +185,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         methodNode.parameters.find { p -> p.getAnnotations(make(annoClass)) && p.type == int_TYPE }
     }
 
-    private static void applyOrders(SelectSql sql, AnnotationNode annotationNode, ClassNode entityNode) {
+    private static void applyOrders(SelectSqlBuilder sql, AnnotationNode annotationNode, ClassNode entityNode) {
         String orderTemplate = extractString(annotationNode, 'order')
         if (orderTemplate) {
             sql.order(new SqlTemplate(orderTemplate).sql(entityNode))

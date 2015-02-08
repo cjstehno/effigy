@@ -24,8 +24,8 @@ import org.codehaus.groovy.ast.stmt.ForStatement
 
 import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.DeleteSql.delete
-import static com.stehno.effigy.transform.sql.SelectSql.select
+import static com.stehno.effigy.transform.sql.DeleteSqlBuilder.delete
+import static com.stehno.effigy.transform.sql.SelectSqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*

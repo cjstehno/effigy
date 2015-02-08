@@ -22,7 +22,7 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.expr.ClassExpression
 
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
-import static com.stehno.effigy.transform.sql.SelectSql.select
+import static com.stehno.effigy.transform.sql.SelectSqlBuilder.select
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryForObject
 import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE

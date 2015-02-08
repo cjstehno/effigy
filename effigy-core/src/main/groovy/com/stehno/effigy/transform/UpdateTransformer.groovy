@@ -19,19 +19,18 @@ package com.stehno.effigy.transform
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.sql.UpdateSql
+import com.stehno.effigy.transform.sql.UpdateSqlBuilder
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.BinaryExpression
-import org.codehaus.groovy.ast.expr.MapEntryExpression
-import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.ast.expr.PropertyExpression
+import org.codehaus.groovy.ast.stmt.Statement
 
+import static UpdateSqlBuilder.update
 import static com.stehno.effigy.logging.Logger.debug
+import static com.stehno.effigy.transform.CreateTransformer.resolveEntityVariable
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.sql.UpdateSql.update
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.updateX
@@ -62,23 +61,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         ensureParameters methodNode
 
-        String entityVar = ENTITY
-        def entityCreator = null
-
-        if (isEntityBased(methodNode.parameters, entityNode)) {
-            entityVar = methodNode.parameters[0].name
-
-        } else if (isMapBased(methodNode.parameters)) {
-            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(varX(methodNode.parameters[0].name))))
-
-        } else {
-            MapExpression argMap = new MapExpression()
-            methodNode.parameters.each { mp ->
-                argMap.addMapEntryExpression(new MapEntryExpression(constX(mp.name), varX(mp.name)))
-            }
-
-            entityCreator = declS(varX(entityVar), ctorX(entityNode, args(argMap)))
-        }
+        def (String entityVar, Statement entityCreator) = resolveEntityVariable(entityNode, methodNode)
 
         components(entityNode).each { ap ->
             injectComponentUpdateMethod repoNode, entityNode, ap
@@ -143,7 +126,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
         debug UpdateTransformer, 'Implemented repository ({}) Update method ({})', repoNode.name, methodNode.name
     }
 
-    private static void applySetters(UpdateSql sql, ClassNode entityNode, String entityVar) {
+    private static void applySetters(UpdateSqlBuilder sql, ClassNode entityNode, String entityVar) {
         entityProperties(entityNode, false).each { p ->
             if (p instanceof EmbeddedPropertyModel) {
                 p.fieldNames.eachWithIndex { pf, idx ->
@@ -197,13 +180,5 @@ class UpdateTransformer extends MethodImplementingTransformation {
         if (!methodNode.parameters) {
             throw new EffigyTransformationException('Update methods must accept at least an Entity or Map parameter.')
         }
-    }
-
-    private static boolean isEntityBased(Parameter[] parameters, ClassNode entityNode) {
-        parameters[0].type == entityNode
-    }
-
-    private static boolean isMapBased(Parameter[] parameters) {
-        parameters[0].type == MAP_TYPE
     }
 }

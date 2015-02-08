@@ -22,15 +22,15 @@ import org.codehaus.groovy.ast.expr.Expression
  * Sql builder for working with update sql statements. For internal use.
  */
 @SuppressWarnings('ConfusingMethodName')
-class UpdateSql implements Predicated<UpdateSql> {
+class UpdateSqlBuilder implements Predicated<UpdateSqlBuilder> {
 
     private String table
 
     private final sets = []
     private final setterParams = []
 
-    static UpdateSql update() {
-        new UpdateSql()
+    static UpdateSqlBuilder update() {
+        new UpdateSqlBuilder()
     }
 
     @Override
@@ -41,18 +41,18 @@ class UpdateSql implements Predicated<UpdateSql> {
         result
     }
 
-    UpdateSql table(String table) {
+    UpdateSqlBuilder table(String table) {
         this.table = table
         this
     }
 
-    UpdateSql sets(List<String> values, List<Expression> exps) {
+    UpdateSqlBuilder sets(List<String> values, List<Expression> exps) {
         sets.addAll(values)
         setterParams.addAll(exps)
         this
     }
 
-    UpdateSql set(String value, Expression exp) {
+    UpdateSqlBuilder set(String value, Expression exp) {
         sets << value
         setterParams << exp
         this
