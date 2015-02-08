@@ -3,8 +3,6 @@
 Entities in Effigy are defined and configured using annotations, the only required annotation being the `@Entity` annotation. The others are optional and used
 to help configure the system to your needs.
 
-> TBD: Document the expected DDL for each annotation.
-
 ## @Entity
 
 The `@Entity` annotation is applied to an entity type, a POGO to denote that the object is an entity to be managed by Effigy.
@@ -16,9 +14,9 @@ Other than marking an object as an entity, the annotation causes some helper cla
 and two `ResultSetExtractor` implementations will be generated for each entity object. Each will be named with the prefix of the 
 class name of the entity. As an example for the entity class `Person` you would have three new classes:
 
-    PersonRowMapper
-    PersonAssociationExtractor
-    PersonCollectionAssociationExtractor
+* `PersonRowMapper` - maps a single row of the person entity table to a single `Person` object instance (no associations).
+* `PersonAssociationExtractor` - maps a single row of the person entity table to a single `Person` object instance (with associations).
+* `PersonCollectionAssociationExtractor` - maps a collection of rows of the person entity table to a collection of `Person` instances (with associations).
 
 Each will be created in the same package as the entity itself. Also helper methods will be added to the entity class to retrieve
 instances of each of these mappers and extractors. For the example above these would have the following signatures:
@@ -41,7 +39,12 @@ The `@Id` annotation is applied to an entity property that is to be defined as t
 explicitly required by Effigy, you will not benefit from most of the functionality without one. An entity id can be a property of any Object type, though
 generally a Long is recommended.
 
-The generating and management of ids is handled by your code and/or the database itself, Effigy does not take any action to generate ids.
+The generating and management of ids is handled by your code and/or the database itself, Effigy does not take any action to generate ids. The DDL expected
+could be something similar to the following:
+
+```sql
+id BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY
+```
 
 Currently, Effigy does not support multiple properties annotated with the `@Id` annotation.
 
@@ -51,7 +54,11 @@ The `@Version` annotation is an optional annotation applied to en entity propert
 The type of the property must be a Long, long, Integer or int.
 
 The generated update methods (see documentation for the `@Update` annotation) will make use of the version property to determine whether or not the 
-update is allowed, based on the version being updated compared to the version in the database.
+update is allowed, based on the version being updated compared to the version in the database. The DDL expected could be something similar to the following:
+
+```sql
+version BIGINT NOT NULL,
+```
 
 Currently, Effigy does not support multiple properties annotated with the `@Version` annotation.
 
@@ -64,6 +71,18 @@ annotation accepts an optional `prefix` property which allows the prefix to be s
 
 The type of the embedded object may be an entity; however, it need not be. If the embedded object is an entity, any @Id or @Version annotations will **not** be 
 honored, since the table data is contained in the table for the enclosing entity. The `@Column` annotation will be honored.
+
+The DDL expected for an embedded property is a set of prefixed columns in the main entity table. Consider the `Person` case, where there is an embedded
+property `Name name`, the framework would expect the following:
+
+```sql
+CREATE TABLE people (
+  -- other fields omitted
+  name_first    VARCHAR(25)           NOT NULL,
+  name_middle   VARCHAR(25)           NOT NULL,
+  name_last     VARCHAR(25)           NOT NULL
+);
+```
 
 > TBD: support for un-annotated embedded types?
 
@@ -83,6 +102,25 @@ specified, the table will be named as the table name of the component type.
 * The `entityColumn` property is used to specify the name of the field used to identify the owning entity in the associated table. If this property is not 
 specified, the name will be the table name of the owning entity suffixed with '_id'.
 
+The DDL expected for components is basically a 1-1 lookup table. Consider the case where a `Person` has a work address component defined as:
+
+```groovy
+@Component(lookupTable = 'employers') Address work
+```
+
+This would map the component to an `employers` table, by the id of the person, such as:
+
+```sql
+CREATE TABLE employers (
+  people_id BIGINT REFERENCES people (id),
+  line1     VARCHAR(30),
+  line2     VARCHAR(30),
+  city      VARCHAR(20),
+  state     VARCHAR(2),
+  zip       VARCHAR(10)
+);
+```
+
 > TBD: support for un-annotated component types?
 
 ## @Association
@@ -97,17 +135,37 @@ table name and the name of the entity association property separated by an under
 * The `entityColumn` property is used to specify the name of the id column for the owning entity. By default, the entity table name will be used, suffixed with '_id'.
 * The `assocColumn` property is used to specify the name of the associated entity id. By default, the associated entity table name will be used, suffixed with '_id'.
 
+The DDL expected for associations is that of an association table used to store the relationship between the two entities. Consider a `Pet` object associated
+with a `Person`, the relationship would be defined in the entity as:
+
+```groovy
+@Association(joinTable = 'peoples_pets', entityColumn = 'person_id', assocColumn = 'pet_id')
+Set<Pet> pets = [] as Set<Pet>
+```
+
+The DDL required by this association would be something like:
+
+```sql
+CREATE TABLE peoples_pets (
+  person_id BIGINT REFERENCES people (id),
+  pet_id    BIGINT REFERENCES pets (id),
+  UNIQUE (person_id, pet_id)
+);
+```
+
+which would contain the relationship information.
+
 The CRUD annotations used by `@Repository` annotated classes will properly handle operations with associations, as will the `RowMapper` and `ResultSetExtractor`
 implementations.
 
 > TBD: support for un-annotated associations.
 
-### @Mapped Association
+## @Mapped Association
 
-Map associations are supported without additional annotations; however, the `@Mapped` annotation may be added in order to specify the property to be used as 
-the Map key. If the `keyProperty` is not specified, the map key will be the id property of the associated entity.
+Map associations are supported without additional annotations; however, the `@Mapped` annotation may be added to a property annotated with `@Association`
+in order to specify the property to be used as the Map key. If the `keyProperty` is not specified, the map key will be the id property of the associated entity.
 
 Care must be taken when using mapped associations - at this time there is no checking around the type of key used. It is on the developer to ensure that the
 keys used are unique and defined in such a way that they will be appropriate for use as Map keys.
 
-
+The DDL expected for mapped associations is the same as that for collection associations.
