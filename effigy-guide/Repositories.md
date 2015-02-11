@@ -164,4 +164,93 @@ Template documentation for more details about syntax and supported functionality
 
 ## SQL Annotations
 
-> TBD: pending functionality
+Classes annotated with `@Repository` are allowed to create their own custom data access methods using a set of helper annotations which allow simple 
+generation of code for common SQL operations. Unlike the CRUD Annotations, these allow the developers to specify their own SQL statement to be used.
+
+If these annotations are used, the class should be defined as `abstract` and the annotated methods should also be `abstract` - these limitations may be 
+relaxed in future releases. Also note that these suggestions are mainly required to make your IDE happy so you may want to experiment for your own needs.
+
+### @SqlSelect
+
+The `@SqlSelect` annotation is used to annotate a method of a repository as a custom SQL query.
+
+A "select" method may accept any type or primitive as input parameters; however, the name of the parameter may be significant depending on how the SQL statement 
+is defined.
+
+A "select" method must return a single type or collection of a type that is appropriate to the `RowMapper` or `ResultSetExtractor` being used. If a `RowMapper`
+or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper or extractor based on the return type - if it cannot resolve
+a mapper or extractor, the compilation will fail.
+
+The `value` property of the annotation is used to provide the SQL string which will be compiled into the method. The method parameters will be used as replacement
+variables in the SQL using the parameter name prefixed with a colon (e.g. `:firstName`).
+
+A "select" method using the default return type mapper resolution would look something like the following:
+
+```groovy
+@SqlSelect('select count(*) from people where age >= :min and age <= :max')
+int countByAgeRange(int min, int max)
+```
+
+In order to configure a custom `RowMapper` or `ResultSetExtractor`, you must use a secondary annotation to specify it.
+
+#### @RowMapper
+
+The `@RowMapper` annotation is used with a `@SqlSelect` annotation to provide information about the `RowMapper` to be used.
+
+There are three distinct configuration scenarios for mapper annotations, they can be defined by the annotations `bean`, or `clazz` properties, or by 
+a combination of the `clazz` and `factor` properties.
+
+The `bean` property will inject code into the repository to autowire a reference to the bean with the specified name. The mapper bean must be defined
+somewhere in the Spring context, and must implement the `RowMapper` interface. This bean will then be used as the `RowMapper` for the query.
+
+The `clazz` property will inject code into the repository to use an instance of the specified class as the mapper. The class must implement the `RowMapper`
+interface.
+
+The `clazz` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
+implementation of `RowMapper` which will be used by the query.
+
+If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `clazz`; `factory` will be ignored
+if the `clazz` property is not specified.
+
+An example of using the `@RowMapper` annotation would be the following:
+
+```groovy
+@SqlSelect('select a,b,c from some_table where d=:d and e < :e')
+@RowMapper(clazz=AbcMapper)
+Collection<Abc> findByDAndE(String d, int e)
+```
+
+#### @ResultSetExtractor
+
+The `@ResultSetExtractor` annotation is used with a `@SqlSelect` annotation to provide information about the `ResultSetExtractor` to be used.
+
+There are three distinct configuration scenarios for extractor annotations, they can be defined by the annotations `bean`, or `clazz` properties, or by 
+a combination of the `clazz` and `factor` properties.
+
+The `bean` property will inject code into the repository to autowire a reference to the bean with the specified name. The extractor bean must be defined
+somewhere in the Spring context, and must implement the `ResultSetExtractor` interface. This bean will then be used as the `ResultSetExtractor` for the query.
+
+The `clazz` property will inject code into the repository to use an instance of the specified class as the extractor. The class must implement the `ResultSetExtractor`
+interface.
+
+The `clazz` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
+implementation of `ResultSetExtractor` which will be used by the query.
+
+If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `clazz`; `factory` will be ignored
+if the `clazz` property is not specified.
+
+An example of using the `@ResultSetExtractor` annotation would be the following:
+
+```groovy
+@SqlSelect('select a,b,c from some_table where d=:d and e < :e')
+@ResultSetExtractor(clazz=AbcExtractor, factory='getExtractor')
+Collection<Abc> findByDAndE(String d, int e)
+```
+
+### @SqlUpdate
+
+> TBD...
+
+### @SqlExecute
+
+> TBD...
