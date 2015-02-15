@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -30,15 +29,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 
-import java.lang.reflect.Modifier
-
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.*
 import static java.lang.reflect.Modifier.PUBLIC
+import static java.lang.reflect.Modifier.isAbstract
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
-
 /**
  * Transformer used for processing the EffigyRepository annotation.
  */
@@ -98,7 +95,7 @@ class RepositoryTransformer implements ASTTransformation {
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
         if (isAbstract(repositoryClassNode.modifiers)) {
-            repositoryClassNode.modifiers = Modifier.PUBLIC
+            repositoryClassNode.modifiers = PUBLIC
             info RepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
     }
