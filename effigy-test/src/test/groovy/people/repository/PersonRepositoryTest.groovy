@@ -26,9 +26,6 @@ import people.entity.Person
 import static org.springframework.test.jdbc.JdbcTestUtils.countRowsInTable
 import static people.entity.Animal.*
 
-/**
- * Created by cjstehno on 1/1/15.
- */
 class PersonRepositoryTest {
 
     @Rule public DatabaseEnvironment database = new DatabaseEnvironment()
