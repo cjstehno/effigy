@@ -52,8 +52,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         returnType == OBJECT_TYPE || returnType == entityNode || returnType.implementsInterface(makeClassSafe(Collection))
     }
 
-    @Override
-    @SuppressWarnings('GroovyAssignabilityCheck')
+    @Override @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def code = block()
 
@@ -72,7 +71,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         updateMethod repoNode, methodNode, code
     }
 
-    private Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+    private static Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         SelectSqlBuilder sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
         applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
@@ -87,7 +86,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         ))
     }
 
-    private Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+    private static Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         SelectSqlBuilder sql = select()
 
         String entityTableName = entityTable(entityNode)

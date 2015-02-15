@@ -35,6 +35,7 @@ import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
 import static java.lang.reflect.Modifier.PRIVATE
+import static java.lang.reflect.Modifier.isAbstract
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 
@@ -44,13 +45,19 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {
 
+    private static final ArrayList<String> SUPPORTED_ANNOTATIONS = [
+        'Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists',
+        'SqlSelect'
+    ]
+
     private static final Map<Class, List<RepositoryMethodVisitor>> TRANSFORMERS = [
-        Create  : [new AssociationSaveMethodInjector(), new CreateTransformer()],
-        Retrieve: [new RetrieveTransformer()],
-        Update  : [new AssociationSaveMethodInjector(), new UpdateTransformer()],
-        Delete  : [new DeleteTransformer()],
-        Count   : [new CountTransformer()],
-        Exists  : [new ExistsTransformer()]
+        Create   : [new AssociationSaveMethodInjector(), new CreateTransformer()],
+        Retrieve : [new RetrieveTransformer()],
+        Update   : [new AssociationSaveMethodInjector(), new UpdateTransformer()],
+        Delete   : [new DeleteTransformer()],
+        Count    : [new CountTransformer()],
+        Exists   : [new ExistsTransformer()],
+        SqlSelect: [new SqlSelectTransformer()]
     ]
 
     @Override
@@ -66,9 +73,7 @@ class RepositoryTransformer implements ASTTransformation {
             injectJdbcTemplate repoNode
 
             getAllMethods(repoNode).each { method ->
-                AnnotationNode annot = method.annotations.find { a ->
-                    a.classNode.nameWithoutPackage in ['Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists']
-                }
+                AnnotationNode annot = method.annotations.find { a -> a.classNode.nameWithoutPackage in SUPPORTED_ANNOTATIONS }
 
                 if (annot) {
                     trace(
@@ -89,7 +94,7 @@ class RepositoryTransformer implements ASTTransformation {
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
-        if (Modifier.isAbstract(repositoryClassNode.modifiers)) {
+        if (isAbstract(repositoryClassNode.modifiers)) {
             repositoryClassNode.modifiers = Modifier.PUBLIC
             info RepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
