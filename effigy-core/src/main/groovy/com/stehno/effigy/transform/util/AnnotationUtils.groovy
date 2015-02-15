@@ -43,6 +43,11 @@ class AnnotationUtils {
         return pair ? pair.value.value : defvalue
     }
 
+    static boolean extractBoolean(AnnotationNode annotation, String key, boolean defvalue = false) {
+        def pair = annotation.members.find { pair -> pair.key == key }
+        return pair ? pair.value.value : defvalue
+    }
+
     static Integer extractInteger(AnnotationNode annotation, String key, Integer defvalue = null) {
         def pair = annotation.members.find { pair -> pair.key == key }
         return pair ? pair.value.value : defvalue

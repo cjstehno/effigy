@@ -11,12 +11,18 @@ is used to specify the type of entity being managed by the repository. The type 
 When the `@Repository` annotation is applied to a repository class, the SpringFramework `@org.springframework.stereotype.Repository` annotation will be 
 added to the compiled class This allows Spring component scanning to pick up Effigy repositories without any extra configuration.
 
-The annotation also injects a field for a Spring `JdbcTemplate` instance into the class, with the signature:
+The annotation also injects a property for a Spring `JdbcTemplate` instance into the class, with the signature:
 
-    @Autowired private JdbcTemplate jdbcTemplate
+    @Autowired JdbcTemplate jdbcTemplate
 
 This allows the Spring auto-wiring to inject the configured Spring `JdbcTemplate` used by the project. This is the `JdbcTemplate` instance which will be
 used by the operations in the repository.
+
+If you do not want the `JdbcTemplate` to be autowired, you can specify the `autowired` property of the `@Repository` annotation as `false`.
+
+Also, if you need to specify the name of the `JdbcTemplate` bean instance to be autowired, you can specify a value for the `qualifier` property of the
+`@Repository` annotation. This will cause a `@Qualifier` annotation to be added to the `JdbcTemplate` property with the specified bean name as its
+`value`. The `qualifier` property is ignored if the `autowired` property is set to `false`.
 
 ## CRUD Annotations
 

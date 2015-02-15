@@ -34,4 +34,15 @@ import java.lang.annotation.*
      * The entity type handled by the repository (must be annotated with @Effigy)
      */
     Class value()
+
+    /**
+     * Used to specify whether or not the JdbcTemplate is to be autowired, the default is 'true'.
+     */
+    boolean autowired() default true
+
+    /**
+     * Used to specify the name of the autowired JdbcTemplate bean, defaults to an empty string, which means the @Qualifier annotation will
+     * not be added. This property is ignored if the value of "autowired" is false.
+     */
+    String qualifier() default ''
 }

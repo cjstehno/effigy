@@ -19,24 +19,24 @@ package com.stehno.effigy.transform
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.FieldNode
+import org.codehaus.groovy.ast.PropertyNode
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 
 import java.lang.reflect.Modifier
 
 import static com.stehno.effigy.logging.Logger.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AnnotationUtils.hasAnnotation
-import static java.lang.reflect.Modifier.PRIVATE
-import static java.lang.reflect.Modifier.isAbstract
+import static com.stehno.effigy.transform.util.AnnotationUtils.*
+import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 
 /**
@@ -60,6 +60,9 @@ class RepositoryTransformer implements ASTTransformation {
         SqlSelect: [new SqlSelectTransformer()]
     ]
 
+    private static final String JDBC_TEMPLATE = 'jdbcTemplate'
+    private static final String TEMPLATE = 'template'
+
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
         try {
@@ -70,7 +73,7 @@ class RepositoryTransformer implements ASTTransformation {
 
             removeAbstract repoNode
             applyRepositoryAnnotation repoNode
-            injectJdbcTemplate repoNode
+            injectJdbcTemplate repoNode, repoAnnotation
 
             getAllMethods(repoNode).each { method ->
                 AnnotationNode annot = method.annotations.find { a -> a.classNode.nameWithoutPackage in SUPPORTED_ANNOTATIONS }
@@ -109,12 +112,25 @@ class RepositoryTransformer implements ASTTransformation {
         }
     }
 
-    private static void injectJdbcTemplate(ClassNode repositoryClassNode) {
-        FieldNode jdbcTemplateFieldNode = new FieldNode('jdbcTemplate', PRIVATE, make(JdbcTemplate), repositoryClassNode, new EmptyExpression())
-        jdbcTemplateFieldNode.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
+    private static void injectJdbcTemplate(ClassNode repositoryNode, AnnotationNode annotationNode) {
+        PropertyNode jdbcTemplateNode = new PropertyNode(
+            JDBC_TEMPLATE, PUBLIC, make(JdbcTemplate), repositoryNode, new EmptyExpression(), null, null
+        )
 
-        repositoryClassNode.addField(jdbcTemplateFieldNode)
+        if (extractBoolean(annotationNode, 'autowired')) {
+            jdbcTemplateNode.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
 
-        info RepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryClassNode.name
+            String qualifier = extractString(annotationNode, 'qualifier', '')
+            if (qualifier) {
+                def qualifierAnnot = new AnnotationNode(make(Qualifier))
+                qualifierAnnot.setMember('value', constX(qualifier))
+
+                jdbcTemplateNode.addAnnotation(qualifierAnnot)
+            }
+        }
+
+        repositoryNode.addProperty(jdbcTemplateNode)
+
+        info RepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryNode.name
     }
 }
