@@ -11,6 +11,8 @@
 * more documentation around the sql template language support
 * Add support for the retrieve(create()) use case - maybe if the return type of a @Create is the Entity type bake this into the generated code
 
+* Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)
+
 * Add groovydocs to the userguide/site (may need a task to generate both and save off generated content)
 
 FIXME: @Delete methods need to support map with property fields as input parameter
