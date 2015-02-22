@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -36,13 +37,14 @@ import static java.lang.reflect.Modifier.isAbstract
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
+
 /**
  * Transformer used for processing the EffigyRepository annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {
 
-    private static final ArrayList<String> SUPPORTED_ANNOTATIONS = [
+    private static final List<String> SUPPORTED_ANNOTATIONS = [
         'Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists',
         'SqlSelect'
     ]
@@ -58,7 +60,7 @@ class RepositoryTransformer implements ASTTransformation {
     ]
 
     private static final String JDBC_TEMPLATE = 'jdbcTemplate'
-    private static final String TEMPLATE = 'template'
+    private static final String VALUE = 'value'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -66,7 +68,7 @@ class RepositoryTransformer implements ASTTransformation {
             ClassNode repoNode = nodes[1] as ClassNode
 
             AnnotationNode repoAnnotation = repoNode.getAnnotations(make(com.stehno.effigy.annotation.Repository))[0]
-            ClassNode entityNode = extractClass(repoAnnotation, 'value')
+            ClassNode entityNode = extractClass(repoAnnotation, VALUE)
 
             removeAbstract repoNode
             applyRepositoryAnnotation repoNode
@@ -120,7 +122,7 @@ class RepositoryTransformer implements ASTTransformation {
             String qualifier = extractString(annotationNode, 'qualifier', '')
             if (qualifier) {
                 def qualifierAnnot = new AnnotationNode(make(Qualifier))
-                qualifierAnnot.setMember('value', constX(qualifier))
+                qualifierAnnot.setMember(VALUE, constX(qualifier))
 
                 jdbcTemplateNode.addAnnotation(qualifierAnnot)
             }

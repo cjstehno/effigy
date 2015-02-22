@@ -15,6 +15,10 @@ subprojects {
         groovyOptions.optimizationOptions.indy = false
     }
 
+    configurations {
+        groovyDoc
+    }
+
     repositories {
         jcenter()
     }
@@ -24,10 +28,17 @@ subprojects {
 
         testCompile 'junit:junit:4.11'
         testCompile 'org.mockito:mockito-all:1.9.5'
+
+        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.0"
+        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.0"
     }
 
     test {
         jvmArgs '-Xverify:none'
+    }
+
+    groovydoc {
+        groovyClasspath = configurations.groovyDoc
     }
 
     codenarc {

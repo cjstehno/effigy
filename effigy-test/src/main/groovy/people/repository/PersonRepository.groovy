@@ -48,4 +48,6 @@ interface PersonRepository {
     List<Person> findPaged(@Offset int offset, @Limit int limit)
 
     List<Person> findByLastName(String lastName)
+
+    List<String> findLastNames(boolean married)
 }

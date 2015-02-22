@@ -18,7 +18,10 @@ package com.stehno.effigy.transform.model
 
 import com.stehno.effigy.annotation.*
 import com.stehno.effigy.transform.util.StringUtils
-import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.AnnotatedNode
+import org.codehaus.groovy.ast.AnnotationNode
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.FieldNode
 
 import java.sql.Types
 
@@ -236,7 +239,7 @@ class EntityModel {
     }
 
     private static String extractFieldName(final FieldNode field) {
-        AnnotationNode fieldColumnAnnot = field.getAnnotations(ClassHelper.make(Column))[0]
+        AnnotationNode fieldColumnAnnot = field.getAnnotations(make(Column))[0]
         if (fieldColumnAnnot) {
             return extractString(fieldColumnAnnot, 'value')
 

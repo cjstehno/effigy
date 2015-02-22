@@ -201,6 +201,15 @@ class PersonRepositoryTest {
         assert people.size() == 1
     }
 
+    @Test void findLastNames() {
+        def (idA, idB, idC) = createThree()
+
+        def lastNames = personRepository.findLastNames(true)
+
+        assert lastNames.size() == 2
+        assert lastNames.containsAll('Public', 'Smith')
+    }
+
     private static void assertProperties(Map props, Person entity) {
         props.each { k, v ->
             assert entity[k] == v

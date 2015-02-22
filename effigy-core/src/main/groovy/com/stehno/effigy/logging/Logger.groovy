@@ -36,7 +36,7 @@ class Logger {
     private static Level level
 
     static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'WARN').toUpperCase())
+        level = Level.valueOf(System.getProperty('effigy.logging', 'INFO').toUpperCase())
     }
 
     static void info(Class clazz, String msg, Object... args) {

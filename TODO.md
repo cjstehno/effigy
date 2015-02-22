@@ -11,6 +11,8 @@
 * more documentation around the sql template language support
 * Add support for the retrieve(create()) use case - maybe if the return type of a @Create is the Entity type bake this into the generated code
 
+* Add groovydocs to the userguide/site (may need a task to generate both and save off generated content)
+
 FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
