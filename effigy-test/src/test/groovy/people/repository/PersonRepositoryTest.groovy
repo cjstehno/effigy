@@ -45,6 +45,10 @@ class PersonRepositoryTest {
         firstName: 'Jane', middleName: 'Y', lastName: 'Smith', birthDate: new Date(), married: true
     ]
 
+    private static final Map PERSON_D = [
+        firstName: 'Bob', middleName: 'R', lastName: 'Nobody', birthDate: new Date(), married: false
+    ]
+
     private PersonRepository personRepository
     private PetRepository petRepository
     private JobRepository jobRepository
@@ -202,12 +206,19 @@ class PersonRepositoryTest {
     }
 
     @Test void findLastNames() {
-        def (idA, idB, idC) = createThree()
+        createThree()
+
+        personRepository.create(new Person(PERSON_D))
 
         def lastNames = personRepository.findLastNames(true)
 
+        assert lastNames.size() == 1
+        assert lastNames.containsAll('Smith')
+
+        lastNames = personRepository.findLastNames(false)
+
         assert lastNames.size() == 2
-        assert lastNames.containsAll('Public', 'Smith')
+        assert lastNames.containsAll('Public', 'Nobody')
     }
 
     private static void assertProperties(Map props, Person entity) {

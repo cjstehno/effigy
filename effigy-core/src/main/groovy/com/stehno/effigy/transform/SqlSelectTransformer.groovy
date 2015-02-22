@@ -23,15 +23,15 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
+import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.springframework.jdbc.core.SingleColumnRowMapper
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.query
-import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafeWithGenerics
-import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
  * Transformer used to process @SqlSelect annotated methods.
@@ -87,15 +87,11 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     }
 
     private static ClassNode resolveReturnType(final MethodNode methodNode) {
-        if (methodNode.returnType.isUsingGenerics()) {
-            def rt = methodNode.returnType.genericsTypes[0].type
-
-            Logger.info SqlSelectTransformer, 'Resolved return type ({}) for method ({}).', rt.name, methodNode.name
-
-            return rt
-        }
-
         def returnType = methodNode.returnType
+
+        if (methodNode.returnType.isUsingGenerics()) {
+            returnType = methodNode.returnType.genericsTypes[0].type
+        }
 
         Logger.info SqlSelectTransformer, 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
 
@@ -103,9 +99,9 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     }
 
     // TODO: this should be refactored out someplace else
-    //    private static final MAPPER_REGISTRY = prepareMapperRegistry()
+    private static final MAPPER_REGISTRY = prepareMapperRegistry()
 
-    /*private static Map<ClassNode, Expression> prepareMapperRegistry() {
+    private static Map<ClassNode, Expression> prepareMapperRegistry() {
         def mapperRegistry = [:]
 
         singleColumnRowMapperX(Integer_TYPE).with { m ->
@@ -131,15 +127,15 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         // TODO: also document the types supported and what they map to in user guide
 
         mapperRegistry
-    }*/
+    }
 
     private static Expression findRegisteredRowMapper(final ClassNode returnType) {
         // TODO: document that the fallback is bean property mapper
-        //        MAPPER_REGISTRY.get(returnType) ?: ctorX(makeClassSafeWithGenerics(BeanPropertyRowMapper, returnType), args(constX(returnType.typeClass)))
-        singleColumnRowMapperX(returnType) // FIXME: temp testing
+        MAPPER_REGISTRY.get(returnType) ?: ctorX(makeClassSafeWithGenerics(BeanPropertyRowMapper, returnType), args(constX(returnType.typeClass)))
     }
 
     private static Expression singleColumnRowMapperX(ClassNode targetType) {
-        ctorX(makeClassSafeWithGenerics(SingleColumnRowMapper, targetType), args(constX(newClass(targetType).typeClass)))
+        // originally had an args block to specify the return type to the constructor but that has compilation issues
+        ctorX(makeClassSafeWithGenerics(SingleColumnRowMapper, targetType))
     }
 }

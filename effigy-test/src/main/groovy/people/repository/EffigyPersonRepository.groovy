@@ -62,5 +62,5 @@ abstract class EffigyPersonRepository implements PersonRepository {
     abstract List<Person> findByLastName(String lastName)
 
     @SqlSelect('select distinct(last_name) from people where married = :married')
-    abstract List<String> findLastNames(boolean married)
+    abstract Set<String> findLastNames(boolean married)
 }
