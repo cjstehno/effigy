@@ -50,4 +50,8 @@ interface PersonRepository {
     List<Person> findByLastName(String lastName)
 
     Set<String> findLastNames(boolean married)
+
+    List<Name> listNames()
+
+    List<Name> findNames(String lastName)
 }

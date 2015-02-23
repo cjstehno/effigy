@@ -17,7 +17,11 @@
 package people.repository
 
 import com.stehno.effigy.annotation.*
+import groovy.transform.Immutable
 import people.entity.Person
+
+import java.sql.ResultSet
+import java.sql.SQLException
 
 /**
  * Effigy-based implementation of the PersonRepository interface.
@@ -63,4 +67,36 @@ abstract class EffigyPersonRepository implements PersonRepository {
 
     @SqlSelect('select distinct(last_name) from people where married = :married')
     abstract Set<String> findLastNames(boolean married)
+
+    @SqlSelect('select first_name,middle_name,last_name from people order by last_name,first_name,middle_name')
+    @RowMapper(type = 'people.repository.NameMapper')
+    abstract List<Name> listNames()
+
+    @SqlSelect('select first_name,middle_name,last_name from people where last_name = :lastName order by last_name,first_name,middle_name')
+    @RowMapper(type = 'people.repository.NameMapper', factory = 'createMapper')
+    abstract List<Name> findNames(String lastName)
+}
+
+@Immutable
+class Name {
+
+    String firstName
+    String middleName
+    String lastName
+
+    String getFullName() {
+        "$firstName $middleName $lastName"
+    }
+}
+
+class NameMapper implements org.springframework.jdbc.core.RowMapper<Name> {
+
+    @Override
+    Name mapRow(ResultSet rs, int rowNum) throws SQLException {
+        new Name(rs.getString('first_name'), rs.getString('middle_name'), rs.getString('last_name'))
+    }
+
+    static NameMapper createMapper() {
+        new NameMapper()
+    }
 }

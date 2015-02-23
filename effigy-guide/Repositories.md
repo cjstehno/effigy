@@ -209,20 +209,20 @@ a combination of the `clazz` and `factor` properties.
 The `bean` property will inject code into the repository to autowire a reference to the bean with the specified name. The mapper bean must be defined
 somewhere in the Spring context, and must implement the `RowMapper` interface. This bean will then be used as the `RowMapper` for the query.
 
-The `clazz` property will inject code into the repository to use an instance of the specified class as the mapper. The class must implement the `RowMapper`
+The `type` property will inject code into the repository to use an instance of the specified class as the mapper. The class must implement the `RowMapper`
 interface.
 
-The `clazz` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
+The `type` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
 implementation of `RowMapper` which will be used by the query.
 
-If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `clazz`; `factory` will be ignored
-if the `clazz` property is not specified.
+If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `type`; `factory` will be ignored
+if the `type` property is not specified.
 
 An example of using the `@RowMapper` annotation would be the following:
 
 ```groovy
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
-@RowMapper(clazz=AbcMapper)
+@RowMapper(type=AbcMapper)
 Collection<Abc> findByDAndE(String d, int e)
 ```
 

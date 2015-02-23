@@ -221,6 +221,35 @@ class PersonRepositoryTest {
         assert lastNames.containsAll('Public', 'Nobody')
     }
 
+    @Test void listNames() {
+        createThree()
+        personRepository.create(new Person(PERSON_D))
+
+        def names = personRepository.listNames()
+
+        assert names.size() == 4
+        assert names[0].fullName == 'Bob R Nobody'
+        assert names[1].fullName == 'John Q Public'
+        assert names[2].fullName == 'Jane Y Smith'
+        assert names[3].fullName == 'John M Smith'
+    }
+
+    @Test void findNames() {
+        createThree()
+        personRepository.create(new Person(PERSON_D))
+
+        def names = personRepository.findNames('Smith')
+
+        assert names.size() == 2
+        assert names[0].fullName == 'Jane Y Smith'
+        assert names[1].fullName == 'John M Smith'
+
+        names = personRepository.findNames('Public')
+
+        assert names.size() == 1
+        assert names[0].fullName == 'John Q Public'
+    }
+
     private static void assertProperties(Map props, Person entity) {
         props.each { k, v ->
             assert entity[k] == v

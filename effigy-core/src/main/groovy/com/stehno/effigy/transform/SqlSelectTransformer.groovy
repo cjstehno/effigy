@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.RawSqlBuilder
 import org.codehaus.groovy.ast.AnnotationNode
@@ -51,11 +52,9 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
 
         code.addStatement(query(
             sql.build(),
-            resolveResultSetExtractor() ?: resolveRowMapper(methodNode),
+            resolveResultSetExtractor() ?: resolveRowMapper(repoNode, methodNode),
             sql.params
         ))
-
-        // TODO: return value processing (query adds a return, but is this enough)?
 
         updateMethod repoNode, methodNode, code
     }
@@ -70,15 +69,29 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         builder
     }
 
-    private static Expression resolveRowMapper(final MethodNode methodNode) {
-        // TODO: add in support for mapper annotation
+    private static Expression resolveRowMapper(final ClassNode repoNode, final MethodNode methodNode) {
         def mapper = null
 
-        if (!mapper) {
-            mapper = findRegisteredRowMapper(resolveReturnType(methodNode))
+        def mapperAnnot = methodNode.getAnnotations(make(RowMapper))[0]
+        if (mapperAnnot) {
+            String beanName = extractString(mapperAnnot, 'bean', '')
+            String mapperType = extractString(mapperAnnot, 'type', '')
+            String mapperFactory = extractString(mapperAnnot, 'factory', '')
+
+            if (beanName) {
+                // FIXME: type - inject shared instance method
+
+            } else if (mapperType && mapperFactory) {
+                // TODO: type+factory - inject shared instance method (this is just duplicated each use)
+                mapper = callX(make(mapperType), mapperFactory)
+
+            } else if (mapperType) {
+                // TODO: bean - inject shared bean instance method (this is just duplicated each use)
+                mapper = ctorX(make(mapperType))
+            }
         }
 
-        mapper
+        mapper ?: findRegisteredRowMapper(resolveReturnType(methodNode))
     }
 
     private static Expression resolveResultSetExtractor() {
@@ -109,15 +122,15 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             mapperRegistry.put Integer_TYPE, m
         }
 
-        //        new SingleColumnRowMapper(Long).with { m ->
-        //            mapperRegistry.put long_TYPE, m
-        //            mapperRegistry.put Long_TYPE, m
-        //        }
+        singleColumnRowMapperX(Long_TYPE).with { m ->
+            mapperRegistry.put long_TYPE, m
+            mapperRegistry.put Long_TYPE, m
+        }
 
-        //        new SingleColumnRowMapper<>(Boolean).with { m ->
-        //            mapperRegistry.put boolean_TYPE, m
-        //            mapperRegistry.put Boolean_TYPE, m
-        //        }
+        singleColumnRowMapperX(Boolean_TYPE).with { m ->
+            mapperRegistry.put boolean_TYPE, m
+            mapperRegistry.put Boolean_TYPE, m
+        }
 
         mapperRegistry.put STRING_TYPE, singleColumnRowMapperX(STRING_TYPE)
 
