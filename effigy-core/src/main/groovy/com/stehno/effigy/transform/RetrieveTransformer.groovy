@@ -46,6 +46,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
     private static final String RESULTS = 'results'
     private static final String PLACEHOLDER = '?'
+    private static final int DEFAULT_INT = -1
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
@@ -157,7 +158,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         def annotatedParam = findAnnotatedIntParam(methodNode, annoClass)
 
         Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
-        if (value > -1) {
+        if (value > DEFAULT_INT) {
             return constX(value)
 
         } else if (annotatedParam) {
@@ -172,7 +173,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         def param = findAnnotatedIntParam(methodNode, annoClass)
         Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
 
-        if (value > -1) {
+        if (value > DEFAULT_INT) {
             sql.offset(PLACEHOLDER, constX(value))
 
         } else if (param) {

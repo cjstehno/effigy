@@ -21,6 +21,7 @@ import org.codehaus.groovy.ast.expr.Expression
 /**
  * Sql builder for building insert statements.
  */
+@SuppressWarnings('ConfusingMethodName')
 class InsertSqlBuilder {
 
     private static final String COMMA = ','

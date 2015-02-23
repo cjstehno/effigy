@@ -59,7 +59,7 @@ class CreateTransformer extends MethodImplementingTransformation {
         returnType == OBJECT_TYPE || identifier(entityNode).type == returnType
     }
 
-    @Override @SuppressWarnings('GroovyAssignabilityCheck')
+    @Override @SuppressWarnings(['GroovyAssignabilityCheck', 'AbcMetric']) // TODO: address the AbcMetric issue
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def (String entityVar, Statement entityCreator) = resolveEntityVariable(entityNode, methodNode)
 

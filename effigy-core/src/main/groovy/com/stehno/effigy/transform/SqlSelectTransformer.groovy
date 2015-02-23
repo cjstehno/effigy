@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.RowMapper
+import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.RawSqlBuilder
 import org.codehaus.groovy.ast.AnnotationNode
@@ -24,20 +25,20 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
-import org.springframework.jdbc.core.BeanPropertyRowMapper
-import org.springframework.jdbc.core.SingleColumnRowMapper
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.query
-import static org.codehaus.groovy.ast.ClassHelper.*
+import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafeWithGenerics
 
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
 class SqlSelectTransformer extends MethodImplementingTransformation {
+
+    private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
@@ -91,7 +92,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             }
         }
 
-        mapper ?: findRegisteredRowMapper(resolveReturnType(methodNode))
+        mapper ?: ROW_MAPPERS.findRowMapper(resolveReturnType(methodNode))
     }
 
     private static Expression resolveResultSetExtractor() {
@@ -109,46 +110,5 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         Logger.info SqlSelectTransformer, 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
 
         returnType
-    }
-
-    // TODO: this should be refactored out someplace else
-    private static final MAPPER_REGISTRY = prepareMapperRegistry()
-
-    private static Map<ClassNode, Expression> prepareMapperRegistry() {
-        def mapperRegistry = [:]
-
-        singleColumnRowMapperX(Integer_TYPE).with { m ->
-            mapperRegistry.put int_TYPE, m
-            mapperRegistry.put Integer_TYPE, m
-        }
-
-        singleColumnRowMapperX(Long_TYPE).with { m ->
-            mapperRegistry.put long_TYPE, m
-            mapperRegistry.put Long_TYPE, m
-        }
-
-        singleColumnRowMapperX(Boolean_TYPE).with { m ->
-            mapperRegistry.put boolean_TYPE, m
-            mapperRegistry.put Boolean_TYPE, m
-        }
-
-        mapperRegistry.put STRING_TYPE, singleColumnRowMapperX(STRING_TYPE)
-
-        // ... date, byte, short, float, double
-
-        // TODO: other types to be added... (maybe allow custom registration?)
-        // TODO: also document the types supported and what they map to in user guide
-
-        mapperRegistry
-    }
-
-    private static Expression findRegisteredRowMapper(final ClassNode returnType) {
-        // TODO: document that the fallback is bean property mapper
-        MAPPER_REGISTRY.get(returnType) ?: ctorX(makeClassSafeWithGenerics(BeanPropertyRowMapper, returnType), args(constX(returnType.typeClass)))
-    }
-
-    private static Expression singleColumnRowMapperX(ClassNode targetType) {
-        // originally had an args block to specify the return type to the constructor but that has compilation issues
-        ctorX(makeClassSafeWithGenerics(SingleColumnRowMapper, targetType))
     }
 }

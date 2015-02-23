@@ -69,7 +69,9 @@ class RawSqlBuilder {
             if (varParam) {
                 inputParams << varParam
             } else {
-                throw new IllegalArgumentException("SQL replacement variable names must match method argument names: '${varName[1..(-1)]}' argument missing.")
+                throw new IllegalArgumentException(
+                    "SQL replacement variable names must match method argument names: '${varName[1..(-1)]}' argument missing."
+                )
             }
         }
 
