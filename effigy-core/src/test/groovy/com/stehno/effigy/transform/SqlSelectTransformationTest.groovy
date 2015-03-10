@@ -22,6 +22,10 @@ import org.junit.Rule
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.RowMapper
+
+import java.sql.ResultSet
+import java.sql.SQLException
 
 import static com.stehno.effigy.test.ClassAssertions.forObject
 
@@ -82,11 +86,78 @@ class SqlSelectTransformationTest {
         assert names.size() == 5
     }
 
+    @Test void 'List<String> listAll():type'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone order by age')
+            @RowMapper(type='com.stehno.effigy.transform.SomeoneRowMapper')
+            abstract List<String> listAll()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(List, 'listAll')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        def items = repo.listAll()
+        assert items.size() == 6
+        assert items[0] == [name: 'Bob', age: 18]
+        assert items[1] == [name: 'Curley', age: 20]
+        assert items[2] == [name: 'Larry', age: 29]
+        assert items[3] == [name: 'Chris', age: 36]
+        assert items[4] == [name: 'Chris', age: 42]
+        assert items[5] == [name: 'Moe', age: 56]
+    }
+
+    @Test void 'List<String> listAll():type+factory'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone order by age')
+            @RowMapper(type='com.stehno.effigy.transform.SomeoneRowMapper', factory='mapper')
+            abstract List<String> listAll()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(List, 'listAll')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        def items = repo.listAll()
+        assert items.size() == 6
+        assert items[0] == [name: 'Bob', age: 18]
+        assert items[1] == [name: 'Curley', age: 20]
+        assert items[2] == [name: 'Larry', age: 29]
+        assert items[3] == [name: 'Chris', age: 36]
+        assert items[4] == [name: 'Chris', age: 42]
+        assert items[5] == [name: 'Moe', age: 56]
+    }
+
     private static void assertJdbcTemplate(ClassAssertions assertions) {
         assertions.with { repoClass ->
             repoClass.assertField(JdbcTemplate, 'jdbcTemplate').annotatedWith(Autowired)
             repoClass.assertMethod('setJdbcTemplate', JdbcTemplate)
             repoClass.assertMethod(JdbcTemplate, 'getJdbcTemplate')
         }
+    }
+}
+
+class SomeoneRowMapper implements RowMapper<Map<String, Object>> {
+
+    static mapper() {
+        new SomeoneRowMapper()
+    }
+
+    @Override
+    Map<String, Object> mapRow(ResultSet rs, int rowNum) throws SQLException {
+        [
+            name: rs.getString(1),
+            age : rs.getInt(2)
+        ]
     }
 }

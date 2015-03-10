@@ -91,14 +91,14 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             String mapperFactory = extractString(mapperAnnot, 'factory', '')
 
             if (beanName) {
-                // FIXME: type - inject shared instance method
+                // FIXME: bean - inject shared instance method
 
             } else if (mapperType && mapperFactory) {
                 // TODO: type+factory - inject shared instance method (this is just duplicated each use)
                 mapper = callX(make(mapperType), mapperFactory)
 
             } else if (mapperType) {
-                // TODO: bean - inject shared bean instance method (this is just duplicated each use)
+                // TODO: type - inject shared bean instance method (this is just duplicated each use)
                 mapper = ctorX(make(mapperType))
             }
         }
