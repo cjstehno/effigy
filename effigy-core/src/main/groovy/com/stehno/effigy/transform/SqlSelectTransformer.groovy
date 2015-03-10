@@ -15,25 +15,22 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.RawSqlBuilder
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.Expression
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
+import static java.lang.reflect.Modifier.PRIVATE
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
@@ -95,12 +92,22 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                 // FIXME: bean - inject shared instance method
 
             } else if (mapperType != VOID_TYPE && mapperFactory) {
-                // TODO: type+factory - inject shared instance method (this is just duplicated each use)
-                mapper = callX(mapperType, mapperFactory)
+                String fieldName = "mapper${mapperType.nameWithoutPackage}From${mapperFactory.capitalize()}"
+
+                if (!repoNode.fields.find { f -> f.name == fieldName }) {
+                    repoNode.addField(new FieldNode(fieldName, PRIVATE, makeClassSafe(org.springframework.jdbc.core.RowMapper), repoNode, callX(mapperType, mapperFactory)))
+                }
+
+                mapper = varX(fieldName)
 
             } else if (mapperType != VOID_TYPE) {
-                // TODO: type - inject shared bean instance method (this is just duplicated each use)
-                mapper = ctorX(mapperType)
+                String fieldName = "mapper${mapperType.nameWithoutPackage}"
+
+                if (!repoNode.fields.find { f -> f.name == fieldName }) {
+                    repoNode.addField(new FieldNode(fieldName, PRIVATE, makeClassSafe(org.springframework.jdbc.core.RowMapper), repoNode, ctorX(mapperType)))
+                }
+
+                mapper = varX(fieldName)
             }
         }
 

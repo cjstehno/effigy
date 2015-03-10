@@ -98,6 +98,7 @@ class SqlSelectTransformationTest {
 
         assertions.with { ac ->
             ac.assertMethod(List, 'listAll')
+            ac.assertField(RowMapper, 'mapperSomeoneRowMapper')
         }
 
         repo.jdbcTemplate = database.jdbcTemplate
@@ -124,6 +125,7 @@ class SqlSelectTransformationTest {
 
         assertions.with { ac ->
             ac.assertMethod(List, 'listAll')
+            ac.assertField(RowMapper, 'mapperSomeoneRowMapperFromMapper')
         }
 
         repo.jdbcTemplate = database.jdbcTemplate
