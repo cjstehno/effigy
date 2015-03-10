@@ -69,11 +69,11 @@ abstract class EffigyPersonRepository implements PersonRepository {
     abstract Set<String> findLastNames(boolean married)
 
     @SqlSelect('select first_name,middle_name,last_name from people order by last_name,first_name,middle_name')
-    @RowMapper(type = 'people.repository.NameMapper')
+    @RowMapper(type = NameMapper)
     abstract List<Name> listNames()
 
     @SqlSelect('select first_name,middle_name,last_name from people where last_name = :lastName order by last_name,first_name,middle_name')
-    @RowMapper(type = 'people.repository.NameMapper', factory = 'createMapper')
+    @RowMapper(type = NameMapper, factory = 'createMapper')
     abstract List<Name> findNames(String lastName)
 }
 

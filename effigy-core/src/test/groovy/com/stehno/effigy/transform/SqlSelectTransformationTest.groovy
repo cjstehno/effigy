@@ -140,6 +140,34 @@ class SqlSelectTransformationTest {
         assert items[5] == [name: 'Moe', age: 56]
     }
 
+    @Test void 'List<String> listAll():bean'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone order by age')
+            @RowMapper(bean='someoneMapper')
+            abstract List<String> listAll()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(List, 'listAll')
+            ac.assertField(RowMapper, 'someoneMapper')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+        repo.someoneMapper = new SomeoneRowMapper()
+
+        def items = repo.listAll()
+        assert items.size() == 6
+        assert items[0] == [name: 'Bob', age: 18]
+        assert items[1] == [name: 'Curley', age: 20]
+        assert items[2] == [name: 'Larry', age: 29]
+        assert items[3] == [name: 'Chris', age: 36]
+        assert items[4] == [name: 'Chris', age: 42]
+        assert items[5] == [name: 'Moe', age: 56]
+    }
+
     private static void assertJdbcTemplate(ClassAssertions assertions) {
         assertions.with { repoClass ->
             repoClass.assertField(JdbcTemplate, 'jdbcTemplate').annotatedWith(Autowired)

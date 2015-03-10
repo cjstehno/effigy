@@ -20,13 +20,17 @@ import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.RawSqlBuilder
 import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.ast.expr.Expression
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static java.lang.reflect.Modifier.PRIVATE
+import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -89,13 +93,35 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             String mapperFactory = extractString(mapperAnnot, 'factory', '')
 
             if (beanName) {
-                // FIXME: bean - inject shared instance method
+                FieldNode fieldNode = new FieldNode(
+                    beanName,
+                    PRIVATE,
+                    makeClassSafe(org.springframework.jdbc.core.RowMapper),
+                    repoNode,
+                    new EmptyExpression()
+                )
+
+                fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
+
+                def annotNode = new AnnotationNode(make(Qualifier))
+                annotNode.setMember('value', constX(beanName))
+                fieldNode.addAnnotation(annotNode)
+
+                repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
+
+                mapper = varX(beanName)
 
             } else if (mapperType != VOID_TYPE && mapperFactory) {
                 String fieldName = "mapper${mapperType.nameWithoutPackage}From${mapperFactory.capitalize()}"
 
                 if (!repoNode.fields.find { f -> f.name == fieldName }) {
-                    repoNode.addField(new FieldNode(fieldName, PRIVATE, makeClassSafe(org.springframework.jdbc.core.RowMapper), repoNode, callX(mapperType, mapperFactory)))
+                    repoNode.addField(new FieldNode(
+                        fieldName,
+                        PRIVATE,
+                        makeClassSafe(org.springframework.jdbc.core.RowMapper),
+                        repoNode,
+                        callX(mapperType, mapperFactory)
+                    ))
                 }
 
                 mapper = varX(fieldName)
@@ -104,7 +130,13 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                 String fieldName = "mapper${mapperType.nameWithoutPackage}"
 
                 if (!repoNode.fields.find { f -> f.name == fieldName }) {
-                    repoNode.addField(new FieldNode(fieldName, PRIVATE, makeClassSafe(org.springframework.jdbc.core.RowMapper), repoNode, ctorX(mapperType)))
+                    repoNode.addField(new FieldNode(
+                        fieldName,
+                        PRIVATE,
+                        makeClassSafe(org.springframework.jdbc.core.RowMapper),
+                        repoNode,
+                        ctorX(mapperType)
+                    ))
                 }
 
                 mapper = varX(fieldName)
