@@ -89,7 +89,7 @@ class SqlSelectTransformationTest {
     @Test void 'List<String> listAll():type'() {
         def repo = classBuilder.inject('''
             @SqlSelect('select name,age from someone order by age')
-            @RowMapper(type='com.stehno.effigy.transform.SomeoneRowMapper')
+            @RowMapper(type=com.stehno.effigy.transform.SomeoneRowMapper)
             abstract List<String> listAll()
         ''').instantiate()
 
@@ -115,7 +115,7 @@ class SqlSelectTransformationTest {
     @Test void 'List<String> listAll():type+factory'() {
         def repo = classBuilder.inject('''
             @SqlSelect('select name,age from someone order by age')
-            @RowMapper(type='com.stehno.effigy.transform.SomeoneRowMapper', factory='mapper')
+            @RowMapper(type=com.stehno.effigy.transform.SomeoneRowMapper, factory='mapper')
             abstract List<String> listAll()
         ''').instantiate()
 

@@ -27,6 +27,7 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
@@ -87,19 +88,19 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def mapperAnnot = methodNode.getAnnotations(make(RowMapper))[0]
         if (mapperAnnot) {
             String beanName = extractString(mapperAnnot, 'bean', '')
-            String mapperType = extractString(mapperAnnot, 'type', '')
+            ClassNode mapperType = extractClass(mapperAnnot, 'type')
             String mapperFactory = extractString(mapperAnnot, 'factory', '')
 
             if (beanName) {
                 // FIXME: bean - inject shared instance method
 
-            } else if (mapperType && mapperFactory) {
+            } else if (mapperType != VOID_TYPE && mapperFactory) {
                 // TODO: type+factory - inject shared instance method (this is just duplicated each use)
-                mapper = callX(make(mapperType), mapperFactory)
+                mapper = callX(mapperType, mapperFactory)
 
-            } else if (mapperType) {
+            } else if (mapperType != VOID_TYPE) {
                 // TODO: type - inject shared bean instance method (this is just duplicated each use)
-                mapper = ctorX(make(mapperType))
+                mapper = ctorX(mapperType)
             }
         }
 

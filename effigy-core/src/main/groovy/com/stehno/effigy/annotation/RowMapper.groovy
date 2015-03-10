@@ -34,7 +34,7 @@ import java.lang.annotation.*
     /**
      * FIXME: document
      */
-    String type() default ''
+    Class type() default Void.class
 
     /**
      * FIXME: document

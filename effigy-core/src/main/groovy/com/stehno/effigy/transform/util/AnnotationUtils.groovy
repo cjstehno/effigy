@@ -20,7 +20,6 @@ import org.codehaus.groovy.ast.AnnotatedNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.expr.ClassExpression
 
 /**
  * Created by cjstehno on 11/26/2014.
@@ -32,10 +31,7 @@ class AnnotationUtils {
         if (pair == null) {
             return null
         }
-
-        assert (pair.value instanceof ClassExpression)
-
-        return pair.value.type;
+        return pair.value.type
     }
 
     static String extractString(AnnotationNode annotation, String key, String defvalue = null) {
