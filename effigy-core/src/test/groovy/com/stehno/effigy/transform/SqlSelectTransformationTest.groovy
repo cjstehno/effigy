@@ -15,24 +15,21 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.test.ClassAssertions
-import com.stehno.effigy.test.ClassBuilder
+import com.stehno.effigy.test.ClassBuilderEnvironment
 import com.stehno.effigy.test.DatabaseEnvironment
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.JdbcTemplate
 
 import static com.stehno.effigy.test.ClassAssertions.forObject
-import static com.stehno.effigy.test.ClassBuilder.forCode
 
 class SqlSelectTransformationTest {
 
     @Rule public DatabaseEnvironment database = new DatabaseEnvironment(schema: 'schema-a.sql', data: 'data-a.sql')
 
-    private final ClassBuilder repoBuilder = forCode('''
+    @Rule public ClassBuilderEnvironment classBuilder = new ClassBuilderEnvironment('''
         package testing
 
         import com.stehno.effigy.annotation.*
@@ -43,17 +40,13 @@ class SqlSelectTransformationTest {
         }
     ''')
 
-    @Before void before() {
-        repoBuilder.reset()
-    }
-
     @Test void 'int countItems(int min, int max)'() {
-        repoBuilder.inject('''
+        classBuilder.inject('''
             @SqlSelect('select count(*) from someone where age > :min and age < :max')
             abstract int countItems(int min, int max)
         ''')
 
-        def repo = repoBuilder.instantiate()
+        def repo = classBuilder.instance()
 
         ClassAssertions assertions = forObject(repo)
 
@@ -71,7 +64,7 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'Set<String> listNames()'() {
-        def repo = repoBuilder.inject('''
+        def repo = classBuilder.inject('''
             @SqlSelect('select distinct(name) from someone')
             abstract Set<String> listNames()
         ''').instantiate()

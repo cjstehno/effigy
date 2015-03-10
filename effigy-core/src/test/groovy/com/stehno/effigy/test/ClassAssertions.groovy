@@ -19,7 +19,7 @@ package com.stehno.effigy.test
 import java.lang.reflect.Field
 
 /**
- * Created by cjstehno on 2/28/15.
+ * Assertion helper class for testing generated class content using reflection.
  */
 class ClassAssertions {
 

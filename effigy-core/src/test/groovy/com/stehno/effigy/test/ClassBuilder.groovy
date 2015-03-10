@@ -20,7 +20,7 @@ import groovy.text.GStringTemplateEngine
 import groovy.text.Template
 
 /**
- * Created by cjstehno on 2/28/15.
+ * Template-based source code compiler used to build and test AST transformation code at runtime.
  */
 class ClassBuilder {
 

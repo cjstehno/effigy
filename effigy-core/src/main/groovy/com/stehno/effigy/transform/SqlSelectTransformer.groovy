@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
@@ -31,6 +32,7 @@ import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
