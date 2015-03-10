@@ -30,10 +30,14 @@ import java.lang.annotation.*
 @GroovyASTTransformationClass(classes = [RepositoryTransformer])
 @interface Repository {
 
+    // FIXME: document this change in behavior - non-required value
+    // FIXME: make the CRUD annotations verify the value present (since required for them)
+
     /**
-     * The entity type handled by the repository (must be annotated with @Effigy)
+     * The entity type handled by the repository (must be annotated with @Effigy). This property is required
+     * if the CRUD operation annotations are to be used, but may be omitted for the raw SQL annotations.
      */
-    Class value()
+    Class value() default Void
 
     /**
      * Used to specify whether or not the JdbcTemplate is to be autowired, the default is 'true'.

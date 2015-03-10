@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
@@ -28,17 +27,17 @@ import org.codehaus.groovy.ast.expr.Expression
 
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
-import static com.stehno.effigy.transform.util.JdbcTemplateHelper.query
+import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
 class SqlSelectTransformer extends MethodImplementingTransformation {
 
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
+    private static final String RESULTS = 'results'
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
@@ -51,11 +50,21 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
 
         def sql = resolveSql(extractString(annotationNode, 'value'), methodNode.parameters)
 
-        code.addStatement(query(
+        Expression qx = queryX(
             sql.build(),
             resolveResultSetExtractor() ?: resolveRowMapper(repoNode, methodNode),
             sql.params
-        ))
+        )
+
+        if (methodNode.returnType.isArray() || methodNode.returnType.interfaces.contains(make(Collection))) {
+            // just return the results and let groovy handle casting
+            code.addStatement(returnS(qx))
+
+        } else {
+            // return the first element in the results
+            code.addStatement(declS(varX(RESULTS), qx))
+            code.addStatement(returnS(callX(varX(RESULTS), 'get', args(constX(0)))))
+        }
 
         updateMethod repoNode, methodNode, code
     }

@@ -16,10 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import org.codehaus.groovy.ast.ASTNode
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.PropertyNode
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
@@ -32,8 +29,7 @@ import org.springframework.stereotype.Repository
 
 import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.*
-import static java.lang.reflect.Modifier.PUBLIC
-import static java.lang.reflect.Modifier.isAbstract
+import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
@@ -112,19 +108,23 @@ class RepositoryTransformer implements ASTTransformation {
     }
 
     private static void injectJdbcTemplate(ClassNode repositoryNode, AnnotationNode annotationNode) {
-        PropertyNode jdbcTemplateNode = new PropertyNode(
-            JDBC_TEMPLATE, PUBLIC, make(JdbcTemplate), repositoryNode, new EmptyExpression(), null, null
+        FieldNode jdbcTemplateField = new FieldNode(
+            JDBC_TEMPLATE, PRIVATE, make(JdbcTemplate), repositoryNode, new EmptyExpression()
         )
 
-        if (extractBoolean(annotationNode, 'autowired')) {
-            jdbcTemplateNode.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
+        PropertyNode jdbcTemplateNode = new PropertyNode(
+            jdbcTemplateField, PUBLIC, null, null
+        )
+
+        if (extractBoolean(annotationNode, 'autowired', true)) {
+            jdbcTemplateField.addAnnotation(new AnnotationNode(new ClassNode(Autowired)))
 
             String qualifier = extractString(annotationNode, 'qualifier', '')
             if (qualifier) {
                 def qualifierAnnot = new AnnotationNode(make(Qualifier))
                 qualifierAnnot.setMember(VALUE, constX(qualifier))
 
-                jdbcTemplateNode.addAnnotation(qualifierAnnot)
+                jdbcTemplateField.addAnnotation(qualifierAnnot)
             }
         }
 
