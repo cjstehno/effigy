@@ -266,7 +266,3 @@ since the extractor is used to build the return value explicitly.
 ### @SqlUpdate
 
 > TBD...
-
-### @SqlExecute
-
-> TBD...
