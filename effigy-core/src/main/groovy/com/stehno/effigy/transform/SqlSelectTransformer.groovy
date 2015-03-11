@@ -21,12 +21,14 @@ import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.RawSqlBuilder
+import groovy.transform.Immutable
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 
+import static com.stehno.effigy.transform.SelectHelperAnnotation.helperFrom
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
@@ -37,7 +39,6 @@ import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
-
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
@@ -45,10 +46,6 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
 
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
-    private static final String BEAN = 'bean'
-    private static final String TYPE = 'type'
-    private static final String FACTORY = 'factory'
-    private static final String DEFAULT_EMPTY = ''
     private static final String VALUE = 'value'
 
     SqlSelectTransformer() {
@@ -103,129 +100,91 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         builder
     }
 
+    private static FieldNode addRepoField(ClassNode repoNode, String name, Class helperType, Expression initializer) {
+        def node = new FieldNode(name, PRIVATE, makeClassSafe(helperType), repoNode, initializer)
+        repoNode.addField(node)
+        node
+    }
+
+    private static void autowireField(FieldNode fieldNode, String beanName) {
+        fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
+
+        def annotNode = new AnnotationNode(make(Qualifier))
+        annotNode.setMember(VALUE, constX(beanName))
+        fieldNode.addAnnotation(annotNode)
+    }
+
+    private static Expression applyAutowiredBean(ClassNode repoNode, Class helperType, String name){
+        if (!repoHasField(repoNode, name)) {
+            FieldNode fieldNode = addRepoField repoNode, name, helperType, new EmptyExpression()
+            autowireField fieldNode, name
+
+            repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
+        }
+
+        varX(name)
+    }
+
+    private static Expression applySharedField(ClassNode repoNode, Class helperType, String name, Expression generator){
+        if (!repoHasField(repoNode, name)) {
+            addRepoField repoNode, name, helperType, generator
+        }
+
+        varX(name)
+    }
+
     private static Expression resolveRowMapper(final ClassNode repoNode, final MethodNode methodNode) {
         def mapper = null
 
-        def mapperAnnot = methodNode.getAnnotations(make(RowMapper))[0]
-        if (mapperAnnot) {
-            String beanName = extractString(mapperAnnot, BEAN, DEFAULT_EMPTY)
-            ClassNode mapperType = extractClass(mapperAnnot, TYPE)
-            String mapperFactory = extractString(mapperAnnot, FACTORY, DEFAULT_EMPTY)
+        def annot = helperFrom(methodNode, RowMapper)
+        if (annot) {
+            if (annot.bean) {
+                mapper = applyAutowiredBean(repoNode, org.springframework.jdbc.core.RowMapper, annot.bean)
 
-            if (beanName) {
-                FieldNode fieldNode = new FieldNode(
-                    beanName,
-                    PRIVATE,
-                    makeClassSafe(org.springframework.jdbc.core.RowMapper),
+            } else if (annot.type != VOID_TYPE && annot.factory) {
+                mapper = applySharedField(
                     repoNode,
-                    new EmptyExpression()
+                    org.springframework.jdbc.core.RowMapper,
+                    "mapper${annot.type.nameWithoutPackage}From${annot.factory.capitalize()}",
+                    callX(annot.type, annot.factory)
                 )
 
-                fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
-
-                def annotNode = new AnnotationNode(make(Qualifier))
-                annotNode.setMember(VALUE, constX(beanName))
-                fieldNode.addAnnotation(annotNode)
-
-                repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
-
-                mapper = varX(beanName)
-
-            } else if (mapperType != VOID_TYPE && mapperFactory) {
-                String fieldName = "mapper${mapperType.nameWithoutPackage}From${mapperFactory.capitalize()}"
-
-                if (!repoNode.fields.find { f -> f.name == fieldName }) {
-                    repoNode.addField(new FieldNode(
-                        fieldName,
-                        PRIVATE,
-                        makeClassSafe(org.springframework.jdbc.core.RowMapper),
-                        repoNode,
-                        callX(mapperType, mapperFactory)
-                    ))
-                }
-
-                mapper = varX(fieldName)
-
-            } else if (mapperType != VOID_TYPE) {
-                String fieldName = "mapper${mapperType.nameWithoutPackage}"
-
-                if (!repoNode.fields.find { f -> f.name == fieldName }) {
-                    repoNode.addField(new FieldNode(
-                        fieldName,
-                        PRIVATE,
-                        makeClassSafe(org.springframework.jdbc.core.RowMapper),
-                        repoNode,
-                        ctorX(mapperType)
-                    ))
-                }
-
-                mapper = varX(fieldName)
+            } else if (annot.type != VOID_TYPE) {
+                mapper = applySharedField(
+                    repoNode,
+                    org.springframework.jdbc.core.RowMapper,
+                    "mapper${annot.type.nameWithoutPackage}",
+                    ctorX(annot.type)
+                )
             }
         }
 
         mapper ?: ROW_MAPPERS.findRowMapper(resolveReturnType(methodNode))
     }
 
-    // FIXME: there is a lot of duplicate/common code in the resolvers for mapper/extractors - refactor and simplify
     private static Expression resolveResultSetExtractor(ClassNode repoNode, MethodNode methodNode) {
         def extractor = null
 
-        def annot = methodNode.getAnnotations(make(ResultSetExtractor))[0]
+        def annot = helperFrom(methodNode, ResultSetExtractor)
         if (annot) {
-            String beanName = extractString(annot, BEAN, DEFAULT_EMPTY)
-            ClassNode extractorType = extractClass(annot, TYPE)
-            String extractorFactory = extractString(annot, FACTORY, DEFAULT_EMPTY)
+            if (annot.bean) {
+                extractor = applyAutowiredBean(repoNode, org.springframework.jdbc.core.ResultSetExtractor, annot.bean)
 
-            if (beanName) {
-                if (!repoHasField(repoNode, beanName)) {
-                    FieldNode fieldNode = new FieldNode(
-                        beanName,
-                        PRIVATE,
-                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
-                        repoNode,
-                        new EmptyExpression()
-                    )
+            } else if (annot.type != VOID_TYPE && annot.factory) {
+                extractor = applySharedField(
+                    repoNode,
+                    org.springframework.jdbc.core.ResultSetExtractor,
+                    "extractor${annot.type.nameWithoutPackage}From${annot.factory.capitalize()}",
+                    callX(annot.type, annot.factory)
+                )
 
-                    fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
-
-                    def annotNode = new AnnotationNode(make(Qualifier))
-                    annotNode.setMember(VALUE, constX(beanName))
-                    fieldNode.addAnnotation(annotNode)
-
-                    repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
-                }
-
-                extractor = varX(beanName)
-
-            } else if (extractorType != VOID_TYPE && extractorFactory) {
-                String fieldName = "extractor${extractorType.nameWithoutPackage}From${extractorFactory.capitalize()}"
-
-                if (!repoHasField(repoNode, fieldName)) {
-                    repoNode.addField(new FieldNode(
-                        fieldName,
-                        PRIVATE,
-                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
-                        repoNode,
-                        callX(extractorType, extractorFactory)
-                    ))
-                }
-
-                extractor = varX(fieldName)
-
-            } else if (extractorType != VOID_TYPE) {
-                String fieldName = "extractor${extractorType.nameWithoutPackage}"
-
-                if (!repoHasField(repoNode, fieldName)) {
-                    repoNode.addField(new FieldNode(
-                        fieldName,
-                        PRIVATE,
-                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
-                        repoNode,
-                        ctorX(extractorType)
-                    ))
-                }
-
-                extractor = varX(fieldName)
+            } else if (annot.type != VOID_TYPE) {
+                extractor = applySharedField(
+                    repoNode,
+                    org.springframework.jdbc.core.ResultSetExtractor,
+                    "extractor${annot.type.nameWithoutPackage}",
+                    ctorX(annot.type)
+                )
             }
         }
 
@@ -246,5 +205,27 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         Logger.info SqlSelectTransformer, 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
 
         returnType
+    }
+}
+
+@Immutable(knownImmutableClasses = [ClassNode])
+class SelectHelperAnnotation {
+
+    private static final String BEAN = 'bean'
+    private static final String TYPE = 'type'
+    private static final String FACTORY = 'factory'
+    private static final String DEFAULT_EMPTY = ''
+
+    String bean
+    ClassNode type
+    String factory
+
+    static SelectHelperAnnotation helperFrom(MethodNode methodNode, Class annotType) {
+        def annot = methodNode.getAnnotations(make(annotType))[0]
+        annot ? new SelectHelperAnnotation(
+            extractString(annot, BEAN, DEFAULT_EMPTY),
+            extractClass(annot, TYPE),
+            extractString(annot, FACTORY, DEFAULT_EMPTY)
+        ) : null
     }
 }
