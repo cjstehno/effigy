@@ -27,7 +27,7 @@ import java.lang.annotation.*
  *   the query.
  * * the 'type' property can be used to specify a class implementing RowMapper which will be instantiated as a shared instance and used by the query.
  * * the 'type' and 'factory' properties may be used similar to the 'type' property alone, except that the specified static factory method will be
- *   called to create the instance, rather than the construcot.
+ *   called to create the instance, rather than the constructor.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
