@@ -21,7 +21,9 @@ import com.stehno.effigy.test.DatabaseEnvironment
 import org.junit.Rule
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
 
 import java.sql.ResultSet
@@ -168,6 +170,67 @@ class SqlSelectTransformationTest {
         assert items[5] == [name: 'Moe', age: 56]
     }
 
+    @Test void 'String grouping(int min, int max):type'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
+            abstract String grouping(int min, int max)
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping', int, int)
+            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
+    }
+
+    @Test void 'String groupings(int min, int max):type+factory'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor, factory='extractor')
+            abstract String grouping(int min, int max)
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping', int, int)
+            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractorFromExtractor')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
+    }
+
+    @Test void 'String groupings(int min, int max):bean'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @ResultSetExtractor(bean='someoneExtractor')
+            abstract String grouping(int min, int max)
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping', int, int)
+            ac.assertField(ResultSetExtractor, 'someoneExtractor')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+        repo.someoneExtractor = new SomeoneResultSetExtractor()
+
+        assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
+    }
+
     private static void assertJdbcTemplate(ClassAssertions assertions) {
         assertions.with { repoClass ->
             repoClass.assertField(JdbcTemplate, 'jdbcTemplate').annotatedWith(Autowired)
@@ -189,5 +252,21 @@ class SomeoneRowMapper implements RowMapper<Map<String, Object>> {
             name: rs.getString(1),
             age : rs.getInt(2)
         ]
+    }
+}
+
+class SomeoneResultSetExtractor implements ResultSetExtractor<String> {
+
+    static extractor(){
+        new SomeoneResultSetExtractor()
+    }
+
+    @Override
+    String extractData(ResultSet rs) throws SQLException, DataAccessException {
+        def rows = []
+        while(rs.next()){
+            rows << "${rs.getString(1)} (${rs.getInt(2)})"
+        }
+        rows.join(' & ')
     }
 }

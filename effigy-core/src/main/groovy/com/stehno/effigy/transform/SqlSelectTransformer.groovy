@@ -15,6 +15,8 @@
  */
 
 package com.stehno.effigy.transform
+
+import com.stehno.effigy.annotation.ResultSetExtractor
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
 import com.stehno.effigy.logging.Logger
@@ -35,6 +37,7 @@ import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
@@ -42,8 +45,13 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
 
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
+    private static final String BEAN = 'bean'
+    private static final String TYPE = 'type'
+    private static final String FACTORY = 'factory'
+    private static final String DEFAULT_EMPTY = ''
+    private static final String VALUE = 'value'
 
-    SqlSelectTransformer(){
+    SqlSelectTransformer() {
         entityRequired = false
     }
 
@@ -56,22 +64,30 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def code = block()
 
-        def sql = resolveSql(extractString(annotationNode, 'value'), methodNode.parameters)
+        def sql = resolveSql(extractString(annotationNode, VALUE), methodNode.parameters)
+
+        def extractor = resolveResultSetExtractor(repoNode, methodNode)
 
         Expression qx = queryX(
             sql.build(),
-            resolveResultSetExtractor() ?: resolveRowMapper(repoNode, methodNode),
+            extractor ?: resolveRowMapper(repoNode, methodNode),
             sql.params
         )
 
-        if (methodNode.returnType.isArray() || methodNode.returnType.interfaces.contains(make(Collection))) {
-            // just return the results and let groovy handle casting
+        if (extractor) {
+            // assume extractors do their own return type conversion
             code.addStatement(returnS(qx))
 
         } else {
-            // return the first element in the results
-            code.addStatement(declS(varX(RESULTS), qx))
-            code.addStatement(returnS(callX(varX(RESULTS), 'get', args(constX(0)))))
+            if (methodNode.returnType.isArray() || methodNode.returnType.interfaces.contains(make(Collection))) {
+                // just return the results and let groovy handle casting
+                code.addStatement(returnS(qx))
+
+            } else {
+                // return the first element in the results
+                code.addStatement(declS(varX(RESULTS), qx))
+                code.addStatement(returnS(callX(varX(RESULTS), 'get', args(constX(0)))))
+            }
         }
 
         updateMethod repoNode, methodNode, code
@@ -92,9 +108,9 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
 
         def mapperAnnot = methodNode.getAnnotations(make(RowMapper))[0]
         if (mapperAnnot) {
-            String beanName = extractString(mapperAnnot, 'bean', '')
-            ClassNode mapperType = extractClass(mapperAnnot, 'type')
-            String mapperFactory = extractString(mapperAnnot, 'factory', '')
+            String beanName = extractString(mapperAnnot, BEAN, DEFAULT_EMPTY)
+            ClassNode mapperType = extractClass(mapperAnnot, TYPE)
+            String mapperFactory = extractString(mapperAnnot, FACTORY, DEFAULT_EMPTY)
 
             if (beanName) {
                 FieldNode fieldNode = new FieldNode(
@@ -108,7 +124,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                 fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
 
                 def annotNode = new AnnotationNode(make(Qualifier))
-                annotNode.setMember('value', constX(beanName))
+                annotNode.setMember(VALUE, constX(beanName))
                 fieldNode.addAnnotation(annotNode)
 
                 repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
@@ -150,9 +166,74 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         mapper ?: ROW_MAPPERS.findRowMapper(resolveReturnType(methodNode))
     }
 
-    private static Expression resolveResultSetExtractor() {
-        // TODO: add in support for extractor annotation
-        null
+    // FIXME: there is a lot of duplicate/common code in the resolvers for mapper/extractors - refactor and simplify
+    private static Expression resolveResultSetExtractor(ClassNode repoNode, MethodNode methodNode) {
+        def extractor = null
+
+        def annot = methodNode.getAnnotations(make(ResultSetExtractor))[0]
+        if (annot) {
+            String beanName = extractString(annot, BEAN, DEFAULT_EMPTY)
+            ClassNode extractorType = extractClass(annot, TYPE)
+            String extractorFactory = extractString(annot, FACTORY, DEFAULT_EMPTY)
+
+            if (beanName) {
+                if (!repoHasField(repoNode, beanName)) {
+                    FieldNode fieldNode = new FieldNode(
+                        beanName,
+                        PRIVATE,
+                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
+                        repoNode,
+                        new EmptyExpression()
+                    )
+
+                    fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
+
+                    def annotNode = new AnnotationNode(make(Qualifier))
+                    annotNode.setMember(VALUE, constX(beanName))
+                    fieldNode.addAnnotation(annotNode)
+
+                    repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
+                }
+
+                extractor = varX(beanName)
+
+            } else if (extractorType != VOID_TYPE && extractorFactory) {
+                String fieldName = "extractor${extractorType.nameWithoutPackage}From${extractorFactory.capitalize()}"
+
+                if (!repoHasField(repoNode, fieldName)) {
+                    repoNode.addField(new FieldNode(
+                        fieldName,
+                        PRIVATE,
+                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
+                        repoNode,
+                        callX(extractorType, extractorFactory)
+                    ))
+                }
+
+                extractor = varX(fieldName)
+
+            } else if (extractorType != VOID_TYPE) {
+                String fieldName = "extractor${extractorType.nameWithoutPackage}"
+
+                if (!repoHasField(repoNode, fieldName)) {
+                    repoNode.addField(new FieldNode(
+                        fieldName,
+                        PRIVATE,
+                        makeClassSafe(org.springframework.jdbc.core.ResultSetExtractor),
+                        repoNode,
+                        ctorX(extractorType)
+                    ))
+                }
+
+                extractor = varX(fieldName)
+            }
+        }
+
+        extractor
+    }
+
+    private static FieldNode repoHasField(ClassNode repoNode, String fieldName) {
+        repoNode.fields.find { f -> f.name == fieldName }
     }
 
     private static ClassNode resolveReturnType(final MethodNode methodNode) {

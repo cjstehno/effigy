@@ -24,9 +24,9 @@ import java.lang.annotation.*
  * A "select" method may accept any type or primitive as input parameters; however, the name of the parameter will used as the name of the replacement
  * variable in the SQL statement, so they will need to be consistent.
  *
- * A "select" method must return a single type or collection of a type that is appropriate to the `RowMapper` or `ResultSetExtractor` being used. If a `RowMapper`
- * or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper or extractor based on the return type - if it cannot resolve
- * a mapper or extractor, the compilation will fail.
+ * A "select" method must return a single type or collection of a type that is appropriate to the `RowMapper` or `ResultSetExtractor` being used. If
+ * a `RowMapper` or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper or extractor based on the return
+ * type - if it cannot resolve a mapper or extractor, the compilation will fail.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

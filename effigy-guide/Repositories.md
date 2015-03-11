@@ -237,28 +237,31 @@ Collection<Abc> findByDAndE(String d, int e)
 
 The `@ResultSetExtractor` annotation is used with a `@SqlSelect` annotation to provide information about the `ResultSetExtractor` to be used.
 
-There are three distinct configuration scenarios for extractor annotations, they can be defined by the annotations `bean`, or `clazz` properties, or by 
-a combination of the `clazz` and `factor` properties.
+There are three distinct configuration scenarios for extractor annotations, they can be defined by the annotations `bean`, or `type` properties, or by
+a combination of the `type` and `factory` properties.
 
 The `bean` property will inject code into the repository to autowire a reference to the bean with the specified name. The extractor bean must be defined
 somewhere in the Spring context, and must implement the `ResultSetExtractor` interface. This bean will then be used as the `ResultSetExtractor` for the query.
 
-The `clazz` property will inject code into the repository to use an instance of the specified class as the extractor. The class must implement the `ResultSetExtractor`
+The `type` property will inject code into the repository to use an instance of the specified class as the extractor. The class must implement the `ResultSetExtractor`
 interface.
 
-The `clazz` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
+The `type` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
 implementation of `ResultSetExtractor` which will be used by the query.
 
-If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `clazz`; `factory` will be ignored
-if the `clazz` property is not specified.
+If multiple properties are configured outside the scope of these scenarios, the precedence order will be `bean`, then `type`; `factory` will be ignored
+if the `type` property is not specified.
 
 An example of using the `@ResultSetExtractor` annotation would be the following:
 
 ```groovy
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
-@ResultSetExtractor(clazz=AbcExtractor, factory='getExtractor')
+@ResultSetExtractor(type=AbcExtractor, factory='getExtractor')
 Collection<Abc> findByDAndE(String d, int e)
 ```
+
+Note that when an extractor is used, the return type of the method should match, or at least be compatible with the return type of the `ResultSetExtractor`
+since the extractor is used to build the return value explicitly.
 
 ### @SqlUpdate
 
