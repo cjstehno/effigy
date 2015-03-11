@@ -73,6 +73,10 @@ class JdbcTemplateHelper {
         callX(varX(JDBC_TEMPLATE), QUERY, queryArgs(sql, handler, params))
     }
 
+    static Expression queryX(String sql, Expression handler, Expression setter) {
+        callX(varX(JDBC_TEMPLATE), QUERY, args(constX(sql), setter, handler))
+    }
+
     static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
         returnS(
             callX(varX(JDBC_TEMPLATE), QUERY_FOR_OBJECT, queryArgs(sql, handler, params))

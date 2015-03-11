@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.annotation.PreparedStatementSetter
 import com.stehno.effigy.annotation.ResultSetExtractor
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
@@ -28,7 +29,6 @@ import org.codehaus.groovy.ast.expr.Expression
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationContext
-import org.springframework.jdbc.core.PreparedStatementSetter
 
 import static com.stehno.effigy.transform.SelectHelperAnnotation.helperFrom
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
@@ -65,22 +65,25 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def code = block()
 
         def sql = resolveSql(extractString(annotationNode, VALUE), methodNode.parameters)
-
+        def setter = resolveSetter(repoNode, methodNode)
         def extractor = resolveResultSetExtractor(repoNode, methodNode)
 
-        /* FIXME:
-            wire in the singleton property for the helpers
+        Expression qx
+        if (setter) {
+            // TODO: add support for teh one that allows method arguments
+            qx = queryX(
+                sql.build(),
+                extractor ?: resolveRowMapper(repoNode, methodNode),
+                setter
+            )
 
-            if a PSS is used, it will be used rather than the input
-            - the sql.params need to be ignored query(sql, pss)
-            if PSS extends EPSS the arguments need to be passed into the
-         */
-
-        Expression qx = queryX(
-            sql.build(),
-            extractor ?: resolveRowMapper(repoNode, methodNode),
-            sql.params
-        )
+        } else {
+            qx = queryX(
+                sql.build(),
+                extractor ?: resolveRowMapper(repoNode, methodNode),
+                sql.params
+            )
+        }
 
         if (extractor) {
             // assume extractors do their own return type conversion
@@ -161,6 +164,41 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         } else {
             return generator
         }
+    }
+
+    // FIXME: there is still a lot of code overlap with the helpers - refactor away
+    // - maybe pull the resolve methods into a shared one in the immutable stub class?
+    private static Expression resolveSetter(final ClassNode repoNode, final MethodNode methodNode) {
+        def setter = null
+
+        // FIXME: what needs to be different when using the EffigyPSS?
+
+        def annot = helperFrom(methodNode, PreparedStatementSetter)
+        if (annot) {
+            if (annot.bean) {
+                setter = applyAutowiredBean(repoNode, org.springframework.jdbc.core.PreparedStatementSetter, annot.bean, annot.singleton)
+
+            } else if (annot.type != VOID_TYPE && annot.factory) {
+                setter = applySharedField(
+                    repoNode,
+                    org.springframework.jdbc.core.PreparedStatementSetter,
+                    "setter${annot.type.nameWithoutPackage}From${annot.factory.capitalize()}",
+                    callX(annot.type, annot.factory),
+                    annot.singleton
+                )
+
+            } else if (annot.type != VOID_TYPE) {
+                setter = applySharedField(
+                    repoNode,
+                    org.springframework.jdbc.core.PreparedStatementSetter,
+                    "setter${annot.type.nameWithoutPackage}",
+                    ctorX(annot.type),
+                    annot.singleton
+                )
+            }
+        }
+
+        setter
     }
 
     private static Expression resolveRowMapper(final ClassNode repoNode, final MethodNode methodNode) {
