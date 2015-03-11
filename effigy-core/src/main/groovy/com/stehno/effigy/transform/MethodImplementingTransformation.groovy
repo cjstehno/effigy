@@ -32,17 +32,23 @@ import static com.stehno.effigy.transform.model.EntityModel.entityProperty
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static java.lang.reflect.Modifier.PUBLIC
+import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 
 /**
- * Abstract parent class for the Effigy CRUD method implementation annotation transformers.
+ * Abstract parent class for the Effigy repository method implementation annotation transformers.
  */
 abstract class MethodImplementingTransformation implements RepositoryMethodVisitor {
+
+    boolean entityRequired = true
 
     @Override
     void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         trace getClass(), 'Implementing method ({}) for repository ({})', methodNode.name, repoNode.name
+
+        checkEntityRequirement repoNode, entityNode, annotationNode, methodNode
+
         try {
             if (isValidReturnType(methodNode.returnType, entityNode)) {
                 implementMethod annotationNode, repoNode, entityNode, methodNode
@@ -116,6 +122,19 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
                     varX(mp.name)
                 )
             }
+        }
+    }
+
+    private void checkEntityRequirement(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+        if (entityRequired && (!entityNode || entityNode == VOID_TYPE)) {
+            error(
+                getClass(),
+                'Method annotation ({}) for repository ({}) method ({}) requires the repository to specify an entity type.',
+                annotationNode.classNode.nameWithoutPackage,
+                repoNode.name,
+                methodNode.name
+            )
+            throw new EffigyTransformationException()
         }
     }
 

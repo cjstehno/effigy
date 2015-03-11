@@ -19,9 +19,14 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a custom SQL select method in an Effigy repository.
+ * Annotation used to denote a custom SQL-based select query method in an Effigy repository.
  *
- * FIXME: document me
+ * A "select" method may accept any type or primitive as input parameters; however, the name of the parameter will used as the name of the replacement
+ * variable in the SQL statement, so they will need to be consistent.
+ *
+ * A "select" method must return a single type or collection of a type that is appropriate to the `RowMapper` or `ResultSetExtractor` being used. If a `RowMapper`
+ * or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper or extractor based on the return type - if it cannot resolve
+ * a mapper or extractor, the compilation will fail.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -29,7 +34,8 @@ import java.lang.annotation.*
 @interface SqlSelect {
 
     /**
-     * The SQL statement to be used in the query.
+     * Used to provide the SQL string which will be compiled into the method. The method parameters will be used as replacement variables in the SQL
+     * using the parameter name prefixed with a colon (e.g. `:firstName`).
      */
     String value()
 }

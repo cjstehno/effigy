@@ -5,8 +5,10 @@ do provide additional functionality related to entities.
 
 ## @Repository
 
-The `@Repository` annotation is applied to a class that is to be used as a repository for an Effigy entity. The required `value` property of the annotation
-is used to specify the type of entity being managed by the repository. The type specified must be annotated with the `@Entity` annotation.
+The `@Repository` annotation is applied to a class that is to be used as a repository for an Effigy entity. The `value` property of the annotation
+is used to specify the type of entity being managed by the repository. The type specified must be annotated with the `@Entity` annotation. The `value`
+property is required if CRUD operation annotations are to be used by the repository; however, the `value` may be omitted if only the SQL-based annotations
+will be used.
 
 When the `@Repository` annotation is applied to a repository class, the SpringFramework `@org.springframework.stereotype.Repository` annotation will be 
 added to the compiled class This allows Spring component scanning to pick up Effigy repositories without any extra configuration.
@@ -180,12 +182,16 @@ relaxed in future releases. Also note that these suggestions are mainly required
 
 The `@SqlSelect` annotation is used to annotate a method of a repository as a custom SQL query.
 
-A "select" method may accept any type or primitive as input parameters; however, the name of the parameter may be significant depending on how the SQL statement 
-is defined.
+A "select" method may accept any type or primitive as input parameters; however, the name of the parameter will used as the name of the replacement
+variable in the SQL statement, so they will need to be consistent.
 
 A "select" method must return a single type or collection of a type that is appropriate to the `RowMapper` or `ResultSetExtractor` being used. If a `RowMapper`
-or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper or extractor based on the return type - if it cannot resolve
-a mapper or extractor, the compilation will fail.
+or `ResultSetExtractor` are not specified, Effigy will attempt to resolve the appropriate mapper based on the return type - if it cannot resolve a
+mapper an instance of the `BeanPropertyRowMapper` class will be used - this may or may not work for the configured scenario, but it is a minimal
+fallback point.
+
+> The return types currently supported by the default row mappers are the following: Byte, byte, Character, char, Short, short, Integer, int, Long,
+long, Float, float, Double, double, Boolean, boolean, and String. Any other return types will fallback to use the BeanPropertyRowMapper.
 
 The `value` property of the annotation is used to provide the SQL string which will be compiled into the method. The method parameters will be used as replacement
 variables in the SQL using the parameter name prefixed with a colon (e.g. `:firstName`).
@@ -197,14 +203,15 @@ A "select" method using the default return type mapper resolution would look som
 int countByAgeRange(int min, int max)
 ```
 
-In order to configure a custom `RowMapper` or `ResultSetExtractor`, you must use a secondary annotation to specify it.
+In order to configure a custom `RowMapper` or `ResultSetExtractor`, it must be specified using a secondary annotation: the `@RowMapper` or `@ResultSetExtractor`
+annotations.
 
 #### @RowMapper
 
 The `@RowMapper` annotation is used with a `@SqlSelect` annotation to provide information about the `RowMapper` to be used.
 
-There are three distinct configuration scenarios for mapper annotations, they can be defined by the annotations `bean`, or `clazz` properties, or by 
-a combination of the `clazz` and `factor` properties.
+There are three distinct configuration scenarios for mapper annotations, they can be defined by the annotations `bean`, or `type` properties, or by
+a combination of the `type` and `factory` properties.
 
 The `bean` property will inject code into the repository to autowire a reference to the bean with the specified name. The mapper bean must be defined
 somewhere in the Spring context, and must implement the `RowMapper` interface. This bean will then be used as the `RowMapper` for the query.
@@ -215,7 +222,7 @@ interface.
 The `type` and `factory` properties used together will inject code that will call the static factory method on the specified class to retrieve an
 implementation of `RowMapper` which will be used by the query.
 
-If multiple properties are configured outside the scope of these scenarios, the precidence order will be `bean`, then `type`; `factory` will be ignored
+If multiple properties are configured outside the scope of these scenarios, the precedence order will be `bean`, then `type`; `factory` will be ignored
 if the `type` property is not specified.
 
 An example of using the `@RowMapper` annotation would be the following:

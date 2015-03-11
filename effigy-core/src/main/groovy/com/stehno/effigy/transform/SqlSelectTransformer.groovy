@@ -43,6 +43,10 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
 
+    SqlSelectTransformer(){
+        entityRequired = false
+    }
+
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
         returnType != VOID_TYPE

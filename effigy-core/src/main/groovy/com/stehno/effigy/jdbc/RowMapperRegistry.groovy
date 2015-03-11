@@ -26,17 +26,15 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafeWithGenerics
 
 /**
- * Created by cjstehno on 2/23/15.
+ * Registry of default RowMappers available by return value type. This class is intended for internal use.
  */
 class RowMapperRegistry {
 
-    // TODO: other types to be added... (maybe allow custom registration?)
-    // TODO: also document the types supported and what they map to in user guide
+    // TODO: consider allowing custom global (or repo-scoped) registry of mappers by type
 
     private final Map<ClassNode, Expression> registry = prepareMapperRegistry()
 
     Expression findRowMapper(final ClassNode returnType) {
-        // TODO: document that the fallback is bean property mapper
         registry.get(returnType) ?: ctorX(makeClassSafeWithGenerics(BeanPropertyRowMapper, returnType), args(constX(returnType.typeClass)))
     }
 
