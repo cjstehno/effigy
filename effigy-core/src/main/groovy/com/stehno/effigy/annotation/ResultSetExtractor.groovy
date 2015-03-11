@@ -38,4 +38,7 @@ import java.lang.annotation.Target
      * The name of a static factory method on the class provided by the 'type' property. This property is ignored unless a 'type' value is specified.
      */
     String factory() default ''
+
+    // FIXME: document here and user guide
+    boolean singleton() default true
 }

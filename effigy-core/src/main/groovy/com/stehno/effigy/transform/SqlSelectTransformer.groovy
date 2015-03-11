@@ -27,11 +27,12 @@ import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.ApplicationContext
+import org.springframework.jdbc.core.PreparedStatementSetter
 
 import static com.stehno.effigy.transform.SelectHelperAnnotation.helperFrom
 import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.AnnotationUtils.*
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static java.lang.reflect.Modifier.PRIVATE
 import static java.lang.reflect.Modifier.PUBLIC
@@ -39,6 +40,7 @@ import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
@@ -47,6 +49,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
     private static final String VALUE = 'value'
+    private static final String APPLICATION_CONTEXT = 'applicationContext'
 
     SqlSelectTransformer() {
         entityRequired = false
@@ -64,6 +67,14 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def sql = resolveSql(extractString(annotationNode, VALUE), methodNode.parameters)
 
         def extractor = resolveResultSetExtractor(repoNode, methodNode)
+
+        /* FIXME:
+            wire in the singleton property for the helpers
+
+            if a PSS is used, it will be used rather than the input
+            - the sql.params need to be ignored query(sql, pss)
+            if PSS extends EPSS the arguments need to be passed into the
+         */
 
         Expression qx = queryX(
             sql.build(),
@@ -106,31 +117,50 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         node
     }
 
-    private static void autowireField(FieldNode fieldNode, String beanName) {
+    private static void autowireField(FieldNode fieldNode, String beanName = null) {
         fieldNode.addAnnotation(new AnnotationNode(make(Autowired)))
 
-        def annotNode = new AnnotationNode(make(Qualifier))
-        annotNode.setMember(VALUE, constX(beanName))
-        fieldNode.addAnnotation(annotNode)
+        if (beanName) {
+            def annotNode = new AnnotationNode(make(Qualifier))
+            annotNode.setMember(VALUE, constX(beanName))
+            fieldNode.addAnnotation(annotNode)
+        }
     }
 
-    private static Expression applyAutowiredBean(ClassNode repoNode, Class helperType, String name){
-        if (!repoHasField(repoNode, name)) {
-            FieldNode fieldNode = addRepoField repoNode, name, helperType, new EmptyExpression()
-            autowireField fieldNode, name
+    private static Expression applyAutowiredBean(ClassNode repoNode, Class helperType, String name, boolean singleton) {
+        // TODO: document singleton and prototype (also bean prototype requirement)
+        if (singleton) {
+            if (!repoHasField(repoNode, name)) {
+                FieldNode fieldNode = addRepoField repoNode, name, helperType, new EmptyExpression()
+                autowireField fieldNode, name
 
-            repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
+                repoNode.addProperty(new PropertyNode(fieldNode, PUBLIC, null, null))
+            }
+
+            return varX(name)
+
+        } else {
+            if (!repoHasField(repoNode, APPLICATION_CONTEXT)) {
+                FieldNode contextNode = addRepoField(repoNode, APPLICATION_CONTEXT, ApplicationContext, new EmptyExpression())
+                autowireField(contextNode)
+            }
+
+            return callX(varX(APPLICATION_CONTEXT), 'getBean', args(constX(makeClassSafe(PreparedStatementSetter)), constX(name)))
         }
-
-        varX(name)
     }
 
-    private static Expression applySharedField(ClassNode repoNode, Class helperType, String name, Expression generator){
-        if (!repoHasField(repoNode, name)) {
-            addRepoField repoNode, name, helperType, generator
-        }
+    private static Expression applySharedField(ClassNode repoNode, Class helperType, String name, Expression generator, boolean singleton) {
+        // TODO: document singleton/prototype
+        if (singleton) {
+            if (!repoHasField(repoNode, name)) {
+                addRepoField repoNode, name, helperType, generator
+            }
 
-        varX(name)
+            return varX(name)
+
+        } else {
+            return generator
+        }
     }
 
     private static Expression resolveRowMapper(final ClassNode repoNode, final MethodNode methodNode) {
@@ -139,14 +169,15 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def annot = helperFrom(methodNode, RowMapper)
         if (annot) {
             if (annot.bean) {
-                mapper = applyAutowiredBean(repoNode, org.springframework.jdbc.core.RowMapper, annot.bean)
+                mapper = applyAutowiredBean(repoNode, org.springframework.jdbc.core.RowMapper, annot.bean, annot.singleton)
 
             } else if (annot.type != VOID_TYPE && annot.factory) {
                 mapper = applySharedField(
                     repoNode,
                     org.springframework.jdbc.core.RowMapper,
                     "mapper${annot.type.nameWithoutPackage}From${annot.factory.capitalize()}",
-                    callX(annot.type, annot.factory)
+                    callX(annot.type, annot.factory),
+                    annot.singleton
                 )
 
             } else if (annot.type != VOID_TYPE) {
@@ -154,7 +185,8 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                     repoNode,
                     org.springframework.jdbc.core.RowMapper,
                     "mapper${annot.type.nameWithoutPackage}",
-                    ctorX(annot.type)
+                    ctorX(annot.type),
+                    annot.singleton
                 )
             }
         }
@@ -168,14 +200,15 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def annot = helperFrom(methodNode, ResultSetExtractor)
         if (annot) {
             if (annot.bean) {
-                extractor = applyAutowiredBean(repoNode, org.springframework.jdbc.core.ResultSetExtractor, annot.bean)
+                extractor = applyAutowiredBean(repoNode, org.springframework.jdbc.core.ResultSetExtractor, annot.bean, annot.singleton)
 
             } else if (annot.type != VOID_TYPE && annot.factory) {
                 extractor = applySharedField(
                     repoNode,
                     org.springframework.jdbc.core.ResultSetExtractor,
                     "extractor${annot.type.nameWithoutPackage}From${annot.factory.capitalize()}",
-                    callX(annot.type, annot.factory)
+                    callX(annot.type, annot.factory),
+                    annot.singleton
                 )
 
             } else if (annot.type != VOID_TYPE) {
@@ -183,7 +216,8 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                     repoNode,
                     org.springframework.jdbc.core.ResultSetExtractor,
                     "extractor${annot.type.nameWithoutPackage}",
-                    ctorX(annot.type)
+                    ctorX(annot.type),
+                    annot.singleton
                 )
             }
         }
@@ -219,13 +253,15 @@ class SelectHelperAnnotation {
     String bean
     ClassNode type
     String factory
+    boolean singleton
 
     static SelectHelperAnnotation helperFrom(MethodNode methodNode, Class annotType) {
         def annot = methodNode.getAnnotations(make(annotType))[0]
         annot ? new SelectHelperAnnotation(
             extractString(annot, BEAN, DEFAULT_EMPTY),
             extractClass(annot, TYPE),
-            extractString(annot, FACTORY, DEFAULT_EMPTY)
+            extractString(annot, FACTORY, DEFAULT_EMPTY),
+            extractBoolean(annot, 'singleton', true)
         ) : null
     }
 }

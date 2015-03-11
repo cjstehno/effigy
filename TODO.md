@@ -122,9 +122,19 @@ FIXME: allow for sql to be resolved from external source (like properties, or so
 
     PreparedStatementSetter (if used) should have access to the method params - I might need to have a custom base interface or something (MethodParamStatementSetter). I guess it could be optional since you could then decide whether or not you care about the params.
 
+should PreparedStatementSetter be annotation or used as a param or both?
+    annotation
+        - stateless, thread-safe and reusable
+        - if want access to method params, will need to implement/extend a custom version that provides args
+
+(select: allows PSS with RSE or RM, update: does not allow RSE or RM)
+
 @PreparedStatementSetter
-    beanName - bean name of object to be used
-    className - bean class of object to be used
-    factoryMethod - (with className) calls static method on class
+    bean - bean name of object to be used
+    type - bean class of object to be used
+    factory - (with className) calls static method on class
 
 
+EffigyPreparedStatementSetter
+    void setValues(PreparedStatement ps, Map<String,Object> methodArguments)
+    void setValues(PreparedStatement ps) - just calls the other with no args

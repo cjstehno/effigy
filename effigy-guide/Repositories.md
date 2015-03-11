@@ -263,6 +263,12 @@ Collection<Abc> findByDAndE(String d, int e)
 Note that when an extractor is used, the return type of the method should match, or at least be compatible with the return type of the `ResultSetExtractor`
 since the extractor is used to build the return value explicitly.
 
+#### @PreparedStatementSetter
+
+> TBD...
+
 ### @SqlUpdate
 
 > TBD...
+
+also allows @PreparedStatementSetter...
