@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
+import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationContext
@@ -52,6 +53,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     private static final String RESULTS = 'results'
     private static final String VALUE = 'value'
     private static final String APPLICATION_CONTEXT = 'applicationContext'
+    private static final String SET_METHOD_ARGUMENTS = 'setMethodArguments'
 
     SqlSelectTransformer() {
         entityRequired = false
@@ -70,32 +72,28 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def setter = resolveSetter(repoNode, methodNode)
         def extractor = resolveResultSetExtractor(repoNode, methodNode)
 
-        // FIXME: argument aware support for mappers
-        // FIXME: argument aware support for extractors
-
         Expression qx
         if (setter) {
-            // TODO: this should be refactored a bit
-            if (helperFrom(methodNode, PreparedStatementSetter).arguments) {
-                // need to replace the setter expression with a variable
-                code.addStatement(declS(varX('setter'), setter))
-                setter = varX('setter')
-
-                code.addStatement(stmt(callX(varX('setter'), 'setMethodArguments', new MapExpression(methodNode.parameters.collect { p ->
-                    new MapEntryExpression(constX(p.name), varX(p.name))
-                }))))
-            }
-
             qx = queryX(
                 sql.build(),
-                extractor ?: resolveRowMapper(repoNode, methodNode),
-                setter
+                applyArguments(
+                    methodNode,
+                    ResultSetExtractor,
+                    code,
+                    extractor
+                ) ?: applyArguments(methodNode, RowMapper, code, resolveRowMapper(repoNode, methodNode)),
+                applyArguments(methodNode, PreparedStatementSetter, code, setter)
             )
 
         } else {
             qx = queryX(
                 sql.build(),
-                extractor ?: resolveRowMapper(repoNode, methodNode),
+                applyArguments(
+                    methodNode,
+                    ResultSetExtractor,
+                    code,
+                    extractor
+                ) ?: applyArguments(methodNode, RowMapper, code, resolveRowMapper(repoNode, methodNode)),
                 sql.params
             )
         }
@@ -117,6 +115,21 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         }
 
         updateMethod repoNode, methodNode, code
+    }
+
+    private static Expression applyArguments(MethodNode methodNode, Class helperType, BlockStatement code, Expression generator) {
+        if (helperFrom(methodNode, helperType)?.arguments) {
+            String varName = "_${helperType.simpleName}"
+
+            // need to replace the generator expression with a variable
+            code.addStatement(declS(varX(varName), generator))
+            generator = varX(varName)
+
+            code.addStatement(stmt(callX(varX(varName), SET_METHOD_ARGUMENTS, new MapExpression(methodNode.parameters.collect { p ->
+                new MapEntryExpression(constX(p.name), varX(p.name))
+            }))))
+        }
+        generator
     }
 
     private static RawSqlBuilder resolveSql(final String sql, final Parameter[] parameters) {
