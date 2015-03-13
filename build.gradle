@@ -60,7 +60,36 @@ subprojects {
     }
 }
 
-// TODO: need a way to build the guide from gradle
+boolean isWindows(){
+    System.properties['os.name'].toLowerCase().contains('windows')
+}
+
+task guide(type:Exec,group:'Documentation', description:'Builds the user guide.'){
+    logger.lifecycle 'Building site...'
+
+    inputs.dir fileTree('effigy-guide')
+    outputs.dir fileTree('effigy-guide/build')
+
+    workingDir './effigy-guide'
+
+    if (isWindows()) {
+        commandLine 'cmd', '/c', 'gaidenw.bat', 'build'
+
+    } else {
+        // TODO: verify that this works on linux
+        commandLine './gaidenw.bat', 'build'
+    }
+}
+
+task cleanGuide(type:Exec,group:'Documentation', description:'Cleans the user guide.'){
+    workingDir './effigy-guide'
+    if (isWindows()) {
+        commandLine 'cmd', '/c', 'gaidenw.bat', 'clean'
+
+    } else {
+        commandLine './gaidenw.bat', 'clean'
+    }
+}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
