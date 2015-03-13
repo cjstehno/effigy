@@ -50,6 +50,8 @@ import java.lang.annotation.*
      */
     String factory() default ''
 
-    // FIXME: document here and user guide
+    /**
+     * Whether or not the created instance of this helper class should be shared. The default is true.
+     */
     boolean singleton() default true
 }

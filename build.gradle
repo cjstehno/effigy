@@ -65,8 +65,6 @@ boolean isWindows(){
 }
 
 task guide(type:Exec,group:'Documentation', description:'Builds the user guide.'){
-    logger.lifecycle 'Building site...'
-
     inputs.dir fileTree('effigy-guide')
     outputs.dir fileTree('effigy-guide/build')
 

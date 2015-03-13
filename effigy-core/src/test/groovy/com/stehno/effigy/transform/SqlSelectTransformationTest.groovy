@@ -18,14 +18,20 @@ package com.stehno.effigy.transform
 import com.stehno.effigy.test.ClassAssertions
 import com.stehno.effigy.test.ClassBuilderEnvironment
 import com.stehno.effigy.test.DatabaseEnvironment
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.springframework.beans.MutablePropertyValues
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
+import org.springframework.context.support.StaticApplicationContext
 import org.springframework.dao.DataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.PreparedStatementSetter
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.RowMapper
 
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 
@@ -45,6 +51,12 @@ class SqlSelectTransformationTest {
             $code
         }
     ''')
+
+    private StaticApplicationContext applicationContext
+
+    @Before void before(){
+        applicationContext = new StaticApplicationContext()
+    }
 
     @Test void 'int countItems(int min, int max)'() {
         classBuilder.inject('''
@@ -231,6 +243,76 @@ class SqlSelectTransformationTest {
         assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
     }
 
+    @Test void 'String grouping():setter:type+factory'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @PreparedStatementSetter(type=com.stehno.effigy.transform.AgeRangeSetter, factory='middleAged')
+            @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
+            abstract String grouping()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping')
+            ac.assertField(PreparedStatementSetter, 'setterAgeRangeSetterFromMiddleAged')
+            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        assert repo.grouping() == 'Chris (42) & Moe (56)'
+    }
+
+    @Test void 'String grouping():setter:bean/singleton'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @PreparedStatementSetter(bean='middleAged')
+            @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
+            abstract String grouping()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping')
+            ac.assertField(PreparedStatementSetter, 'middleAged')
+            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+        repo.middleAged = AgeRangeSetter.middleAged()
+
+        assert repo.grouping() == 'Chris (42) & Moe (56)'
+    }
+
+    @Test void 'String grouping():setter:bean-prototype'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
+            @PreparedStatementSetter(bean='middleAged', singleton=false)
+            @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
+            abstract String grouping()
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(String, 'grouping')
+            ac.assertField(ApplicationContext, 'applicationContext')
+            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+        }
+
+        applicationContext.registerPrototype('middleAged', AgeRangeSetter, new MutablePropertyValues([min:40, max: 60]) )
+
+        repo.jdbcTemplate = database.jdbcTemplate
+        repo.applicationContext = applicationContext
+
+        assert repo.grouping() == 'Chris (42) & Moe (56)'
+    }
+
     private static void assertJdbcTemplate(ClassAssertions assertions) {
         assertions.with { repoClass ->
             repoClass.assertField(JdbcTemplate, 'jdbcTemplate').annotatedWith(Autowired)
@@ -268,5 +350,21 @@ class SomeoneResultSetExtractor implements ResultSetExtractor<String> {
             rows << "${rs.getString(1)} (${rs.getInt(2)})"
         }
         rows.join(' & ')
+    }
+}
+
+class AgeRangeSetter implements PreparedStatementSetter {
+
+    int min
+    int max
+
+    static middleAged(){
+        new AgeRangeSetter(min: 40, max: 60)
+    }
+
+    @Override
+    void setValues(PreparedStatement ps) throws SQLException {
+        ps.setInt(1, min)
+        ps.setInt(2, max)
     }
 }

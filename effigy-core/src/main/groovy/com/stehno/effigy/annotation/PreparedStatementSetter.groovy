@@ -23,7 +23,6 @@ import java.lang.annotation.*
 @interface PreparedStatementSetter {
 
     // TODO: annotations can have interfaces, might be nice to have the helpers all implement a common interface
-    // TODO: this needs to be documented in the user guide
 
     /**
      * The name of the bean to be autowired into the repository for use as a PreparedStatementSetter instance. If the default value is used,
@@ -41,6 +40,8 @@ import java.lang.annotation.*
      */
     String factory() default ''
 
-    // FIXME: document here and user guide
+    /**
+     * Whether or not the created instance of this helper class should be shared. The default is true.
+     */
     boolean singleton() default true
 }

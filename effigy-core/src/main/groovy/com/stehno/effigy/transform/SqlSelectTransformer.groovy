@@ -148,7 +148,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
                 autowireField(contextNode)
             }
 
-            return callX(varX(APPLICATION_CONTEXT), 'getBean', args(constX(makeClassSafe(PreparedStatementSetter)), constX(name)))
+            return callX(varX(APPLICATION_CONTEXT), 'getBean', args(constX(name), classX(org.springframework.jdbc.core.PreparedStatementSetter)))
         }
     }
 
