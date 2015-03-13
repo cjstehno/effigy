@@ -61,22 +61,12 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'int countItems(int min, int max)'() {
-        classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select count(*) from someone where age > :min and age < :max')
             abstract int countItems(int min, int max)
-        ''')
-
-        def repo = classBuilder.instance()
-
-        ClassAssertions assertions = forObject(repo)
-
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(int, 'countItems', int, int)
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         assert repo.countItems(21, 45) == 3
         assert repo.countItems(50, 100) == 1
@@ -84,40 +74,25 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'Set<String> listNames()'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select distinct(name) from someone')
             abstract Set<String> listNames()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(Set, 'listNames')
         }
 
-        repo.jdbcTemplate = database.jdbcTemplate
-
-        def names = repo.listNames()
-        assert names.size() == 5
+        assert repo.listNames().size() == 5
     }
 
     @Test void 'List<String> listAll():type'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone order by age')
             @RowMapper(type=com.stehno.effigy.transform.SomeoneRowMapper)
             abstract List<String> listAll()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(List, 'listAll')
-            ac.assertField(RowMapper, 'mapperSomeoneRowMapper')
+            ac.assertField(RowMapper, '_SomeoneRowMapper')
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         def items = repo.listAll()
         assert items.size() == 6
@@ -130,21 +105,14 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'List<String> listAll():type+factory'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone order by age')
             @RowMapper(type=com.stehno.effigy.transform.SomeoneRowMapper, factory='mapper')
             abstract List<String> listAll()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(List, 'listAll')
-            ac.assertField(RowMapper, 'mapperSomeoneRowMapperFromMapper')
+            ac.assertField(RowMapper, '_SomeoneRowMapper_Mapper')
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         def items = repo.listAll()
         assert items.size() == 6
@@ -157,21 +125,15 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'List<String> listAll():bean'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone order by age')
             @RowMapper(bean='someoneMapper')
             abstract List<String> listAll()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(List, 'listAll')
             ac.assertField(RowMapper, 'someoneMapper')
         }
 
-        repo.jdbcTemplate = database.jdbcTemplate
         repo.someoneMapper = new SomeoneRowMapper()
 
         def items = repo.listAll()
@@ -185,154 +147,109 @@ class SqlSelectTransformationTest {
     }
 
     @Test void 'String grouping(int min, int max):type'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
             abstract String grouping(int min, int max)
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping', int, int)
-            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+            ac.assertField(ResultSetExtractor, '_SomeoneResultSetExtractor')
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
     }
 
     @Test void 'String groupings(int min, int max):type+factory'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor, factory='extractor')
             abstract String grouping(int min, int max)
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping', int, int)
-            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractorFromExtractor')
+            ac.assertField(ResultSetExtractor, '_SomeoneResultSetExtractor_Extractor')
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
     }
 
     @Test void 'String groupings(int min, int max):bean'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @ResultSetExtractor(bean='someoneExtractor')
             abstract String grouping(int min, int max)
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping', int, int)
             ac.assertField(ResultSetExtractor, 'someoneExtractor')
         }
 
-        repo.jdbcTemplate = database.jdbcTemplate
         repo.someoneExtractor = new SomeoneResultSetExtractor()
 
         assert repo.grouping(15,30) == 'Bob (18) & Curley (20) & Larry (29)'
     }
 
     @Test void 'String grouping():setter:type+factory'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @PreparedStatementSetter(type=com.stehno.effigy.transform.AgeRangeSetter, factory='middleAged')
             @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
             abstract String grouping()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping')
-            ac.assertField(PreparedStatementSetter, 'setterAgeRangeSetterFromMiddleAged')
-            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+            ac.assertField(PreparedStatementSetter, '_AgeRangeSetter_MiddleAged')
+            ac.assertField(ResultSetExtractor, '_SomeoneResultSetExtractor')
         }
-
-        repo.jdbcTemplate = database.jdbcTemplate
 
         assert repo.grouping() == 'Chris (42) & Moe (56)'
     }
 
     @Test void 'String grouping():setter:bean/singleton'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @PreparedStatementSetter(bean='middleAged')
             @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
             abstract String grouping()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping')
             ac.assertField(PreparedStatementSetter, 'middleAged')
-            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+            ac.assertField(ResultSetExtractor, '_SomeoneResultSetExtractor')
         }
 
-        repo.jdbcTemplate = database.jdbcTemplate
         repo.middleAged = AgeRangeSetter.middleAged()
 
         assert repo.grouping() == 'Chris (42) & Moe (56)'
     }
 
     @Test void 'String grouping():setter:bean-prototype'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name,age from someone where age > :min and age < :max order by age')
             @PreparedStatementSetter(bean='middleAged', singleton=false)
             @ResultSetExtractor(type=com.stehno.effigy.transform.SomeoneResultSetExtractor)
             abstract String grouping()
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(String, 'grouping')
             ac.assertField(ApplicationContext, 'applicationContext')
-            ac.assertField(ResultSetExtractor, 'extractorSomeoneResultSetExtractor')
+            ac.assertField(ResultSetExtractor, '_SomeoneResultSetExtractor')
         }
 
         applicationContext.registerPrototype('middleAged', AgeRangeSetter, new MutablePropertyValues([min:40, max: 60]) )
 
-        repo.jdbcTemplate = database.jdbcTemplate
         repo.applicationContext = applicationContext
 
         assert repo.grouping() == 'Chris (42) & Moe (56)'
     }
 
     @Test void 'List<String> search(String term):epss-setter'() {
-        def repo = classBuilder.inject('''
+        def repo = repository('''
             @SqlSelect('select name from someone where name like ? order by age')
             @PreparedStatementSetter(type=com.stehno.effigy.transform.NameSearchSetter, arguments=true)
             abstract List<String> search(String term)
-        ''').instantiate()
-
-        ClassAssertions assertions = forObject(repo)
-        assertJdbcTemplate assertions
-
-        assertions.with { ac ->
+        '''){ ac ->
             ac.assertMethod(List, 'search', String)
         }
 
         repo.jdbcTemplate = database.jdbcTemplate
 
-        def results = repo.search('e')
-        assert results.size() == 2
+        assert repo.search('e').size() == 2
     }
 
     private static void assertJdbcTemplate(ClassAssertions assertions) {
@@ -341,6 +258,18 @@ class SqlSelectTransformationTest {
             repoClass.assertMethod('setJdbcTemplate', JdbcTemplate)
             repoClass.assertMethod(JdbcTemplate, 'getJdbcTemplate')
         }
+    }
+
+    private repository(String code, Closure asserts){
+        def repo = classBuilder.inject(code).instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with asserts
+
+        repo.jdbcTemplate = database.jdbcTemplate
+        repo
     }
 }
 

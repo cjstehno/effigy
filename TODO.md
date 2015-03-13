@@ -12,9 +12,6 @@
 
 * Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)
 
-* Add groovydocs to the userguide/site (may need a task to generate both and save off generated content)
-
-FIXME: @Delete methods need to support map with property fields as input parameter
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
 FIXME: @Retrieve methods need to support map with property fields as input parameters
@@ -66,8 +63,6 @@ Enhanced property handling in the sql template language - need ability to do sql
 * ability to supply custom field serializer/deserializer @Column(handlerName='', handlerClass='') - stateless class to read/write value (name allows to pull from spring)
     - I dont think this would be something Id want at runtime, just compile time
 
-Come up with a better way to test the functionality
-
 /////////////////////////
 
 Person
@@ -93,17 +88,8 @@ Room
 ! retrieve based on association criteria
 ! allow for cascade operations on associations (create, update, delete)?
 
-///////////////////////////
-///////////////////////////
+//////////
 
-register a default set of retrun type mappers for things like int, long, Date, etc - would be nice if there were a means
-for developers to register their own (of course they could just configure a mapper)
-- entity types row mappers, extractors should be registered by default (maybe just for the repository entity)
-- maybe allow an annotation on repository class to set return type handling on all SqlSelect annotated methods in that repository.
-- @TypeRowMapper(type=Integer, clazz|bean|(clazz & factory)) - similar for extractor and others
-    - this would be useful if you have a bunch of custom methods with same mapper (return type)
-
-FIXME: PreparedStatementSetter support for @SqlSelect annotation
 FIXME: @SqlSelect support for Entities in mappers and where clauses (?)
 
 FIXME: allow for sql to be resolved from external source (like properties, or some other file ) - compile time or runtime?
@@ -119,22 +105,3 @@ FIXME: allow for sql to be resolved from external source (like properties, or so
     supporting-annotations: PreparedStatementSetter
     method-return: boolean or count based on return type
     method-params: sql params by name or position (type is used) or pogo/entity (if entity specified)
-
-    PreparedStatementSetter (if used) should have access to the method params - I might need to have a custom base interface or something (MethodParamStatementSetter). I guess it could be optional since you could then decide whether or not you care about the params.
-
-should PreparedStatementSetter be annotation or used as a param or both?
-    annotation
-        - stateless, thread-safe and reusable
-        - if want access to method params, will need to implement/extend a custom version that provides args
-
-(select: allows PSS with RSE or RM, update: does not allow RSE or RM)
-
-@PreparedStatementSetter
-    bean - bean name of object to be used
-    type - bean class of object to be used
-    factory - (with className) calls static method on class
-
-
-EffigyPreparedStatementSetter
-    void setValues(PreparedStatement ps, Map<String,Object> methodArguments)
-    void setValues(PreparedStatement ps) - just calls the other with no args

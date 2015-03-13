@@ -230,6 +230,17 @@ created for each use (singleton=false); the default is true. One thing to make s
 specified along with the `singleton` property having a value of `false`, the configured bean in your application context should be configured as a
 prototype bean, otherwise you are not really getting a new instance with each call.
 
+Configured `RowMapper` instance are allowed to access the arguments passed into the method; to do this, the `arguments` property must be set to `true`,
+which will force the `singleton` property to be `false` (prototype). See the description of the `singleton` property above for more information. Mappers
+that accept method arguments must either implement the `ArgumentAwareHelper` or provide a method with the following signature:
+
+```groovy
+void setMethodArguments(Map<String,Object> args)
+```
+
+The arguments will be injected at runtime using this method. It is up to the implementation to make proper use of them. Obviously, mappers making use
+of this construct are no longer stateless.
+
 An example of using the `@RowMapper` annotation would be the following:
 
 ```groovy
@@ -261,6 +272,17 @@ The `singleton` property is used to specify whether or not the generated extract
 created for each use (singleton=false); the default is true. One thing to make special note of, is that for the case when the `bean` property is
 specified along with the `singleton` property having a value of `false`, the configured bean in your application context should be configured as a
 prototype bean, otherwise you are not really getting a new instance with each call.
+
+Configured `ResultSetExtractor` instances are allowed to access the arguments passed into the method; to do this, the `arguments` property must be set to `true`,
+which will force the `singleton` property to be `false` (prototype). See the description of the `singleton` property above for more information. Extractors
+that accept method arguments must either implement the `ArgumentAwareHelper` or provide a method with the following signature:
+
+```groovy
+void setMethodArguments(Map<String,Object> args)
+```
+
+The arguments will be injected at runtime using this method. It is up to the implementation to make proper use of them. Obviously, extractors making use
+of this construct are no longer stateless.
 
 An example of using the `@ResultSetExtractor` annotation would be the following:
 
@@ -299,6 +321,17 @@ created for each use (singleton=false); the default is true. One thing to make s
 specified along with the `singleton` property having a value of `false`, the configured bean in your application context should be configured as a
 prototype bean, otherwise you are not really getting a new instance with each call.
 
+Configured `PreparedStatementSetter` instances are allowed to access the arguments passed into the method; to do this, the `arguments` property must be
+set to `true`, which will force the `singleton` property to be `false` (prototype). See the description of the `singleton` property above for more
+information. Setters that accept method arguments must either implement the `ArgumentAwareHelper` or provide a method with the following signature:
+
+```groovy
+void setMethodArguments(Map<String,Object> args)
+```
+
+The arguments will be injected at runtime using this method. It is up to the implementation to make proper use of them. Obviously, mappers making use
+of this construct are no longer stateless.
+
 An example of using the `@PreparedStatementSetter` annotation would be the following:
 
 ```groovy
@@ -308,16 +341,8 @@ An example of using the `@PreparedStatementSetter` annotation would be the follo
 Collection<Abc> findByDAndE()
 ```
 
-Note that when an setter is used, there are no method arguments (or they are ignored) unless the `PreparedStatementSetter` is an extension of
-the `EffigyPreparedStatementSetter` class.
-
-The `EffigyPreparedStatementSetter` class allows....
-
-> TBD: more info about EPSS
-- must be prototype
-
-> TBD: Document arguments support in helpers...
-
+Note that when an setter is used, there are no method arguments (or they are ignored) unless the annotation has `arguments` set to `true`; see the
+description of the `arguments` property above, for more information.
 
 ### @SqlUpdate
 

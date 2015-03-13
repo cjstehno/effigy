@@ -55,7 +55,6 @@ import java.lang.annotation.*
      */
     boolean singleton() default true
 
-    // FIXME: document in user guide
     /**
      * Whether or not the created instance of this helper class should have the method arguments provided to it. The default is false.
      *

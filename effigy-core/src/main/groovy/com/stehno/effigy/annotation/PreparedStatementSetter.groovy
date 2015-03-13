@@ -22,9 +22,6 @@ import java.lang.annotation.*
 @Documented
 @interface PreparedStatementSetter {
 
-    // TODO: annotations can have interfaces, might be nice to have the helpers all implement a common interface
-    // TODO: document the arguments property
-
     /**
      * The name of the bean to be autowired into the repository for use as a PreparedStatementSetter instance. If the default value is used,
      * this property will be ignored.

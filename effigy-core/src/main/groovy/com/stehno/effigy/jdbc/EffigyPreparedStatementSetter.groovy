@@ -35,7 +35,3 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter,
     abstract void setValues(PreparedStatement ps, Map<String,Object> arguments)
 }
 
-interface ArgumentAwareHelper {
-
-    void setMethodArguments(Map<String,Object> args)
-}
