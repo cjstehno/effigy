@@ -17,7 +17,10 @@
 package com.stehno.effigy.transform.sql
 
 import groovy.transform.ToString
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.Expression
+
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 
 /**
  * SQL builder used for working with raw SQL statements and parameters.
@@ -44,6 +47,13 @@ class RawSqlBuilder {
 
     RawSqlBuilder param(String name, Expression exp) {
         paramExpressions.put(name, exp)
+        this
+    }
+
+    RawSqlBuilder parameters(Parameter[] parameters){
+        parameters.each { param ->
+            paramExpressions.put(param.name, varX(param.name, param.type))
+        }
         this
     }
 

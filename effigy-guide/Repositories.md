@@ -348,4 +348,14 @@ description of the `arguments` property above, for more information.
 
 > TBD...
 
+ * Annotation used to denote a custom SQL-based update method in an Effigy repository.
+ *
+ * An "update" method may accept any type or primitive as input parameters; however, the name of the parameter will
+ * used as the name of the replacement variable in the SQL statement, so they will need to be consistent.
+ *
+ * An "update" method must have a return type of one of the following:
+ * - void
+ * - a boolean denoting a non-zero update record count (true) or 0 (false)
+ * - an int or long denoting the updated record count.
+
 also allows @PreparedStatementSetter...

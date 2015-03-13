@@ -105,3 +105,7 @@ FIXME: allow for sql to be resolved from external source (like properties, or so
     supporting-annotations: PreparedStatementSetter
     method-return: boolean or count based on return type
     method-params: sql params by name or position (type is used) or pogo/entity (if entity specified)
+
+
+mapper and extractor builder dsl (?)
+update copyrights

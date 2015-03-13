@@ -42,7 +42,7 @@ class RepositoryTransformer implements ASTTransformation {
 
     private static final List<String> SUPPORTED_ANNOTATIONS = [
         'Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists',
-        'SqlSelect'
+        'SqlSelect', 'SqlUpdate'
     ]
 
     private static final Map<Class, List<RepositoryMethodVisitor>> TRANSFORMERS = [
@@ -52,7 +52,8 @@ class RepositoryTransformer implements ASTTransformation {
         Delete   : [new DeleteTransformer()],
         Count    : [new CountTransformer()],
         Exists   : [new ExistsTransformer()],
-        SqlSelect: [new SqlSelectTransformer()]
+        SqlSelect: [new SqlSelectTransformer()],
+        SqlUpdate: [new SqlUpdateTransformer()]
     ]
 
     private static final String JDBC_TEMPLATE = 'jdbcTemplate'
