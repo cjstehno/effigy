@@ -23,6 +23,7 @@ import java.lang.annotation.*
 @interface PreparedStatementSetter {
 
     // TODO: annotations can have interfaces, might be nice to have the helpers all implement a common interface
+    // TODO: document the arguments property
 
     /**
      * The name of the bean to be autowired into the repository for use as a PreparedStatementSetter instance. If the default value is used,
@@ -44,4 +45,17 @@ import java.lang.annotation.*
      * Whether or not the created instance of this helper class should be shared. The default is true.
      */
     boolean singleton() default true
+
+    /**
+     * Whether or not the created instance of this helper class should have the method arguments provided to it. The default is false.
+     *
+     * If the arguments are to be provided, the value of the 'singleton' property should be 'false' since the helper will no longer be stateless.
+     * The implementation of the PreparedStatementSetter must either implement the ArgumentAwareHelper class or provide a method with the
+     * following signature to accept the method parameters.
+     *
+     * public void setMethodArguments(Map<String,Object> map)
+     *
+     * In the provided method case, it is up to the implementation to store and use the arguments properly.
+     */
+    boolean arguments() default false
 }

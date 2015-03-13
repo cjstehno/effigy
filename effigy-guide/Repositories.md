@@ -299,16 +299,25 @@ created for each use (singleton=false); the default is true. One thing to make s
 specified along with the `singleton` property having a value of `false`, the configured bean in your application context should be configured as a
 prototype bean, otherwise you are not really getting a new instance with each call.
 
-An example of using the `@ResultSetExtractor` annotation would be the following:
+An example of using the `@PreparedStatementSetter` annotation would be the following:
 
 ```groovy
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
 @ResultSetExtractor(type=AbcExtractor, factory='getExtractor')
-Collection<Abc> findByDAndE(String d, int e)
+@PreparedStatementSetter(type=DandESetter)
+Collection<Abc> findByDAndE()
 ```
 
-Note that when an extractor is used, the return type of the method should match, or at least be compatible with the return type of the `ResultSetExtractor`
-since the extractor is used to build the return value explicitly.
+Note that when an setter is used, there are no method arguments (or they are ignored) unless the `PreparedStatementSetter` is an extension of
+the `EffigyPreparedStatementSetter` class.
+
+The `EffigyPreparedStatementSetter` class allows....
+
+> TBD: more info about EPSS
+- must be prototype
+
+> TBD: Document arguments support in helpers...
+
 
 ### @SqlUpdate
 

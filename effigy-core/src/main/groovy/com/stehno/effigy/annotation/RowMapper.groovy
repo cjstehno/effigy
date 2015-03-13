@@ -54,4 +54,18 @@ import java.lang.annotation.*
      * Whether or not the created instance of this helper class should be shared. The default is true.
      */
     boolean singleton() default true
+
+    // FIXME: document in user guide
+    /**
+     * Whether or not the created instance of this helper class should have the method arguments provided to it. The default is false.
+     *
+     * If the arguments are to be provided, the value of the 'singleton' property should be 'false' since the helper will no longer be stateless.
+     * The implementation of the PreparedStatementSetter must either implement the ArgumentAwareHelper class or provide a method with the
+     * following signature to accept the method parameters.
+     *
+     * public void setMethodArguments(Map<String,Object> map)
+     *
+     * In the provided method case, it is up to the implementation to store and use the arguments properly.
+     */
+    boolean arguments() default false
 }

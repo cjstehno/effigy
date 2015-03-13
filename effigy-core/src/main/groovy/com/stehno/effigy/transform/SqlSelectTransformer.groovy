@@ -26,6 +26,8 @@ import groovy.transform.Immutable
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.MapEntryExpression
+import org.codehaus.groovy.ast.expr.MapExpression
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationContext
@@ -68,9 +70,22 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
         def setter = resolveSetter(repoNode, methodNode)
         def extractor = resolveResultSetExtractor(repoNode, methodNode)
 
+        // FIXME: argument aware support for mappers
+        // FIXME: argument aware support for extractors
+
         Expression qx
         if (setter) {
-            // TODO: add support for teh one that allows method arguments
+            // TODO: this should be refactored a bit
+            if (helperFrom(methodNode, PreparedStatementSetter).arguments) {
+                // need to replace the setter expression with a variable
+                code.addStatement(declS(varX('setter'), setter))
+                setter = varX('setter')
+
+                code.addStatement(stmt(callX(varX('setter'), 'setMethodArguments', new MapExpression(methodNode.parameters.collect { p ->
+                    new MapEntryExpression(constX(p.name), varX(p.name))
+                }))))
+            }
+
             qx = queryX(
                 sql.build(),
                 extractor ?: resolveRowMapper(repoNode, methodNode),
@@ -131,7 +146,6 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     }
 
     private static Expression applyAutowiredBean(ClassNode repoNode, Class helperType, String name, boolean singleton) {
-        // TODO: document singleton and prototype (also bean prototype requirement)
         if (singleton) {
             if (!repoHasField(repoNode, name)) {
                 FieldNode fieldNode = addRepoField repoNode, name, helperType, new EmptyExpression()
@@ -153,7 +167,6 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     }
 
     private static Expression applySharedField(ClassNode repoNode, Class helperType, String name, Expression generator, boolean singleton) {
-        // TODO: document singleton/prototype
         if (singleton) {
             if (!repoHasField(repoNode, name)) {
                 addRepoField repoNode, name, helperType, generator
@@ -170,8 +183,6 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     // - maybe pull the resolve methods into a shared one in the immutable stub class?
     private static Expression resolveSetter(final ClassNode repoNode, final MethodNode methodNode) {
         def setter = null
-
-        // FIXME: what needs to be different when using the EffigyPSS?
 
         def annot = helperFrom(methodNode, PreparedStatementSetter)
         if (annot) {
@@ -292,14 +303,23 @@ class SelectHelperAnnotation {
     ClassNode type
     String factory
     boolean singleton
+    boolean arguments
 
     static SelectHelperAnnotation helperFrom(MethodNode methodNode, Class annotType) {
         def annot = methodNode.getAnnotations(make(annotType))[0]
-        annot ? new SelectHelperAnnotation(
-            extractString(annot, BEAN, DEFAULT_EMPTY),
-            extractClass(annot, TYPE),
-            extractString(annot, FACTORY, DEFAULT_EMPTY),
-            extractBoolean(annot, 'singleton', true)
-        ) : null
+
+        if (annot) {
+            boolean args = extractBoolean(annot, 'arguments', false)
+
+            return new SelectHelperAnnotation(
+                extractString(annot, BEAN, DEFAULT_EMPTY),
+                extractClass(annot, TYPE),
+                extractString(annot, FACTORY, DEFAULT_EMPTY),
+                args ? false : extractBoolean(annot, 'singleton', true),
+                args
+            )
+        }
+
+        return null
     }
 }

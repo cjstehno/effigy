@@ -10,22 +10,11 @@ import java.sql.SQLException
  * @PreparedStatementSetter using an implementation of this abstract class will be able to access the method arguments at runtime for use within the
  * setter.
  */
-abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter {
+abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter, ArgumentAwareHelper {
 
-    // FIXME: document me in user guide
-    /*
-        FIXME:
-            should not allow autowired beans of this PSS type - since its not stateless.
-            add property to PSS annotation - singleton=true|false
-                - singleton is default
-                - false is prototype which will create a new instancce for each call
-                - just roll this into the other helpers too, might be useful to allow stateful
-                - bean-defined helpers should not allow prototype=true - unless I want to add in appliccationcontext fetcchingt
-
-            this type is always prototype (and checked)
-            instance will be created and have arguments of mthod provide to it
+    /**
+     * The arguments passed into the method. The key will be the argument name and the value will be the argument value.
      */
-
     Map<String,Object> methodArguments = [:]
 
     /**
@@ -44,4 +33,9 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter 
      * @param arguments the method runtime arguments
      */
     abstract void setValues(PreparedStatement ps, Map<String,Object> arguments)
+}
+
+interface ArgumentAwareHelper {
+
+    void setMethodArguments(Map<String,Object> args)
 }

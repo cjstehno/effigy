@@ -15,6 +15,8 @@
  */
 
 package com.stehno.effigy.transform
+
+import com.stehno.effigy.jdbc.EffigyPreparedStatementSetter
 import com.stehno.effigy.test.ClassAssertions
 import com.stehno.effigy.test.ClassBuilderEnvironment
 import com.stehno.effigy.test.DatabaseEnvironment
@@ -313,6 +315,26 @@ class SqlSelectTransformationTest {
         assert repo.grouping() == 'Chris (42) & Moe (56)'
     }
 
+    @Test void 'List<String> search(String term):epss-setter'() {
+        def repo = classBuilder.inject('''
+            @SqlSelect('select name from someone where name like ? order by age')
+            @PreparedStatementSetter(type=com.stehno.effigy.transform.NameSearchSetter, arguments=true)
+            abstract List<String> search(String term)
+        ''').instantiate()
+
+        ClassAssertions assertions = forObject(repo)
+        assertJdbcTemplate assertions
+
+        assertions.with { ac ->
+            ac.assertMethod(List, 'search', String)
+        }
+
+        repo.jdbcTemplate = database.jdbcTemplate
+
+        def results = repo.search('e')
+        assert results.size() == 2
+    }
+
     private static void assertJdbcTemplate(ClassAssertions assertions) {
         assertions.with { repoClass ->
             repoClass.assertField(JdbcTemplate, 'jdbcTemplate').annotatedWith(Autowired)
@@ -366,5 +388,13 @@ class AgeRangeSetter implements PreparedStatementSetter {
     void setValues(PreparedStatement ps) throws SQLException {
         ps.setInt(1, min)
         ps.setInt(2, max)
+    }
+}
+
+class NameSearchSetter extends EffigyPreparedStatementSetter {
+
+    @Override
+    void setValues(PreparedStatement ps, Map<String, Object> arguments) {
+        ps.setString(1, "%${arguments.term}%")
     }
 }
