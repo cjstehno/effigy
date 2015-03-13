@@ -1,4 +1,3 @@
-
 subprojects {
     version = '0.2.0'
     group = 'com.stehno.effigy'
@@ -7,8 +6,8 @@ subprojects {
     apply plugin: 'codenarc'
 
     compileJava {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = 8
+        targetCompatibility = 8
     }
 
     compileGroovy {
@@ -61,6 +60,8 @@ subprojects {
     }
 }
 
+// TODO: need a way to build the guide from gradle
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2.1'
+    gradleVersion = '2.3'
 }
