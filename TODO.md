@@ -95,17 +95,5 @@ FIXME: @SqlSelect support for Entities in mappers and where clauses (?)
 FIXME: allow for sql to be resolved from external source (like properties, or some other file ) - compile time or runtime?
 
 
-////
-
-@SqlUpdate (transform - any method of @Repository annotated class)
-    sql='insert into foo (a,b,c) values(?,?,?)'
-    sql='update foo set a=?, b=?, c=? where d=?'
-    sql='delete from foo where a=:ahe and c=:cee'
-    entity - same as above
-    supporting-annotations: PreparedStatementSetter
-    method-return: boolean or count based on return type
-    method-params: sql params by name or position (type is used) or pogo/entity (if entity specified)
-
-
 mapper and extractor builder dsl (?)
 update copyrights

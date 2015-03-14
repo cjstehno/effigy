@@ -184,7 +184,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        info EntityTransformer, 'Injected association extractor helper method for {}', entityClassNode.name
+        info getClass(), 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -282,6 +282,6 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ]))))
         ))
 
-        info EntityTransformer, 'Injected collection association extractor helper method for {}', entityClassNode.name
+        info getClass(), 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

@@ -82,7 +82,7 @@ into the code, rather than determined at runtime.
 The `order` properety is used to define the ordering Sql Template used by the query, basically just the order by clause, for example:
 
     @Retrieve(order='@lastName asc, @firstName asc')
-    Collection<Person> findPeople()
+    abstract Collection<Person> findPeople()
     
 See the SQL Template documentation for more information about the sytax.
 
@@ -200,7 +200,7 @@ A "select" method using the default return type mapper resolution would look som
 
 ```groovy
 @SqlSelect('select count(*) from people where age >= :min and age <= :max')
-int countByAgeRange(int min, int max)
+abstract int countByAgeRange(int min, int max)
 ```
 
 In order to configure a custom `RowMapper` or `ResultSetExtractor`, it must be specified using a secondary annotation: the `@RowMapper` or `@ResultSetExtractor`
@@ -246,7 +246,7 @@ An example of using the `@RowMapper` annotation would be the following:
 ```groovy
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
 @RowMapper(type=AbcMapper)
-Collection<Abc> findByDAndE(String d, int e)
+abstract Collection<Abc> findByDAndE(String d, int e)
 ```
 
 #### @ResultSetExtractor
@@ -289,7 +289,7 @@ An example of using the `@ResultSetExtractor` annotation would be the following:
 ```groovy
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
 @ResultSetExtractor(type=AbcExtractor, factory='getExtractor')
-Collection<Abc> findByDAndE(String d, int e)
+abstract Collection<Abc> findByDAndE(String d, int e)
 ```
 
 Note that when an extractor is used, the return type of the method should match, or at least be compatible with the return type of the `ResultSetExtractor`
@@ -338,7 +338,7 @@ An example of using the `@PreparedStatementSetter` annotation would be the follo
 @SqlSelect('select a,b,c from some_table where d=:d and e < :e')
 @ResultSetExtractor(type=AbcExtractor, factory='getExtractor')
 @PreparedStatementSetter(type=DandESetter)
-Collection<Abc> findByDAndE()
+abstract Collection<Abc> findByDAndE()
 ```
 
 Note that when an setter is used, there are no method arguments (or they are ignored) unless the annotation has `arguments` set to `true`; see the
@@ -346,16 +346,25 @@ description of the `arguments` property above, for more information.
 
 ### @SqlUpdate
 
-> TBD...
+The `@SqlUpdate` annotation is used to annotate a method of a repository as a custom SQL update or insert statement.
 
- * Annotation used to denote a custom SQL-based update method in an Effigy repository.
- *
- * An "update" method may accept any type or primitive as input parameters; however, the name of the parameter will
- * used as the name of the replacement variable in the SQL statement, so they will need to be consistent.
- *
- * An "update" method must have a return type of one of the following:
- * - void
- * - a boolean denoting a non-zero update record count (true) or 0 (false)
- * - an int or long denoting the updated record count.
+An "update" method may accept any type or primitive as input parameters; however, the name of the parameter will used as the name of the replacement
+variable in the SQL statement, so they will need to be consistent.
 
-also allows @PreparedStatementSetter...
+The return type of an "update" method must be one of the following:
+
+* void - the return type is ignored
+* boolean - which will be `true` for a non-zero update record count, and `false` for 0.
+* int or long - which will be the count of the records inserted or updated.
+
+The `value` property of the annotation is used to provide the SQL string which will be compiled into the method. The method parameters will be used as replacement
+variables in the SQL using the parameter name prefixed with a colon (e.g. `:firstName`).
+
+An "update" method would look something like the following:
+
+```groovy
+@SqlUpdate('insert into pets (name,breed) values (:name,:breed)')
+abstract boolean addPet(String name, String breed)
+```
+
+The "update" methods also allow the use of the `PreparedStatementSetter` helper annotation. See its documentation above, for more information.
