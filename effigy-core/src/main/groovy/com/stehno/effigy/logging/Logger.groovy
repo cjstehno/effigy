@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class Logger {
     private static Level level
 
     static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'WARN').toUpperCase())
+        level = Level.valueOf(System.getProperty('effigy.logging', 'INFO').toUpperCase())
     }
 
     static void info(Class clazz, String msg, Object... args) {

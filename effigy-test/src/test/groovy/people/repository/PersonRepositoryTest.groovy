@@ -45,6 +45,10 @@ class PersonRepositoryTest {
         firstName: 'Jane', middleName: 'Y', lastName: 'Smith', birthDate: new Date(), married: true
     ]
 
+    private static final Map PERSON_D = [
+        firstName: 'Bob', middleName: 'R', lastName: 'Nobody', birthDate: new Date(), married: false
+    ]
+
     private PersonRepository personRepository
     private PetRepository petRepository
     private JobRepository jobRepository
@@ -199,6 +203,51 @@ class PersonRepositoryTest {
 
         people = personRepository.findByLastName('Public')
         assert people.size() == 1
+    }
+
+    @Test void findLastNames() {
+        createThree()
+
+        personRepository.create(new Person(PERSON_D))
+
+        def lastNames = personRepository.findLastNames(true)
+
+        assert lastNames.size() == 1
+        assert lastNames.containsAll('Smith')
+
+        lastNames = personRepository.findLastNames(false)
+
+        assert lastNames.size() == 2
+        assert lastNames.containsAll('Public', 'Nobody')
+    }
+
+    @Test void listNames() {
+        createThree()
+        personRepository.create(new Person(PERSON_D))
+
+        def names = personRepository.listNames()
+
+        assert names.size() == 4
+        assert names[0].fullName == 'Bob R Nobody'
+        assert names[1].fullName == 'John Q Public'
+        assert names[2].fullName == 'Jane Y Smith'
+        assert names[3].fullName == 'John M Smith'
+    }
+
+    @Test void findNames() {
+        createThree()
+        personRepository.create(new Person(PERSON_D))
+
+        def names = personRepository.findNames('Smith')
+
+        assert names.size() == 2
+        assert names[0].fullName == 'Jane Y Smith'
+        assert names[1].fullName == 'John M Smith'
+
+        names = personRepository.findNames('Public')
+
+        assert names.size() == 1
+        assert names[0].fullName == 'John Q Public'
     }
 
     private static void assertProperties(Map props, Person entity) {

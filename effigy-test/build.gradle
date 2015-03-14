@@ -4,5 +4,5 @@ dependencies {
     compile 'org.springframework:spring-jdbc:4.1.2.RELEASE'
 
     testCompile 'org.springframework:spring-test:4.1.2.RELEASE'
-	testCompile 'com.h2database:h2:1.4.178'
+    testCompile 'com.h2database:h2:1.4.186'
 }

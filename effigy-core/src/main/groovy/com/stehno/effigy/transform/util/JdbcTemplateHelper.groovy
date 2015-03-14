@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ class JdbcTemplateHelper {
     private static final String COLLECTION_ASSOCIATION_EXTRACTOR = 'collectionAssociationExtractor'
     private static final String QUERY = 'query'
     private static final String QUERY_FOR_OBJECT = 'queryForObject'
+    private static final String UPDATE = 'update'
 
     /**
      * Expression used to access the RowMapper accessor method for an entity.
@@ -73,6 +74,10 @@ class JdbcTemplateHelper {
         callX(varX(JDBC_TEMPLATE), QUERY, queryArgs(sql, handler, params))
     }
 
+    static Expression queryX(String sql, Expression handler, Expression setter) {
+        callX(varX(JDBC_TEMPLATE), QUERY, args(constX(sql), setter, handler))
+    }
+
     static Statement queryForObject(String sql, Expression handler, List<Expression> params = []) {
         returnS(
             callX(varX(JDBC_TEMPLATE), QUERY_FOR_OBJECT, queryArgs(sql, handler, params))
@@ -84,7 +89,11 @@ class JdbcTemplateHelper {
     }
 
     static Expression updateX(String sql, List<Expression> params = []) {
-        callX(varX(JDBC_TEMPLATE), 'update', updateArgs(sql, params))
+        callX(varX(JDBC_TEMPLATE), UPDATE, updateArgs(sql, params))
+    }
+
+    static Expression updateX(String sql, Expression setter) {
+        callX(varX(JDBC_TEMPLATE), UPDATE, args(constX(sql), setter))
     }
 
     static Expression singleColumnRowMapper(ClassNode requiredType) {

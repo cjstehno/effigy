@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,9 +31,10 @@ import java.lang.annotation.*
 @interface Repository {
 
     /**
-     * The entity type handled by the repository (must be annotated with @Effigy)
+     * The entity type handled by the repository (must be annotated with @Effigy). This property is required
+     * if the CRUD operation annotations are to be used, but may be omitted for the raw SQL annotations.
      */
-    Class value()
+    Class value() default Void
 
     /**
      * Used to specify whether or not the JdbcTemplate is to be autowired, the default is 'true'.

@@ -1,18 +1,21 @@
-
 subprojects {
-    version = '0.1.0'
+    version = '0.2.0'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'
     apply plugin: 'codenarc'
 
     compileJava {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = 8
+        targetCompatibility = 8
     }
 
     compileGroovy {
         groovyOptions.optimizationOptions.indy = false
+    }
+
+    configurations {
+        groovyDoc
     }
 
     repositories {
@@ -24,10 +27,17 @@ subprojects {
 
         testCompile 'junit:junit:4.11'
         testCompile 'org.mockito:mockito-all:1.9.5'
+
+        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.0"
+        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.0"
     }
 
     test {
         jvmArgs '-Xverify:none'
+    }
+
+    groovydoc {
+        groovyClasspath = configurations.groovyDoc
     }
 
     codenarc {
@@ -50,6 +60,34 @@ subprojects {
     }
 }
 
+boolean isWindows(){
+    System.properties['os.name'].toLowerCase().contains('windows')
+}
+
+task guide(type:Exec,group:'Documentation', description:'Builds the user guide.'){
+    inputs.dir fileTree('effigy-guide')
+    outputs.dir fileTree('effigy-guide/build')
+
+    workingDir './effigy-guide'
+
+    if (isWindows()) {
+        commandLine 'cmd', '/c', 'gaidenw.bat', 'build'
+
+    } else {
+        commandLine './gaidenw', 'build'
+    }
+}
+
+task cleanGuide(type:Exec,group:'Documentation', description:'Cleans the user guide.'){
+    workingDir './effigy-guide'
+    if (isWindows()) {
+        commandLine 'cmd', '/c', 'gaidenw.bat', 'clean'
+
+    } else {
+        commandLine './gaidenw', 'clean'
+    }
+}
+
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.2.1'
+    gradleVersion = '2.3'
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ class CreateTransformer extends MethodImplementingTransformation {
         returnType == OBJECT_TYPE || identifier(entityNode).type == returnType
     }
 
-    @Override @SuppressWarnings('GroovyAssignabilityCheck')
+    @Override @SuppressWarnings(['GroovyAssignabilityCheck', 'AbcMetric']) // TODO: address the AbcMetric issue
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def (String entityVar, Statement entityCreator) = resolveEntityVariable(entityNode, methodNode)
 

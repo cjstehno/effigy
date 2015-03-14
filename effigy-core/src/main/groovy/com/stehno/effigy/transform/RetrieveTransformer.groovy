@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,14 +46,14 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
     private static final String RESULTS = 'results'
     private static final String PLACEHOLDER = '?'
+    private static final int DEFAULT_INT = -1
 
     @Override
     protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
         returnType == OBJECT_TYPE || returnType == entityNode || returnType.implementsInterface(makeClassSafe(Collection))
     }
 
-    @Override
-    @SuppressWarnings('GroovyAssignabilityCheck')
+    @Override @SuppressWarnings('GroovyAssignabilityCheck')
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         def code = block()
 
@@ -72,7 +72,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         updateMethod repoNode, methodNode, code
     }
 
-    private Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+    private static Statement generateSelectWithoutAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         SelectSqlBuilder sql = select().columns(listColumnNames(entityNode)).from(entityTable(entityNode))
 
         applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
@@ -87,7 +87,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         ))
     }
 
-    private Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
+    private static Statement generateSelectWithAssociations(ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         SelectSqlBuilder sql = select()
 
         String entityTableName = entityTable(entityNode)
@@ -158,7 +158,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         def annotatedParam = findAnnotatedIntParam(methodNode, annoClass)
 
         Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
-        if (value > -1) {
+        if (value > DEFAULT_INT) {
             return constX(value)
 
         } else if (annotatedParam) {
@@ -173,7 +173,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         def param = findAnnotatedIntParam(methodNode, annoClass)
         Integer value = extractInteger(annotationNode, annoClass.simpleName.toLowerCase())
 
-        if (value > -1) {
+        if (value > DEFAULT_INT) {
             sql.offset(PLACEHOLDER, constX(value))
 
         } else if (param) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -184,7 +184,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        info EntityTransformer, 'Injected association extractor helper method for {}', entityClassNode.name
+        info getClass(), 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -282,6 +282,6 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ]))))
         ))
 
-        info EntityTransformer, 'Injected collection association extractor helper method for {}', entityClassNode.name
+        info getClass(), 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

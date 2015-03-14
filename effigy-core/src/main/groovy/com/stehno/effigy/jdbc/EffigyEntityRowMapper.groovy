@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,5 +38,5 @@ abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
 
     abstract protected E newEntity()
 
-    abstract protected E mapping( ResultSet rs, E entity )
+    abstract protected E mapping(ResultSet rs, E entity)
 }
