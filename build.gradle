@@ -74,8 +74,7 @@ task guide(type:Exec,group:'Documentation', description:'Builds the user guide.'
         commandLine 'cmd', '/c', 'gaidenw.bat', 'build'
 
     } else {
-        // TODO: verify that this works on linux
-        commandLine './gaidenw.bat', 'build'
+        commandLine './gaidenw', 'build'
     }
 }
 
@@ -85,7 +84,7 @@ task cleanGuide(type:Exec,group:'Documentation', description:'Cleans the user gu
         commandLine 'cmd', '/c', 'gaidenw.bat', 'clean'
 
     } else {
-        commandLine './gaidenw.bat', 'clean'
+        commandLine './gaidenw', 'clean'
     }
 }
 
