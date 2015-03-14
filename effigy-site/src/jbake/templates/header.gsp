@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title><%if (content.title) {%>${content.title}<% } else { %>JBake<% }%></title>
+      <title><% if (content.title) { %>${content.title}<% } else { %>Effigy<% } %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <meta name="keywords" content="">
+      <meta name="description" content="Groovy annotation-driven JDBC simplification framework - CRUD without the crap.">
+      <meta name="author" content="Christopher J. Stehno">
+      <meta name="keywords" content="groovy,jdbc,ast">
     <meta name="generator" content="JBake">
 
     <!-- Le styles -->
