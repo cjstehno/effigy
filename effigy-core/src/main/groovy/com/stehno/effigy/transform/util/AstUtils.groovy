@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform.util
+
 import groovy.text.GStringTemplateEngine
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.builder.AstBuilder
@@ -30,6 +31,7 @@ import java.lang.reflect.Modifier
 import static com.stehno.effigy.logging.Logger.trace
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+
 /**
  * Created by cjstehno on 11/28/2014.
  */

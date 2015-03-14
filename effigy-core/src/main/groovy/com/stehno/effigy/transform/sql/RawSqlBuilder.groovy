@@ -50,7 +50,7 @@ class RawSqlBuilder {
         this
     }
 
-    RawSqlBuilder parameters(Parameter[] parameters){
+    RawSqlBuilder parameters(Parameter[] parameters) {
         parameters.each { param ->
             paramExpressions.put(param.name, varX(param.name, param.type))
         }

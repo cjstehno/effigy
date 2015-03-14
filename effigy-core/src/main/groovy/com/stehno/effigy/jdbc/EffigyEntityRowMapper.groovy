@@ -38,5 +38,5 @@ abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
 
     abstract protected E newEntity()
 
-    abstract protected E mapping( ResultSet rs, E entity )
+    abstract protected E mapping(ResultSet rs, E entity)
 }

@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.transform.util.AnnotationUtils
 import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassHelper
@@ -28,6 +29,7 @@ import org.springframework.jdbc.core.PreparedStatementSetter
 
 import static com.stehno.effigy.transform.ClassManipulationUtils.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * Immutable object stub used to represent the Sql helper annotation values during the transformation.
  */

@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
@@ -29,8 +30,9 @@ import static java.lang.reflect.Modifier.PUBLIC
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+
 /**
- * FIXME: document me
+ * AST class manipulation helper utilities.
  */
 class ClassManipulationUtils {
 

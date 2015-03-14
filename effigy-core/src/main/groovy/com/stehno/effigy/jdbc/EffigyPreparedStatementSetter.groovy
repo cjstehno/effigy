@@ -31,7 +31,7 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter,
     /**
      * The arguments passed into the method. The key will be the argument name and the value will be the argument value.
      */
-    Map<String,Object> methodArguments = [:]
+    Map<String, Object> methodArguments = [:]
 
     /**
      * Delegates to the setValues(PreparedStatement, Map<String,Object>) version of the method, with an empty map instance.
@@ -48,6 +48,6 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter,
      * @param ps the prepared statement provided by the framework
      * @param arguments the method runtime arguments
      */
-    abstract void setValues(PreparedStatement ps, Map<String,Object> arguments)
+    abstract void setValues(PreparedStatement ps, Map<String, Object> arguments)
 }
 

@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.annotation.PreparedStatementSetter
 import com.stehno.effigy.annotation.ResultSetExtractor
 import com.stehno.effigy.annotation.RowMapper
@@ -33,6 +34,7 @@ import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+
 /**
  * Transformer used to process @SqlSelect annotated methods.
  */
@@ -41,7 +43,6 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
     private static final String VALUE = 'value'
-    private static final String SET_METHOD_ARGUMENTS = 'setMethodArguments'
 
     SqlSelectTransformer() {
         entityRequired = false
