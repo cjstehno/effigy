@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.debug
-
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
+
+import static com.stehno.effigy.logging.Logger.debug
 
 /**
  * Handles the transformation of the Effigy Entity classes (annotated with the EffigyEntity annotation).

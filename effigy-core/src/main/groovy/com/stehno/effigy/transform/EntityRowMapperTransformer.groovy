@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,6 @@
 
 package com.stehno.effigy.transform
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
-import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AstUtils.*
-import static java.lang.reflect.Modifier.*
-import static org.codehaus.groovy.ast.ClassHelper.*
-import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
-import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -38,6 +28,16 @@ import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
+
+import static com.stehno.effigy.logging.Logger.error
+import static com.stehno.effigy.logging.Logger.info
+import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AstUtils.*
+import static java.lang.reflect.Modifier.*
+import static org.codehaus.groovy.ast.ClassHelper.*
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
  * Transformer used for creating a RowMapper instance for the entity.

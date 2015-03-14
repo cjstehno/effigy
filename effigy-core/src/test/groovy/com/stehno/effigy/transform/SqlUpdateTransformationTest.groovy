@@ -14,20 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.annotation
+package com.stehno.effigy.transform
 
-import java.lang.annotation.*
-
-/**
- * Augments a Map property annotated with the @Association annotation to enable additional meta configuration.
- */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-@Documented
-@interface Mapped {
-
-    /**
-     * Specifies the property whose value is to be used as the map key. If this annotation is not used, the entity id will be used.
-     */
-    String keyProperty()
+class SqlUpdateTransformationTest {
 }
