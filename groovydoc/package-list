@@ -1,0 +1,7 @@
+com.stehno.effigy.annotation
+com.stehno.effigy.jdbc
+com.stehno.effigy.logging
+com.stehno.effigy.transform
+com.stehno.effigy.transform.model
+com.stehno.effigy.transform.sql
+com.stehno.effigy.transform.util

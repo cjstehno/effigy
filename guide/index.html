@@ -1,7 +1,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Introduction - Effigy</title>
+    <title>Effigy User Guide - Effigy</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/font-awesome.min.css">
@@ -75,7 +75,20 @@
                   <li class="unnumbered visible"><a href="Repositories.html#count">@Count</a></li>
                 </ul>
               </li>
-              <li class="unnumbered visible"><a href="Repositories.html#sql-annotations">SQL Annotations</a></li>
+              <li class="unnumbered visible">
+                <a href="Repositories.html#sql-annotations">SQL Annotations</a>
+                <ul>
+                  <li class="unnumbered visible">
+                    <a href="Repositories.html#sqlselect">@SqlSelect</a>
+                    <ul>
+                      <li class="unnumbered invisible"><a href="Repositories.html#rowmapper">@RowMapper</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#resultsetextractor">@ResultSetExtractor</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#preparedstatementsetter">@PreparedStatementSetter</a></li>
+                    </ul>
+                  </li>
+                  <li class="unnumbered visible"><a href="Repositories.html#sqlupdate">@SqlUpdate</a></li>
+                </ul>
+              </li>
             </ul>
           </li>
         </ul>
@@ -84,47 +97,41 @@
         <div class="content-handle"></div>
         <div class="content-container">
           <div class="content-nav content-nav-top">
-            <a class="prev-page" href="index.html">
-            <i class="fa fa-angle-left"></i>
-            Effigy User Guide
-            </a>
-            <a class="next-page" href="GettingStarted.html">
-            Getting Started
+            <a class="next-page" href="Introduction.html">
+            Introduction
             <i class="fa fa-angle-right"></i>
             </a>
           </div>
           <div class="page-toc">
             <ul>
               <li class="unnumbered visible">
-                <a href="#introduction">Introduction</a>
+                <a href="#effigy-user-guide">Effigy User Guide</a>
                 <ul>
-                  <li class="unnumbered visible"><a href="#what-effigy-is">What Effigy Is</a></li>
-                  <li class="unnumbered visible"><a href="#what-effigy-is-not">What Effigy Is Not</a></li>
-                  <li class="unnumbered visible"><a href="#why-effigy-exists">Why Effigy Exists</a></li>
-                  <li class="unnumbered visible"><a href="#how-the-sausage-is-made">How the Sausage Is Made</a></li>
+                  <li class="unnumbered visible"><a href="#license">License</a></li>
+                  <li class="unnumbered visible"><a href="#relevant-links">Relevant Links</a></li>
                 </ul>
               </li>
             </ul>
           </div>
           <div class="main-content">
-            <h1 id="introduction">Introduction</h1>
-            <h2 id="what-effigy-is">What Effigy Is</h2>
-            <p>Effigy is an annotation-driven utility layer on top of the Spring-JDBC API providing additional functionality based on standard usage patterns and scenarios. It provides a simple means of generating CRUD methods with simplicity inspired by the Spring-Data JPA project.</p>
-            <h2 id="what-effigy-is-not">What Effigy Is Not</h2>
-            <p>Effigy is NOT a full ORM, think of it more akin to an object mapping framework. Effigy is NOT a replacement for a true ORM, if that is what you want or what you need.</p>
-            <h2 id="why-effigy-exists">Why Effigy Exists</h2>
-            <p>Why another database-related framework and isn&rsquo;t this just &ldquo;reinventing the wheel&rdquo;? I don&rsquo;t think so. When I first started thinking about what would become Effigy, I was inspired by a presentation about Spring-Data JPA and my past experience with Grails&rsquo; Gorm library. I was working on a small to moderate project with fairly simple database requirements, but when I tried to use the &ldquo;standard&rdquo; libraries like Hibernate with or without JPA it seemed that there were a lot of configuration requirements and it seemed that I had to conform my project to their requirements - unless I wanted even more pain. As I got deeper I ran into roadblock after roadblock where I found myself thinking how easy these would be if I could just use plain old JDBC. Yes, you can do that to some degree in Hibernate, but there are costs. I think Effigy fills the gap between hand-coded JDBC and a full ORM framework. It&rsquo;s not for every situation, but it&rsquo;s another tool in the toolbox.</p>
-            <h2 id="how-the-sausage-is-made">How the Sausage Is Made</h2>
-            <p>Effigy makes use of Groovy&rsquo;s AST transformation support so that the annotations in your entities and repositories are used to generate the required code at compile-time rather than at runtime (or as proxies). This limits the use of Effigy to Groovy-based projects; however, that was a trade-off I was willing to make.</p>
-            <p>Under the covers, the JDBC operations boil down to calls to auto-injected instances of the Spring Framework <code>JdbcTemplate</code> class. This ties the project to Spring, at least the spring-jdbc library. Again, this was an easy choice since I use it for all my personal projects anyway.</p>
+            <h1 id="effigy-user-guide">Effigy User Guide</h1>
+            <blockquote>
+              <p>Effigy: 1. a sculpture or model of a person. 2. a roughly made model of a particular person, made in order to be damaged or destroyed as a protest or expression of anger</p>
+            </blockquote>
+            <p>You can decide which definition above fits with your standard data-access experience.</p>
+            <h2 id="license">License</h2>
+            <p>Copyright (c) 2015 Christopher J. Stehno</p>
+            <p>Licensed under the Apache License, Version 2.0 (the &ldquo;License&rdquo;); you may not use this project except in compliance with the License. You may obtain a copy of the License at <a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>.</p>
+            <p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an &ldquo;AS IS&rdquo; BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</p>
+            <h2 id="relevant-links">Relevant Links</h2>
+            <ul>
+              <li>Site: <a href="http://cjstehno.github.io/effigy">http://cjstehno.github.io/effigy</a></li>
+              <li>Project: <a href="https://github.com/cjstehno/effigy">https://github.com/cjstehno/effigy</a></li>
+            </ul>
           </div>
           <div class="content-nav content-nav-bottom">
-            <a class="prev-page" href="index.html">
-            <i class="fa fa-angle-left"></i>
-            Effigy User Guide
-            </a>
-            <a class="next-page" href="GettingStarted.html">
-            Getting Started
+            <a class="next-page" href="Introduction.html">
+            Introduction
             <i class="fa fa-angle-right"></i>
             </a>
           </div>

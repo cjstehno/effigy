@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-      <title>Effigy</title>
+      <title>About</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="description" content="Groovy annotation-driven JDBC simplification framework - CRUD without the crap.">
       <meta name="author" content="Christopher J. Stehno">
@@ -62,44 +62,14 @@
       </div>
     </div>
     <div class="container">
-
-<a href="https://github.com/cjstehno/effigy"><img style="position: absolute; top: 60; right: 0; border: 0;"
-                                                  src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67"
-                                                  alt="Fork me on GitHub"
-                                                  data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
-
+	
 	<div class="page-header">
-        <h1>Effigy Entity & Mapper Framework</h1>
+		<h1>About</h1>
 	</div>
 
-<blockquote>Effigy: 1. a sculpture or model of a person. 2. a roughly made model of a particular person, made in order to be damaged or destroyed
-as a protest or expression of anger</blockquote>
+	<p><p>Effigy started out as a Java-based project using generated proxies to provide a simpler means of working with the repetitive code required to develop Spring JDBC applications. The proxies would provide all the boilerplate code so that the developer just worked on SQL and functionality.</p><p>That project died under lack of time and loss of interest. The proxy approach was flawed and has been overdone anyway. Proxies are acceptable in a language like Java where you have no other option, but with a dynamic language like Groovy you have AST transforms which allow you to undercut proxies and just generate actual code that becomes part of the object. This approach appealed to me even then; I looked at Javassist, but like I said, time was also a factor.</p><p>More recently, I started to get more interested in AST Transformations and I was working on a Spring-JDBC-based project of my own, so it seemed a good time to delve deeper into the spirit of my earlier work. Effigy is the work in progress towards that goal.</p></p>
 
-<p>You can decide which definition above fits with your standard data-access experience, but I generally find #2 to be appropriate when trying to do
-simple quick work.</p>
-
-<h2>Features</h2>
-
-<p>Effigy provides two primary features:</p>
-
-<ul>
-    <li>Sql annotations to inject Spring-JDBC code into abstract methods in a simple and consistent manner using minimal code.</li>
-    <li>Entity framework annotations which provide a simple and lightweight entity CRUD framework.</li>
-</ul>
-
-See the <a href="guide">User Guide</a> for in-depth documentation about all of the supported features.
-
-<h2>Important URLs</h2>
-
-<ul>
-    <li>Site: <a href="http://cjstehno.github.io/effigy">http://cjstehno.github.io/effigy</a></li>
-    <li>Project: <a href="https://github.com/cjstehno/effigy">https://github.com/cjstehno/effigy</a></li>
-    <li>Issues: <a href="https://github.com/cjstehno/effigy/issues">https://github.com/cjstehno/effigy/issues</a></li>
-    <li>Drone.io: <a href="https://drone.io/github.com/cjstehno/effigy">https://drone.io/github.com/cjstehno/effigy</a></li>
-    <li>Bintray: <a href="https://bintray.com/cjstehno/stehno/effigy/view">https://bintray.com/cjstehno/stehno/effigy/view</a></li>
-</ul>
-
-<blockquote>Effigy is still currently in the early stages of development; however, it is generally stable and usable.</blockquote>
+	<hr />
 
 		</div>
 		<div id="push"></div>
