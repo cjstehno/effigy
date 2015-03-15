@@ -1,5 +1,23 @@
 > A future feature idea...
 
+How do you create/use them in effigy... something like:
+
+class Mappers {
+
+    static personMapper(){
+        mapper(Person){
+            ...
+        }
+    }
+}
+
+@SqlSelect('select * from people')
+@RowMapper(type=Mappers, factory='personMapper')
+abstract List<Person> listAll()
+
+///////
+
+
 could provide a runtime usage of this to generate row mappers as DSL
 
 coule also provide a compile time use case where done in a special config class to build compiled mappers based on the DSL - compile time might not buy you much here since you can transform
@@ -15,6 +33,8 @@ mapper(Person){
     map 'last_name' using {} into 'name' at 'lastName'
     // map('last_name').using({}).into('name').at('lastName')
 }
+
+mapProperty 'firstName' - helper for mapping 'first_name' into 'firstName'
 
 map(string) - map field name value
 map(index) - map by index
