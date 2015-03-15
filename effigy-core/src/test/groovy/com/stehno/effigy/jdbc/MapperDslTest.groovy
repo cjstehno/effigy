@@ -38,8 +38,6 @@ class MapperDslTest {
             map 'part_name' into 'partName'
             map 'some_date' using { x -> new Date(x) } into 'someDate'
             mapProperty 'number'
-            //            map 'sub_id' into 'sub.id'
-            //            map 'sub_label' into 'sub.label'
         }
 
         assert rowMapper
@@ -47,11 +45,13 @@ class MapperDslTest {
         when(resultSet.getObject('part_name')).thenReturn('OXY937')
         when(resultSet.getObject('some_date')).thenReturn(System.currentTimeMillis())
         when(resultSet.getObject('number')).thenReturn(9876)
-        when(resultSet.getObject('sub_id')).thenReturn(2467L)
-        when(resultSet.getObject('sub_label')).thenReturn('Other')
 
         def output = rowMapper.mapRow(resultSet, 0)
-        println output
+
+        assert output
+        assert output.partName == 'OXY937'
+        assert output.number == 9876
+        assert output.someDate
     }
 }
 
@@ -61,11 +61,4 @@ class InterestingObject {
     String partName
     Date someDate
     int number
-    SubObject sub
-}
-
-@ToString
-class SubObject {
-    long id
-    String label
 }

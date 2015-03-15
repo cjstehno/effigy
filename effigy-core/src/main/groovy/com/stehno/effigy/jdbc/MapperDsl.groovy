@@ -92,6 +92,7 @@ class Mapping {
     }
 
     // TODO: should I store desired type (or resolve it)
+    // TODO: support for component types
     void resolve(ResultSet rs, Object instance) {
         def value = rs.getObject(fieldName)
         instance[propertyName] = transformer ? transformer.call(value) : value
