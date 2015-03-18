@@ -97,3 +97,12 @@ FIXME: allow for sql to be resolved from external source (like properties, or so
 
 mapper and extractor builder dsl (?)
 update copyrights
+
+////////////
+
+* better separation of internal vs external api
+* bring standard tests into main project and keep test as a full test project (spring)
+* copy the codenarc and tests from "test" project into site
+* consider alternative jdbc strategy (non-spring) - configurable switching with annotation @JdbcStrategy(Spring|Groovy) - seems like a waste of time also dbutil.
+* stored procedure support
+* batch support
