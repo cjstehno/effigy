@@ -25,33 +25,44 @@ import org.springframework.jdbc.core.RowMapper
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.jdbc.MapperDsl.mapper
+import static RowMapperBuilder.mapper
 import static org.mockito.Mockito.when
 
 @RunWith(MockitoJUnitRunner)
-class MapperDslTest {
+class RowMapperBuilderTest {
 
     @Mock private ResultSet resultSet
 
     @Test void mapping() {
         RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {
-            map 'part_name' into 'partName'
-            map 'some_date' using { x -> new Date(x) } into 'someDate'
-            mapProperty 'number'
+            map 'partName'
+            map 'someDate' using { x -> new Date(x) }
+            map 'items' from 'line_items' using { x -> x.split(';') }
+            map 'lineNumber' from 'line_number'
+            map 'something' using mapper(EmbedddObject, 'obj_') {
+                map 'id'
+                map 'label'
+            }
         }
 
         assert rowMapper
 
         when(resultSet.getObject('part_name')).thenReturn('OXY937')
         when(resultSet.getObject('some_date')).thenReturn(System.currentTimeMillis())
-        when(resultSet.getObject('number')).thenReturn(9876)
+        when(resultSet.getObject('line_number')).thenReturn(9876)
+        when(resultSet.getObject('line_items')).thenReturn('alpha;bravo;charlie')
+        when(resultSet.getObject('obj_id')).thenReturn(123987)
+        when(resultSet.getObject('obj_label')).thenReturn('Foobar')
 
         def output = rowMapper.mapRow(resultSet, 0)
 
         assert output
         assert output.partName == 'OXY937'
-        assert output.number == 9876
+        assert output.lineNumber == 9876
         assert output.someDate
+        assert output.items.containsAll(['alpha', 'bravo', 'charlie'])
+        assert output.something.id == 123987
+        assert output.something.label == 'Foobar'
     }
 }
 
@@ -60,5 +71,13 @@ class InterestingObject {
 
     String partName
     Date someDate
-    int number
+    int lineNumber
+    List<String> items
+    EmbedddObject something
+}
+
+@ToString
+class EmbedddObject {
+    long id
+    String label
 }

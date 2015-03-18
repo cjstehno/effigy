@@ -89,18 +89,3 @@ and use it to build
 which could have performance benefits over the simple compile and the runtime version, but would be harder to code in ast
 in a pinch it could just dump the mapper code in as is
 
-///////////////////////////
-
-* change the direction of the mapping DSL
-
-mapping(Photo){
-    mapProperty 'id'
-    mapped 'location' using mapping(Location){
-
-    }
-}
-
-
-map 'firstName' from 'first_name'
-map 'location' using 'loc_', mapping(Location){} // or add prefix to the ctor
-map 'something' using {}
