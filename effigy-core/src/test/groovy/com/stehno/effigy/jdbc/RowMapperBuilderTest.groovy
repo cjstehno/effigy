@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.jdbc
 
+import com.stehno.effigy.test.ClassBuilder
 import groovy.transform.ToString
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,7 +34,7 @@ class RowMapperBuilderTest {
 
     @Mock private ResultSet resultSet
 
-    @Test void mapping() {
+    @Test void 'mapping: dsl-style'() {
         RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {
             map 'partName'
             map 'someDate' using { x -> new Date(x) }
@@ -63,6 +64,52 @@ class RowMapperBuilderTest {
         assert output.items.containsAll(['alpha', 'bravo', 'charlie'])
         assert output.something.id == 123987
         assert output.something.label == 'Foobar'
+    }
+
+    @Test void 'mapping: ast-style'() {
+        ClassBuilder builder = ClassBuilder.forCode('''
+            package mappings
+
+            import org.springframework.jdbc.core.RowMapper
+            import com.stehno.effigy.jdbc.CompiledMapper
+            import com.stehno.effigy.jdbc.InterestingObject
+
+            class AstMapper {
+                $code
+            }
+        ''')
+
+        def instance = builder.inject('''
+            @CompiledMapper
+            RowMapper compiledMapper(){
+                mapper(InterestingObject) {
+                    map 'partName'
+                }
+            }
+        ''').instantiate()
+
+        // FIXME: validate the class stuff
+
+        def rowMapper = instance.compiledMapper()
+
+        assert rowMapper
+
+        when(resultSet.getObject('part_name')).thenReturn('OXY937')
+        when(resultSet.getObject('some_date')).thenReturn(System.currentTimeMillis())
+        when(resultSet.getObject('line_number')).thenReturn(9876)
+        when(resultSet.getObject('line_items')).thenReturn('alpha;bravo;charlie')
+        when(resultSet.getObject('obj_id')).thenReturn(123987)
+        when(resultSet.getObject('obj_label')).thenReturn('Foobar')
+
+        def output = rowMapper.mapRow(resultSet, 0)
+
+        assert output
+        assert output.partName == 'OXY937'
+        //        assert output.lineNumber == 9876
+        //        assert output.someDate
+        //        assert output.items.containsAll(['alpha', 'bravo', 'charlie'])
+        //        assert output.something.id == 123987
+        //        assert output.something.label == 'Foobar'
     }
 }
 
