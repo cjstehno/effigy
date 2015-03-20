@@ -24,7 +24,6 @@ FIXME: mapped assocations require an instance of their collection by default - s
 
 * gmetrics reporting might be interesting
 * support for batch operations in CRUD and SQL annotation methods
-* support for execute operations in sql annotations e.g. @SqlExecute - needed?
 
 ////
 
@@ -95,16 +94,19 @@ FIXME: @SqlSelect support for Entities in mappers and where clauses (?)
 FIXME: allow for sql to be resolved from external source (like properties, or some other file ) - compile time or runtime?
 
 
-mapper and extractor builder dsl (?)
-update copyrights
-
 ////////////
 
 * better separation of internal vs external api
 * bring standard tests into main project and keep test as a full test project (spring)
 * copy the codenarc and tests from "test" project into site
 * consider alternative jdbc strategy (non-spring) - configurable switching with annotation @JdbcStrategy(Spring|Groovy) - seems like a waste of time also dbutil.
-* stored procedure support
-* batch support
 
-* AST version of mapper dsl 
+//// stored procs
+use StoredProcedure or call()?
+
+//// batch
+@BatchUpdate
+@BatchCreate
+@SqlBatchUpdate (has a setter allowed)
+
+* AST version of mapper dsl
