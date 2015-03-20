@@ -3,3 +3,4 @@
 "GettingStarted.md"
 "Entities.md"
 "Repositories.md"
+"RowMapperDsl.md"

@@ -106,3 +106,5 @@ update copyrights
 * consider alternative jdbc strategy (non-spring) - configurable switching with annotation @JdbcStrategy(Spring|Groovy) - seems like a waste of time also dbutil.
 * stored procedure support
 * batch support
+
+* AST version of mapper dsl 

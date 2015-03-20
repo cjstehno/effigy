@@ -249,6 +249,8 @@ An example of using the `@RowMapper` annotation would be the following:
 abstract Collection<Abc> findByDAndE(String d, int e)
 ```
 
+> The [RowMapper Dsl](RowMapperDsl.html) may be used to generate RowMappers (provided by a static factory method).
+
 #### @ResultSetExtractor
 
 The `@ResultSetExtractor` annotation is used with a `@SqlSelect` annotation to provide information about the `ResultSetExtractor` to be used.

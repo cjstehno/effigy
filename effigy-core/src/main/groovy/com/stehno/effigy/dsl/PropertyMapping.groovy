@@ -14,51 +14,16 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.jdbc
+package com.stehno.effigy.dsl
 
-import groovy.transform.Immutable
+import com.stehno.effigy.transform.util.StringUtils
 import org.springframework.jdbc.core.RowMapper
 
 import java.sql.ResultSet
-import java.sql.SQLException
-
-import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 
 /**
- * Created by cjstehno on 3/15/15.
+ * Property mapping builder used by the RowMapper DSL.
  */
-class RowMapperBuilder<T> {
-    // FIXME: API documentation
-    // FIXME: user guide documentation
-
-    private final Class<? extends T> mappedType
-    private final String prefix
-    private final List<PropertyMapping> mappings = []
-
-    private RowMapperBuilder(final Class<? extends T> mappedType, final String prefix) {
-        this.mappedType = mappedType
-        this.prefix = prefix
-    }
-
-    PropertyMapping map(String propertyName) {
-        def mapping = new PropertyMapping(propertyName, prefix)
-        mappings << mapping
-        mapping
-    }
-
-    static <T> RowMapper<T> mapper(Class<? extends T> mappedType, String prefix = '', Closure closure) {
-        def builder = new RowMapperBuilder<T>(mappedType, prefix)
-        closure.delegate = builder
-        closure.resolveStrategy = Closure.DELEGATE_ONLY
-        closure()
-        builder.build()
-    }
-
-    RowMapper<T> build() {
-        new DynamicRowMapper<T>(mappedType, mappings.asImmutable())
-    }
-}
-
 class PropertyMapping {
 
     private final String propertyName
@@ -72,24 +37,40 @@ class PropertyMapping {
         this.prefix = prefix
     }
 
+    /**
+     * Defines the database field name for the property mapping.
+     *
+     * @param fieldName the database field name
+     * @return this property mapping instance
+     */
     PropertyMapping from(String fieldName) {
         this.fieldName = fieldName
         this
     }
 
+    /**
+     * Defines a closure used to transform the database field value into the property value. The closure must take zero or one arguments (the field
+     * value) and return the value to be stored in the property field.
+     *
+     * @param transformer the closure
+     */
     void using(Closure transformer) {
         this.transformer = transformer
         this.rowMapper = null
     }
 
+    /**
+     * Allows a property to be extracted from the results of another row mapper.
+     *
+     * @param rowMapper the row mapper
+     */
     void using(RowMapper rowMapper) {
         this.transformer = null
         this.rowMapper = rowMapper
     }
 
-    // TODO: should I store desired type (or resolve it)
     void resolve(ResultSet rs, int rowNum, Object instance) {
-        def value = rs.getObject("${prefix}${fieldName ?: camelCaseToUnderscore(propertyName)}")
+        def value = rs.getObject("${prefix}${fieldName ?: StringUtils.camelCaseToUnderscore(propertyName)}")
         if (transformer) {
             instance[propertyName] = transformer.maximumNumberOfParameters == 1 ? transformer.call(value) : transformer.call()
 
@@ -100,22 +81,5 @@ class PropertyMapping {
             instance[propertyName] = value
         }
 
-    }
-}
-
-
-// TODO: this wont handle immutable pogos...
-
-@Immutable
-class DynamicRowMapper<T> implements RowMapper<T> {
-
-    Class<? extends T> mappedType
-    List<PropertyMapping> mappings
-
-    @Override
-    T mapRow(ResultSet rs, int rowNum) throws SQLException {
-        def instance = mappedType.newInstance()
-        mappings*.resolve(rs, rowNum, instance)
-        instance
     }
 }

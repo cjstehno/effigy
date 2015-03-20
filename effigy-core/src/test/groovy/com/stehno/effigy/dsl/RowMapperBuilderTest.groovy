@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.jdbc
+package com.stehno.effigy.dsl
 
 import groovy.transform.ToString
 import org.junit.Test
@@ -25,7 +25,7 @@ import org.springframework.jdbc.core.RowMapper
 
 import java.sql.ResultSet
 
-import static RowMapperBuilder.mapper
+import static com.stehno.effigy.dsl.RowMapperBuilder.mapper
 import static org.mockito.Mockito.when
 
 @RunWith(MockitoJUnitRunner)
