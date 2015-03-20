@@ -18,9 +18,12 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <b class="caret"></b></a>
               <ul class="dropdown-menu">
-                  <li><a href="tests" target="_blank">JUnit</a></li>
-                  <li><a href="codenarc/main.html" target="_blank">CodeNarc (Main)</a></li>
-                  <li><a href="codenarc/test.html" target="_blank">CodeNarc (Test)</a></li>
+                  <li><a href="core/tests" target="_blank">JUnit (Core)</a></li>
+                  <li><a href="test/tests" target="_blank">JUnit (Test)</a></li>
+                  <li><a href="core/codenarc/main.html" target="_blank">CodeNarc (Core: Main)</a></li>
+                  <li><a href="core/codenarc/test.html" target="_blank">CodeNarc (Core: Test)</a></li>
+                  <li><a href="test/codenarc/main.html" target="_blank">CodeNarc (Test: Main)</a></li>
+                  <li><a href="test/codenarc/test.html" target="_blank">CodeNarc (Test: Test)</a></li>
                   <li><a href="groovydoc" target="_blank">GroovyDoc</a></li>
               </ul>
             </li>

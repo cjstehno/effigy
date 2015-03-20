@@ -37,8 +37,15 @@ task aggregate(group: 'Aggregate', description: 'Aggregates external content int
 
     ant.copy(todir: 'build/jbake') {
         fileset(dir: '../effigy-core/build/docs', includes: '**/**')
-        fileset(dir: '../effigy-core/build/reports', includes: '**/**')
         fileset(dir: '../effigy-site/build/jbake', includes: '**/**')
+    }
+
+    ant.copy(todir: 'build/jbake/core') {
+        fileset(dir: '../effigy-core/build/reports', includes: '**/**')
+    }
+
+    ant.copy(todir: 'build/jbake/test') {
+        fileset(dir: '../effigy-test/build/reports', includes: '**/**')
     }
 
     ant.copy(todir: 'build/jbake/guide') {
