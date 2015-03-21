@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
@@ -29,7 +30,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.*
@@ -45,6 +45,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 @SuppressWarnings('GStringExpressionWithinString')
 class ComponentRowMapperTransformer implements ASTTransformation {
 
+    private static final Logger log = Logger.factory(ComponentRowMapperTransformer)
     private static final String PREFIX = 'prefix'
     private static final String MAP = 'map'
 
@@ -52,13 +53,13 @@ class ComponentRowMapperTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityNode = nodes[1] as ClassNode
 
-        debug ComponentRowMapperTransformer, 'Visiting {} for association row mapper creation.', entityNode.name
+        log.debug 'Visiting {} for association row mapper creation.', entityNode.name
 
         components(entityNode).each { ap ->
-            debug ComponentRowMapperTransformer, 'Visiting one-to-one association ({}).', ap.type.name
+            log.debug 'Visiting one-to-one association ({}).', ap.type.name
 
             if (!isEntity(ap.type) && !rowMapperExists(ap.type, source)) {
-                info ComponentRowMapperTransformer, 'Creating one-to-one Association RowMapper for: {}', ap.type.name
+                log.info 'Creating one-to-one Association RowMapper for: {}', ap.type.name
 
                 injectRowMapperAccessor(ap.type, buildRowMapper(ap.type, source))
             }
@@ -113,12 +114,12 @@ class ComponentRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            info ComponentRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
+            log.info 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
 
             return mapperClassNode
 
         } catch (ex) {
-            error ComponentRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
+            log.error 'Problem building RowMapper ({}): {}', mapperName, ex.message
             throw ex
         }
     }
@@ -142,6 +143,6 @@ class ComponentRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
-        info ComponentRowMapperTransformer, 'Injected row mapper helper method for {}', assocNode.name
+        log.info 'Injected row mapper helper method for {}', assocNode.name
     }
 }

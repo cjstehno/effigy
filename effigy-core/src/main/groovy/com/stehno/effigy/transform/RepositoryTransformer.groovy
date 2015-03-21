@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.control.CompilePhase
@@ -27,7 +28,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 
-import static com.stehno.effigy.logging.Logger.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.*
 import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.make
@@ -39,6 +39,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {
+
+    private static final Logger log = Logger.factory(RepositoryTransformer)
 
     private static final List<String> SUPPORTED_ANNOTATIONS = [
         'Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists',
@@ -75,8 +77,7 @@ class RepositoryTransformer implements ASTTransformation {
                 AnnotationNode annot = method.annotations.find { a -> a.classNode.nameWithoutPackage in SUPPORTED_ANNOTATIONS }
 
                 if (annot) {
-                    trace(
-                        RepositoryTransformer,
+                    log.trace(
                         'Found CRUD annotation ({}) on method ({}) of repository ({}).',
                         annot.classNode.nameWithoutPackage,
                         method.name,
@@ -88,14 +89,14 @@ class RepositoryTransformer implements ASTTransformation {
             }
 
         } catch (ex) {
-            warn RepositoryTransformer, 'Problem transforming repository: {}', ex.message
+            log.warn 'Problem transforming repository: {}', ex.message
         }
     }
 
     private static void removeAbstract(ClassNode repositoryClassNode) {
         if (isAbstract(repositoryClassNode.modifiers)) {
             repositoryClassNode.modifiers = PUBLIC
-            info RepositoryTransformer, 'Removed abstract from repository class ({}).', repositoryClassNode.name
+            log.info 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
     }
 
@@ -131,6 +132,6 @@ class RepositoryTransformer implements ASTTransformation {
 
         repositoryNode.addProperty(jdbcTemplateNode)
 
-        info RepositoryTransformer, 'Added autowired JdbcTemplate property to repository class ({}).', repositoryNode.name
+        log.info 'Added autowired JdbcTemplate property to repository class ({}).', repositoryNode.name
     }
 }

@@ -16,13 +16,13 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.ForStatement
 
-import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.DeleteSqlBuilder.delete
 import static com.stehno.effigy.transform.sql.SelectSqlBuilder.select
@@ -35,6 +35,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
  */
 class DeleteTransformer extends MethodImplementingTransformation {
 
+    private static final Logger log = Logger.factory(DeleteTransformer)
     private static final String ENTITY_IDS = 'entityIds'
     private static final String ENTITY_ID = 'entityId'
 
@@ -60,14 +61,14 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
     private static void injectAssociationDeletes(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
         if (hasAssociatedEntities(entityNode)) {
-            debug DeleteTransformer, 'Associations({}:{})', entityNode.name, methodNode.name
+            log.debug 'Associations({}:{})', entityNode.name, methodNode.name
 
             injectEntityIdSelection(entityNode, methodNode, deleteNode, code)
 
             def closureCode = block()
 
             associations(entityNode).each { ap ->
-                debug DeleteTransformer, '- Association({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
+                log.debug '- Association({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
 
                 def sql = delete().from(ap.joinTable).where("${ap.joinTable}.${ap.entityColumn}=?", varX(ENTITY_ID))
 
@@ -75,7 +76,7 @@ class DeleteTransformer extends MethodImplementingTransformation {
             }
 
             components(entityNode).each { ap ->
-                debug DeleteTransformer, '- Component({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
+                log.debug '- Component({}:{}): {}', entityNode.name, methodNode.name, ap.propertyName
 
                 def sql = delete().from(ap.lookupTable).where("${ap.lookupTable}.${ap.entityColumn}=?", varX(ENTITY_ID))
 
@@ -94,7 +95,7 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
         applyParameters(sql, new AnnotatedMethod(deleteNode, entityNode, methodNode))
 
-        debug DeleteTransformer, 'Sql({}:Delete): {}', entityNode.name, sql
+        log.debug 'Sql({}:Delete): {}', entityNode.name, sql
 
         code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(ident.type), sql.params)))
     }

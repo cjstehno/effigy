@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -32,7 +33,6 @@ import org.codehaus.groovy.ast.stmt.Statement
 import org.springframework.jdbc.core.PreparedStatementCreatorFactory
 import org.springframework.jdbc.support.GeneratedKeyHolder
 
-import static com.stehno.effigy.logging.Logger.error
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.InsertSqlBuilder.insert
 import static com.stehno.effigy.transform.util.AstUtils.*
@@ -47,6 +47,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 @SuppressWarnings('GStringExpressionWithinString')
 class CreateTransformer extends MethodImplementingTransformation {
 
+    private static final Logger log = Logger.factory(CreateTransformer)
     private static final String ID = 'id'
     private static final String ENTITY = 'entity'
     private static final String NEWLINE = '\n'
@@ -190,7 +191,7 @@ class CreateTransformer extends MethodImplementingTransformation {
                 repositoryNode.addMethod(methodN(PROTECTED, methodName, VOID_TYPE, statement, methodParams))
 
             } catch (ex) {
-                error CreateTransformer, 'Unable to inject component save method for entity ({}): {}', entityNode.name, ex.message
+                log.error 'Unable to inject component save method for entity ({}): {}', entityNode.name, ex.message
                 throw ex
             }
         }

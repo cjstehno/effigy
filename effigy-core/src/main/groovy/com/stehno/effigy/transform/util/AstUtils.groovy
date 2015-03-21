@@ -28,7 +28,6 @@ import org.codehaus.groovy.control.CompilePhase
 
 import java.lang.reflect.Modifier
 
-import static com.stehno.effigy.logging.Logger.trace
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
@@ -48,13 +47,7 @@ class AstUtils {
     }
 
     static String string(Map bindings = [:], String text) {
-        String result = new GStringTemplateEngine().createTemplate(text).make(bindings) as String
-
-        trace AstUtils, SEPARATOR_LINE
-        trace AstUtils, result
-        trace AstUtils, SEPARATOR_LINE
-
-        result
+        new GStringTemplateEngine().createTemplate(text).make(bindings) as String
     }
 
     static Statement codeS(Map bindings = [:], String text) {

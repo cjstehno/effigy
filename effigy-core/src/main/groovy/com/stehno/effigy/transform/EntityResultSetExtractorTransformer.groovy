@@ -18,6 +18,7 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -31,8 +32,6 @@ import org.springframework.jdbc.core.RowMapper
 import java.lang.reflect.Modifier
 import java.sql.ResultSet
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -47,6 +46,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 @SuppressWarnings('GStringExpressionWithinString')
 class EntityResultSetExtractorTransformer implements ASTTransformation {
 
+    private static final Logger log = Logger.factory(EntityResultSetExtractorTransformer)
     private static final String ROW_MAPPER = 'rowMapper'
     private static final String MAP_ASSOCIATIONS = 'mapAssociations'
     private static final String RS = 'rs'
@@ -83,7 +83,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
         if (hasAssociatedEntities(entityClassNode)) {
-            info EntityResultSetExtractorTransformer, 'Creating ResultSetExtractor for: {}', entityClassNode.name
+            log.info 'Creating ResultSetExtractor for: {}', entityClassNode.name
 
             ClassNode extractorClassNode = buildAssociationExtractor(entityClassNode, source)
             injectExtractorAccessor(entityClassNode, extractorClassNode)
@@ -160,7 +160,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            error EntityResultSetExtractorTransformer, 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
+            log.error 'Problem building ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
@@ -184,7 +184,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        info getClass(), 'Injected association extractor helper method for {}', entityClassNode.name
+        log.info 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -254,7 +254,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             return classNode
 
         } catch (ex) {
-            error EntityResultSetExtractorTransformer, 'Problem building collection ResultSetExtractor ({}): {}', extractorName, ex.message
+            log.error 'Problem building collection ResultSetExtractor ({}): {}', extractorName, ex.message
             throw ex
         }
     }
@@ -282,6 +282,6 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ]))))
         ))
 
-        info getClass(), 'Injected collection association extractor helper method for {}', entityClassNode.name
+        log.info 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

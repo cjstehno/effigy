@@ -1,3 +1,4 @@
+
 dependencies {
     compile project(':effigy-core')
     compile 'org.springframework:spring-context:4.1.2.RELEASE'
@@ -5,4 +6,8 @@ dependencies {
 
     testCompile 'org.springframework:spring-test:4.1.2.RELEASE'
     testCompile 'com.h2database:h2:1.4.186'
+}
+
+test {
+    systemProperty 'effigy.logging.level', 'DEBUG'
 }

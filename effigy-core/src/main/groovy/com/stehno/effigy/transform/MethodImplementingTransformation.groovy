@@ -18,6 +18,7 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
+import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.Predicated
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
@@ -26,8 +27,6 @@ import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.stmt.Statement
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.trace
 import static com.stehno.effigy.transform.model.EntityModel.entityProperty
 import static com.stehno.effigy.transform.model.EntityModel.entityTable
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
@@ -43,9 +42,11 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
 
     boolean entityRequired = true
 
+    private static final Logger log = Logger.factory(MethodImplementingTransformation)
+
     @Override
     void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
-        trace getClass(), 'Implementing method ({}) for repository ({})', methodNode.name, repoNode.name
+        log.trace 'Implementing method ({}) for repository ({})', methodNode.name, repoNode.name
 
         checkEntityRequirement repoNode, entityNode, annotationNode, methodNode
 
@@ -54,8 +55,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
                 implementMethod annotationNode, repoNode, entityNode, methodNode
 
             } else {
-                error(
-                    getClass(),
+                log.error(
                     'Return type for repository ({}) method ({}) is not valid for the provided annotation ({}).',
                     repoNode.name,
                     methodNode.name,
@@ -68,8 +68,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
             throw etex
 
         } catch (ex) {
-            error(
-                getClass(),
+            log.error(
                 'Unable to implement {} method ({}) for ({}): {}',
                 annotationNode.classNode.nameWithoutPackage,
                 methodNode.name,
@@ -127,8 +126,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
 
     private void checkEntityRequirement(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
         if (entityRequired && (!entityNode || entityNode == VOID_TYPE)) {
-            error(
-                getClass(),
+            log.error(
                 'Method annotation ({}) for repository ({}) method ({}) requires the repository to specify an entity type.',
                 annotationNode.classNode.nameWithoutPackage,
                 repoNode.name,

@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -24,8 +25,6 @@ import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.associations
 import static com.stehno.effigy.transform.model.EntityModel.identifier
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -41,6 +40,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
 
+    private static final Logger log = Logger.factory(AssociationSaveMethodInjector)
     private static final String ENTITY = 'entity'
 
     @Override
@@ -56,7 +56,7 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
         def methodParams = [param(newClass(entityNode), ENTITY)] as Parameter[]
 
         if (!repositoryNode.hasMethod(methodName, methodParams)) {
-            info AssociationSaveMethodInjector, 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
+            log.info 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
             try {
                 // FIXME: pre-compile the collection vs single entity stuff
                 def statement = codeS(
@@ -118,7 +118,7 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
                 repositoryNode.addMethod(methodN(PROTECTED, methodName, VOID_TYPE, statement, methodParams))
 
             } catch (ex) {
-                error AssociationSaveMethodInjector, 'Unable to inject association save method for entity ({}): {}', entityNode.name, ex.message
+                log.error 'Unable to inject association save method for entity ({}): {}', entityNode.name, ex.message
                 throw ex
             }
         }

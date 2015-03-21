@@ -16,6 +16,7 @@
 
 package com.stehno.effigy.transform
 
+import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -28,7 +29,6 @@ import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.stmt.Statement
 
 import static UpdateSqlBuilder.update
-import static com.stehno.effigy.logging.Logger.debug
 import static com.stehno.effigy.transform.CreateTransformer.resolveEntityVariable
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
@@ -46,6 +46,9 @@ import static org.codehaus.groovy.syntax.Types.MINUS
  */
 class UpdateTransformer extends MethodImplementingTransformation {
 
+    private static final Logger log = Logger.factory(UpdateTransformer)
+
+    // FIXME: pull out common constants
     private static final String ENTITY = 'entity'
     private static final String COMMA = ','
     private static final String ID = 'id'
@@ -123,7 +126,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
         updateMethod repoNode, methodNode, code
 
-        debug UpdateTransformer, 'Implemented repository ({}) Update method ({})', repoNode.name, methodNode.name
+        log.debug 'Implemented repository ({}) Update method ({})', repoNode.name, methodNode.name
     }
 
     private static void applySetters(UpdateSqlBuilder sql, ClassNode entityNode, String entityVar) {

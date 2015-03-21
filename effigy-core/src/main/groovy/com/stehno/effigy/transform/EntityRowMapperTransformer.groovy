@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
+import com.stehno.effigy.logging.Logger
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
@@ -29,8 +30,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.logging.Logger.error
-import static com.stehno.effigy.logging.Logger.info
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.*
@@ -46,6 +45,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 @SuppressWarnings('GStringExpressionWithinString')
 class EntityRowMapperTransformer implements ASTTransformation {
 
+    private static final Logger log = Logger.factory(EntityRowMapperTransformer)
     private static final String PREFIX = 'prefix'
     private static final String DATA = 'data'
 
@@ -53,7 +53,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
-        info EntityRowMapperTransformer, 'Creating RowMapper for: {}', entityClassNode.name
+        log.info 'Creating RowMapper for: {}', entityClassNode.name
 
         ClassNode mapperClassNode = buildRowMapper(entityClassNode, source)
         injectRowMapperAccessor(entityClassNode, mapperClassNode)
@@ -110,12 +110,12 @@ class EntityRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            info EntityRowMapperTransformer, 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
+            log.info 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
 
             return mapperClassNode
 
         } catch (ex) {
-            error EntityRowMapperTransformer, 'Problem building RowMapper ({}): {}', mapperName, ex.message
+            log.error 'Problem building RowMapper ({}): {}', mapperName, ex.message
             throw ex
         }
     }
@@ -139,6 +139,6 @@ class EntityRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
-        info EntityRowMapperTransformer, 'Injected row mapper helper method for {}', entityClassNode
+        log.info 'Injected row mapper helper method for {}', entityClassNode
     }
 }

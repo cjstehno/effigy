@@ -3,7 +3,9 @@
 
 * more documentation around the sql template language support
 
-* Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)
+- audit the logging for message level and usefulness
+- need to be able to configure the logging from projects using the library
+
 FIXME: there are issues with primitive long id fields
 
 ///////////

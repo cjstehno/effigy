@@ -16,7 +16,11 @@
 
 package com.stehno.effigy.logging
 
+import groovy.transform.Memoized
+
 /**
+ *  FIXME: update docs and add to guide  - why not prexisting logger api? classloader issues
+ *
  * Static logging mechanism for logging during AST transformation activity.
  *
  * The default logging level is WARN, which may be changed by setting the "effigy.logging" system property to a value of TRACE, DEBUG, INFO, WARN,
@@ -33,58 +37,65 @@ class Logger {
         OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL
     }
 
-    private static Level level
+    // FIXME: how to configure
+    private final Level level = Level.valueOf(System.getProperty('effigy.logging.level', 'INFO').toUpperCase())
+    private final Class loggedClass
 
-    static {
-        level = Level.valueOf(System.getProperty('effigy.logging', 'INFO').toUpperCase())
+    private Logger(Class loggedClass) {
+        this.loggedClass = loggedClass
     }
 
-    static void info(Class clazz, String msg, Object... args) {
-        log Level.INFO, clazz, msg, args
+    @Memoized
+    static Logger factory(Class loggedClass) {
+        new Logger(loggedClass)
     }
 
-    static void info(Class clazz, String msg, Closure closure) {
-        logClos Level.INFO, clazz, msg, closure
+    void info(String msg, Object... args) {
+        log Level.INFO, loggedClass, msg, args
     }
 
-    static void trace(Class clazz, String msg, Object... args) {
-        log Level.TRACE, clazz, msg, args
+    void info(String msg, Closure closure) {
+        logClos Level.INFO, loggedClass, msg, closure
     }
 
-    static void trace(Class clazz, String msg, Closure closure) {
-        logClos Level.TRACE, clazz, msg, closure
+    void trace(String msg, Object... args) {
+        log Level.TRACE, loggedClass, msg, args
     }
 
-    static void debug(Class clazz, String msg, Object... args) {
-        log Level.DEBUG, clazz, msg, args
+    void trace(String msg, Closure closure) {
+        logClos Level.TRACE, loggedClass, msg, closure
     }
 
-    static void debug(Class clazz, String msg, Closure closure) {
-        logClos Level.DEBUG, clazz, msg, closure
+    void debug(String msg, Object... args) {
+        log Level.DEBUG, loggedClass, msg, args
     }
 
-    static void warn(Class clazz, String msg, Object... args) {
-        log Level.WARN, clazz, msg, args
+    void debug(String msg, Closure closure) {
+        logClos Level.DEBUG, loggedClass, msg, closure
     }
 
-    static void warn(Class clazz, String msg, Closure closure) {
-        logClos Level.WARN, clazz, msg, closure
+    void warn(String msg, Object... args) {
+        log Level.WARN, loggedClass, msg, args
     }
 
-    static void error(Class clazz, String msg, Object... args) {
-        log Level.ERROR, clazz, msg, args
+    void warn(String msg, Closure closure) {
+        logClos Level.WARN, loggedClass, msg, closure
     }
 
-    static void error(Class clazz, String msg, Closure closure) {
-        logClos Level.ERROR, clazz, msg, closure
+    void error(String msg, Object... args) {
+        log Level.ERROR, loggedClass, msg, args
     }
 
-    private static void log(Level lvl, Class clazz, String msg, Object... args) {
+    void error(String msg, Closure closure) {
+        logClos Level.ERROR, loggedClass, msg, closure
+    }
+
+    private void log(Level lvl, Class clazz, String msg, Object... args) {
         logClos(lvl, clazz, msg) { args }
     }
 
     @SuppressWarnings(['Println', 'ParameterReassignment'])
-    private static void logClos(Level lvl, Class clazz, String msg, Closure closure) {
+    private void logClos(Level lvl, Class clazz, String msg, Closure closure) {
         if (level.ordinal() >= lvl.ordinal()) {
             closure().each { arg ->
                 msg = msg.replaceFirst(REPLACEMENT_PATTERN, (arg != null ? arg : '<null>') as String)

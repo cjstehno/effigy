@@ -40,6 +40,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
  */
 class SqlSelectTransformer extends MethodImplementingTransformation {
 
+    private static final Logger log = Logger.factory(SqlSelectTransformer)
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
     private static final String VALUE = 'value'
@@ -108,7 +109,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             returnType = methodNode.returnType.genericsTypes[0].type
         }
 
-        Logger.info SqlSelectTransformer, 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
+        log.info 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
 
         returnType
     }
