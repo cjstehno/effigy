@@ -1,16 +1,36 @@
 
 # Things to do
 
+* Clean up the groovydoc format so that its readable - also generate docs for site
+* more documentation around the sql template language support
+
+* Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)
+FIXME: there are issues with primitive long id fields
+
+///////////
+
+Enhanced property handling in the sql template language - need ability to do sql template operations on embedded/component and maybe associations
+
+@property.@property
+@name.@firstName
+
+:entity.@name.@lastName - sql gets the ? while the param gets the property lookup
+
+* support for large text/CLOB/BLOB fields
+* ability to supply custom field serializer/deserializer @Column(handlerName='', handlerClass='') - stateless class to read/write value (name allows to pull from spring)
+    - I dont think this would be something Id want at runtime, just compile time
+
+* better separation of internal vs external api
+
+---------------------------------------------
+
 > This is just notes to myself - don't try to figure it out :-)
 
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
 * Add support for @Transient fields - to be ignored by Effigy inspections
-* Clean up the groovydoc format so that its readable - also generate docs for site
-* more documentation around the sql template language support
-* Add support for the retrieve(create()) use case - maybe if the return type of a @Create is the Entity type bake this into the generated code
 
-* Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)
+* Add support for the retrieve(create()) use case - maybe if the return type of a @Create is the Entity type bake this into the generated code
 
 FIXME: @Count methods need to support map with property fields as input parameter
 FIXME: @Exists methods need to support map with property fields as input parameter
@@ -19,11 +39,9 @@ FIXME: @Retrieve support for runtime sort order param
 FIXME: @Retrieve support limit with association queries
 FIXME: @Retrieve support offset with association queries
 
-FIXME: there are issues with primitive long id fields
 FIXME: mapped assocations require an instance of their collection by default - should allow null by default
 
 * gmetrics reporting might be interesting
-* support for batch operations in CRUD and SQL annotation methods
 
 ////
 
@@ -45,22 +63,10 @@ Should Effigy provide any kind of validation and/or validation hooks?
 
 support for result caching - basically integrate with the spring caching mechanism (optional)
 
-///////////
-
-Enhanced property handling in the sql template language - need ability to do sql template operations on embedded/component and maybe associations
-
-@property.@property
-@name.@firstName
-
-:entity.@name.@lastName - sql gets the ? while the param gets the property lookup
-
-
 
 * ability to create and retrieve entity
     Job job = jobRepository.create(attributes:[user:'admin'])
-* support for large text/CLOB/BLOB fields
-* ability to supply custom field serializer/deserializer @Column(handlerName='', handlerClass='') - stateless class to read/write value (name allows to pull from spring)
-    - I dont think this would be something Id want at runtime, just compile time
+
 
 /////////////////////////
 
@@ -96,9 +102,7 @@ FIXME: allow for sql to be resolved from external source (like properties, or so
 
 ////////////
 
-* better separation of internal vs external api
 * bring standard tests into main project and keep test as a full test project (spring)
-* copy the codenarc and tests from "test" project into site
 * consider alternative jdbc strategy (non-spring) - configurable switching with annotation @JdbcStrategy(Spring|Groovy) - seems like a waste of time also dbutil.
 
 //// stored procs
