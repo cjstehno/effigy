@@ -23,12 +23,19 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 /**
- * RowMapper instance used by the RowMapper DSL to contain the configured mappings.
+ * RowMapper class used by the RowMapper DSL to contain the configured mappings.
  */
 @Immutable
 class DynamicRowMapper<T> implements RowMapper<T> {
 
+    /**
+     * The type provided by the mapper.
+     */
     Class<? extends T> mappedType
+
+    /**
+     * The list of property mappings objects from the DSL.
+     */
     List<PropertyMapping> mappings
 
     @Override

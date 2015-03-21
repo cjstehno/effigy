@@ -24,9 +24,11 @@ import java.lang.annotation.*
  * Update methods must accept an entity object or Map containing entity properties to be updated.
  *
  * Update methods must return one of the following:
- *  - void
- *  - a boolean denoting whether or not a change was made
- *  - an int value representing the number of entities
+ * <ul>
+ *     <li>void</li>
+ *     <li>a boolean denoting whether or not a change was made</li>
+ *     <li>an int value representing the number of entities</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

@@ -22,13 +22,17 @@ import java.lang.annotation.*
  * Annotation used to denote a delete method in an Effigy repository.
  *
  * Delete method must accept as parameters, one of the following:
- *  - no parameters to denote deleting all entities
- *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entity to be deleted
+ * <ul>
+ *     <li>no parameters to denote deleting all entities</li>
+ *     <li>a Map object containing the properties corresponding to an entity object (String keys, Object values)</li>
+ *     <li>individual properties (by name and type) of the entity to be deleted</li>
+ * </ul>
  *
  * Delete methods must return either:
- *  - a boolean denoting whether or not something was actually deleted
- *  - an int denoting the number of items deleted
+ * <ul>
+ *     <li>a boolean denoting whether or not something was actually deleted</li>
+ *     <li>an int denoting the number of items deleted</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

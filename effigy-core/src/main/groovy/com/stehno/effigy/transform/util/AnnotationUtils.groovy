@@ -22,7 +22,7 @@ import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 11/26/2014.
+ * Utilities for working with annotations and AST transformations.
  */
 class AnnotationUtils {
 

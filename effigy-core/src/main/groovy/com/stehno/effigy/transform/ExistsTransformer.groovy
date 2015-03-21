@@ -31,7 +31,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS
 
 /**
- * Transformer used to process the @Exists annotations.
+ * Transformer used to process the <code>@Exists</code> annotations.
  */
 class ExistsTransformer extends MethodImplementingTransformation {
 

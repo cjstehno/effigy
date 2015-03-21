@@ -22,17 +22,23 @@ import java.lang.annotation.*
  * Annotation used to denote a "retrieve" method in an Effigy repository.
  *
  * Retrieve methods must accept as parameters, one of the following:
- *  - no parameters to denote retrieving all entities
- *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entity to be deleted
+ * <ul>
+ *     <li>no parameters to denote retrieving all entities</li>
+ *     <li>a Map object containing the properties corresponding to an entity object (String keys, Object values)</li>
+ *     <li>individual properties (by name and type) of the entity to be deleted</li>
+ * </ul>
  *
  * Additionally the method may except one or more of the following (though only one of each):
- *  - an @Limit int property used to limit the query results returned
- *  - an @Offset int property used to offset the start of the returned results
+ * <ul>
+ *     <li>an <code>@Limit</code> int property used to limit the query results returned</li>
+ *     <li>an <code>@Offset</code> int property used to offset the start of the returned results</li>
+ * </ul>
  *
  * Create methods must return either:
- *  - a Collection (or extension of) of the entity managed by the repository
- *  - a Single instance of the entity managed by the repository
+ * <ul>
+ *     <li>a Collection (or extension of) of the entity managed by the repository</li>
+ *     <li>a Single instance of the entity managed by the repository</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

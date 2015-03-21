@@ -31,7 +31,7 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 /**
- * Transformer used to process the @Delete annotation.
+ * Transformer used to process the <code>@Delete</code> annotation.
  */
 class DeleteTransformer extends MethodImplementingTransformation {
 

@@ -22,12 +22,11 @@ import org.springframework.jdbc.core.RowMapper
  * Builder used to create RowMapper instances based on the RowMapper DSL.
  * This API is not intended for direct use, but rather through the DSL.
  *
- * <pre>
- *  RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {*       map 'partName'
+ * <pre>RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {*       map 'partName'
  *       map 'someDate' using { x -> new Date(x) }*       map 'items' from 'line_items' using { x -> x.split(';') }*       map 'lineNumber' from 'line_number'
  *       map 'something' using mapper(EmbedddObject, 'obj_') {*           map 'id'
  *           map 'label'
- *}*}* </pre>
+ *}*}</pre>
  */
 class RowMapperBuilder<T> {
 

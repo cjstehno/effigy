@@ -32,7 +32,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.block
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS
 
 /**
- * Transformer used to process @SqlUpdate annotated methods.
+ * Transformer used to process <code>@SqlUpdate</code> annotated methods.
  */
 class SqlUpdateTransformer extends MethodImplementingTransformation {
 

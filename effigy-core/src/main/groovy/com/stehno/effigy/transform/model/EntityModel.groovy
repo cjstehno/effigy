@@ -34,6 +34,7 @@ import static org.codehaus.groovy.ast.ClassHelper.make
  * Utility functions for working with the Effigy entity model.
  */
 class EntityModel {
+    // TODO: consider a trait-base approach to clean up some of the model oddness
 
     private static final String PLURAL = 's'
     private static final String DOLLAR_SIGN = '$'

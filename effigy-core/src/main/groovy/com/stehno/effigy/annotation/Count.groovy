@@ -22,12 +22,16 @@ import java.lang.annotation.*
  * Annotation used to denote a count method in an Effigy repository.
  *
  * Count methods must accept as parameters, one of the following:
- *  - no parameters to denote counting all entities
- *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entities to be counted
+ * <ul>
+ *     <li>no parameters to denote counting all entities</li>
+ *     <li>a Map object containing the properties corresponding to an entity object (String keys, Object values)</li>
+ *     <li>individual properties (by name and type) of the entities to be counted</li>
+ * </ul>
  *
  * Count methods must return:
- *  - an int denoting the number of items counted
+ * <ul>
+ *     <li>an int denoting the number of items counted</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

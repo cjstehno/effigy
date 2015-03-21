@@ -41,7 +41,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
- * Transformer used for creating a ResultSetExtractor instance for the entity.
+ * Transformer used for creating a <code>ResultSetExtractor</code> instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 @SuppressWarnings('GStringExpressionWithinString')

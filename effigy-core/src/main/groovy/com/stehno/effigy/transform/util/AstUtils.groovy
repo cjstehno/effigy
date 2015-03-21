@@ -33,7 +33,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 /**
- * Created by cjstehno on 11/28/2014.
+ * Utilities for working with AST transformations.
  */
 class AstUtils {
 

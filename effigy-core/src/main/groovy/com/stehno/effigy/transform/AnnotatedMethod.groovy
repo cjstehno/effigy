@@ -22,7 +22,7 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 
 /**
- * Created by cjstehno on 2/7/15.
+ * A helper object for bundling information about an annotated method.
  */
 @Immutable(knownImmutableClasses = [AnnotationNode, ClassNode, MethodNode])
 class AnnotatedMethod {

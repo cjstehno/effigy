@@ -28,7 +28,7 @@ import static org.codehaus.groovy.ast.ClassHelper.Integer_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.int_TYPE
 
 /**
- * Transformer used to process the @Count annotations.
+ * Transformer used to process the <code>@Count</code> annotations.
  */
 class CountTransformer extends MethodImplementingTransformation {
 

@@ -40,7 +40,7 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
- * Transformer used for creating a RowMapper instance for the entity.
+ * Transformer used for creating a <code>RowMapper</code> instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 @SuppressWarnings('GStringExpressionWithinString')
@@ -60,7 +60,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
     }
 
     /**
-     * Creates a RowMapper implementation class for each annotated entity.
+     * Creates a <code>RowMapper</code> implementation class for each annotated entity.
      *
      * @param model the entity model
      * @param source the source unit
@@ -124,7 +124,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
      * Injects a helper method into the entity. This helper method allows for simple retrieval of the generated row mapper with
      * optional prefix definition. The method signature is:
      *
-     * public static rowMapper(String prefix='')
+     * <pre>public static rowMapper(String prefix='')</pre>
      *
      * @param entityClassNode
      * @param mapperClassNode

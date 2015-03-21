@@ -35,7 +35,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 
 /**
- * Transformer used for processing the EffigyRepository annotation.
+ * Transformer used for processing the <code>EffigyRepository</code> annotation.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class RepositoryTransformer implements ASTTransformation {

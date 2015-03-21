@@ -21,7 +21,7 @@ import org.codehaus.groovy.ast.ClassNode
 import static com.stehno.effigy.transform.model.EntityModel.*
 
 /**
- * Created by cjstehno on 12/27/14.
+ * A templatized SQL statement.
  */
 class SqlTemplate {
 

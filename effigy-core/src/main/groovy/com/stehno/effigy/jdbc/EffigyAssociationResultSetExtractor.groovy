@@ -24,8 +24,8 @@ import java.sql.ResultSet
 import java.sql.SQLException
 
 /**
- * Spring ResultSetExtractor used internally by the Effigy entity transformers to build extractors for handling
- * entity associations. This class is not really intended for use outside of the framework.
+ * Spring <code>ResultSetExtractor</code> used internally by the Effigy entity transformers to build extractors for handling entity associations.
+ * This class is not really intended for use outside of the framework.
  */
 abstract class EffigyAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
 

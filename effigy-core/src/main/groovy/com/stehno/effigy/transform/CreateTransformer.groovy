@@ -42,7 +42,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
- * Transformer used to process the @Create annotation.
+ * Transformer used to process the <code>@Create</code> annotation.
  */
 @SuppressWarnings('GStringExpressionWithinString')
 class CreateTransformer extends MethodImplementingTransformation {

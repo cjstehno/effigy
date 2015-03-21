@@ -27,8 +27,8 @@ import static java.lang.Integer.MAX_VALUE
 import static java.lang.Math.min
 
 /**
- * Spring ResultSetExtractor used internally by the Effigy entity transformers to build extractors for handling
- * entity collections associations. This class is not really intended for use outside of the framework.
+ * Spring <code>ResultSetExtractor</code> used internally by the Effigy entity transformers to build extractors for handling entity collections
+ * associations. This class is not really intended for use outside of the framework.
  */
 abstract class EffigyCollectionAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
 

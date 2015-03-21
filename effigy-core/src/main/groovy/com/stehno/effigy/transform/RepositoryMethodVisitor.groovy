@@ -21,7 +21,7 @@ import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 
 /**
- * Created by cjstehno on 1/1/15.
+ * Defines a specialized AST node visitor used by the repository transformer.
  */
 interface RepositoryMethodVisitor {
 

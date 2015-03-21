@@ -36,7 +36,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.param
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
 /**
- * Created by cjstehno on 12/28/14.
+ * Generates the entity association saving method for <cod>@Create</code> and <code>@Update</code> annotations.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 class AssociationSaveMethodInjector implements RepositoryMethodVisitor {

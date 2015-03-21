@@ -22,12 +22,16 @@ import java.lang.annotation.*
  * Annotation used to denote an "exists" method in an Effigy repository.
  *
  * Exists methods must accept as parameters, one of the following:
- *  - no parameters to determine existence of any entities of the type
- *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entities to be determined
+ * <ul>
+ *     <li>no parameters to determine existence of any entities of the type</li>
+ *     <li>a Map object containing the properties corresponding to an entity object (String keys, Object values)</li>
+ *     <li>individual properties (by name and type) of the entities to be determined</li>
+ * </ul>
  *
  * Exists methods must return:
- *  - a boolean to denote existence
+ * <ul>
+ *     <li>a boolean to denote existence</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

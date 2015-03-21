@@ -22,12 +22,14 @@ import java.lang.annotation.*
  * This annotation is used with a SqlSelect annotation to provide information about the RowMapper instance to be used.
  *
  * There are three distinct configuration scenarios for mapper annotations, based on the annotation property values:
- *
- * * the 'bean' property can be used to specify the name of a bean (implementing RowMapper) which will be autowired into the repository and used by
- *   the query.
- * * the 'type' property can be used to specify a class implementing RowMapper which will be instantiated as a shared instance and used by the query.
- * * the 'type' and 'factory' properties may be used similar to the 'type' property alone, except that the specified static factory method will be
- *   called to create the instance, rather than the constructor.
+ * <ul>
+ *     <li>the 'bean' property can be used to specify the name of a bean (implementing <code>RowMapper</code>) which will be autowired into the
+ *     repository and used by the query.</li>
+ *     <li>the 'type' property can be used to specify a class implementing <code>RowMapper</code> which will be instantiated as a shared instance and
+ *     used by the query.</li>
+ *     <li>the 'type' and 'factory' properties may be used similar to the 'type' property alone, except that the specified static factory method will
+ *     be called to create the instance, rather than the constructor.</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,13 +37,13 @@ import java.lang.annotation.*
 @interface RowMapper {
 
     /**
-     * The name of the bean to be autowired into the repository for use as a RowMapper instance. If the default value is used, this property will
-     * be ignored.
+     * The name of the bean to be autowired into the repository for use as a <code>RowMapper</code> instance. If the default value is used, this
+     * property will be ignored.
      */
     String bean() default ''
 
     /**
-     * The class implementing RowMapper that is to be used by the query. If the default value is used, this property will be ignored.
+     * The class implementing <code>RowMapper</code> that is to be used by the query. If the default value is used, this property will be ignored.
      */
     Class type() default Void.class
 
@@ -59,10 +61,10 @@ import java.lang.annotation.*
      * Whether or not the created instance of this helper class should have the method arguments provided to it. The default is false.
      *
      * If the arguments are to be provided, the value of the 'singleton' property should be 'false' since the helper will no longer be stateless.
-     * The implementation of the PreparedStatementSetter must either implement the ArgumentAwareHelper class or provide a method with the
+     * The implementation of the <code>RowMapper</code> must either implement the <code>ArgumentAwareHelper</code> class or provide a method with the
      * following signature to accept the method parameters.
      *
-     * public void setMethodArguments(Map<String,Object> map)
+     * <pre>public void setMethodArguments(Map<String,Object> map)</pre>
      *
      * In the provided method case, it is up to the implementation to store and use the arguments properly.
      */

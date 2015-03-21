@@ -42,7 +42,7 @@ import static org.codehaus.groovy.syntax.Token.newSymbol
 import static org.codehaus.groovy.syntax.Types.MINUS
 
 /**
- * Transformer used to process the @Update annotations.
+ * Transformer used to process the <code>@Update</code> annotations.
  */
 class UpdateTransformer extends MethodImplementingTransformation {
 

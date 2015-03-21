@@ -21,7 +21,7 @@ import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Created by cjstehno on 12/6/2014.
+ * Effigy property model representing an id field.
  */
 @Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
 class IdentifierPropertyModel implements EntityPropertyModel {

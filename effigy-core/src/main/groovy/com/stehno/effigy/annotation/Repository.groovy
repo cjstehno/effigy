@@ -31,7 +31,7 @@ import java.lang.annotation.*
 @interface Repository {
 
     /**
-     * The entity type handled by the repository (must be annotated with @Effigy). This property is required
+     * The entity type handled by the repository (must be annotated with <code>@Effigy</code>). This property is required
      * if the CRUD operation annotations are to be used, but may be omitted for the raw SQL annotations.
      */
     Class value() default Void

@@ -17,7 +17,7 @@
 package com.stehno.effigy.transform
 
 /**
- * Created by cjstehno on 12/28/14.
+ * Represents an exception caught and rethrown (or generated) during AST processing.
  */
 class EffigyTransformationException extends RuntimeException {
 

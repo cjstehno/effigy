@@ -19,9 +19,9 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a property as a one-to-one relationship with the enclosing entity. The one-to-one assocation expressed by a Component
- * is similar to an @Embedded object; however, this relation data is contained in a separate lookup table, rather than embedded within the same
- * table.
+ * Annotation used to denote a property as a one-to-one relationship with the enclosing entity. The one-to-one association expressed by a Component
+ * is similar to an <code>@Embedded</code> object; however, this relation data is contained in a separate lookup table, rather than embedded within
+ * the same table.
  *
  * The type of the annotated field may be an Entity-annotated class; however, the entity table property as well as any Id, Version annotated fields
  * will be ignored by the Component association functionality.

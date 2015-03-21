@@ -40,7 +40,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 
 /**
- * Transformer used to process the @Retrieve annotations.
+ * Transformer used to process the <code>@Retrieve</code> annotations.
  */
 class RetrieveTransformer extends MethodImplementingTransformation {
 

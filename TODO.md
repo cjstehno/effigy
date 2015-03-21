@@ -1,7 +1,6 @@
 
 # Things to do
 
-* Clean up the groovydoc format so that its readable - also generate docs for site
 * more documentation around the sql template language support
 
 * Refactor the logging - the @Log annotation work but need to figure out how to get logging configured in my context (ast)

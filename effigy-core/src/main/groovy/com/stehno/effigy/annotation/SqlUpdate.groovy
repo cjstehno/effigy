@@ -25,9 +25,11 @@ import java.lang.annotation.*
  * used as the name of the replacement variable in the SQL statement, so they will need to be consistent.
  *
  * An "update" method must have a return type of one of the following:
- * - void
- * - a boolean denoting a non-zero update record count (true) or 0 (false)
- * - an int or long denoting the updated record count.
+ * <ul>
+ *     <li>void</li>
+ *     <li>a boolean denoting a non-zero update record count (true) or 0 (false)</li>
+ *     <li>an int or long denoting the updated record count.</li>
+ * </ul>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

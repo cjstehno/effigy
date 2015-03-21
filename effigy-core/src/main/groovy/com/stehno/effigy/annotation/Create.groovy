@@ -22,9 +22,11 @@ import java.lang.annotation.*
  * Annotation used to denote a create method in an Effigy repository.
  *
  * Create method must accept as parameters, one of the following:
- *  - an object of the entity type (to be created)
- *  - a Map object containing the properties corresponding to an entity object (String keys, Object values)
- *  - individual properties (by name and type) of the entity to be created
+ * <ul>
+ *     <li>an object of the entity type (to be created)</li>
+ *     <li>a Map object containing the properties corresponding to an entity object (String keys, Object values)</li>
+ *     <li>individual properties (by name and type) of the entity to be created</li>
+ * </ul>
  *
  * Create methods must return the identity type for the entity.
  */

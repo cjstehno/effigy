@@ -36,7 +36,7 @@ import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 
 /**
- * Transformer used to process @SqlSelect annotated methods.
+ * Transformer used to process <code>@SqlSelect</code> annotated methods.
  */
 class SqlSelectTransformer extends MethodImplementingTransformation {
 

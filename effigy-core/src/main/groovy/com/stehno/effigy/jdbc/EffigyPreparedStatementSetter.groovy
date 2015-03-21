@@ -22,9 +22,9 @@ import java.sql.PreparedStatement
 import java.sql.SQLException
 
 /**
- * Effigy-specific implementation of the PreparedStatementSetter interface used to provide access to the method arguments. A method annotated with
- * @PreparedStatementSetter using an implementation of this abstract class will be able to access the method arguments at runtime for use within the
- * setter.
+ * Effigy-specific implementation of the <code>PreparedStatementSetter</code> interface used to provide access to the method arguments. A method
+ * annotated with <code>@PreparedStatementSetter</code> using an implementation of this abstract class will be able to access the method arguments at
+ * runtime for use within the setter.
  */
 abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter, ArgumentAwareHelper {
 
@@ -34,7 +34,7 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter,
     Map<String, Object> methodArguments = [:]
 
     /**
-     * Delegates to the setValues(PreparedStatement, Map<String,Object>) version of the method, with an empty map instance.
+     * Delegates to the <code>setValues(PreparedStatement, Map<String,Object>)</code> version of the method, with an empty map instance.
      */
     @Override
     final void setValues(PreparedStatement ps) throws SQLException {
@@ -42,8 +42,8 @@ abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter,
     }
 
     /**
-     * This method should be implemented to set the desired values on the provided PreparedStatement instance. The arguments map may or may not be
-     * populated depending on how this setter is configured.
+     * This method should be implemented to set the desired values on the provided <code>PreparedStatement</code> instance. The arguments map may or
+     * may not be populated depending on how this setter is configured.
      *
      * @param ps the prepared statement provided by the framework
      * @param arguments the method runtime arguments
