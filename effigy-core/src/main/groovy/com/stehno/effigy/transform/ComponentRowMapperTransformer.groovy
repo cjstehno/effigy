@@ -50,13 +50,13 @@ class ComponentRowMapperTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityNode = nodes[1] as ClassNode
 
-        log.debug 'Visiting {} for association row mapper creation.', entityNode.name
+        log.trace 'Visiting {} for association row mapper creation.', entityNode.name
 
         components(entityNode).each { ap ->
-            log.debug 'Visiting one-to-one association ({}).', ap.type.name
+            log.trace 'Visiting one-to-one association ({}).', ap.type.name
 
             if (!isEntity(ap.type) && !rowMapperExists(ap.type, source)) {
-                log.info 'Creating one-to-one Association RowMapper for: {}', ap.type.name
+                log.debug 'Creating one-to-one Association RowMapper for: {}', ap.type.name
 
                 injectRowMapperAccessor(ap.type, buildRowMapper(ap.type, source))
             }
@@ -111,7 +111,7 @@ class ComponentRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            log.info 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
+            log.debug 'Injected row mapper ({}) for {}', mapperClassNode.name, assocNode
 
             return mapperClassNode
 
@@ -140,6 +140,6 @@ class ComponentRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
-        log.info 'Injected row mapper helper method for {}', assocNode.name
+        log.debug 'Injected row mapper helper method for {}', assocNode.name
     }
 }

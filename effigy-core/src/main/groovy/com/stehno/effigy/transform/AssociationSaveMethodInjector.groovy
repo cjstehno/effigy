@@ -55,7 +55,7 @@ class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
         def methodParams = [param(newClass(entityNode), ENTITY)] as Parameter[]
 
         if (!repositoryNode.hasMethod(methodName, methodParams)) {
-            log.info 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
+            log.debug 'Injecting association ({}) save method for entity ({})', assoc.propertyName, entityNode
             try {
                 // FIXME: pre-compile the collection vs single entity stuff
                 def statement = codeS(

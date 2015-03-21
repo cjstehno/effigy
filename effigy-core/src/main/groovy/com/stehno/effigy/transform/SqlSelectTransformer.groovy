@@ -107,7 +107,7 @@ class SqlSelectTransformer extends MethodImplementingTransformation {
             returnType = methodNode.returnType.genericsTypes[0].type
         }
 
-        log.info 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
+        log.debug 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
 
         returnType
     }

@@ -82,7 +82,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
         if (hasAssociatedEntities(entityClassNode)) {
-            log.info 'Creating ResultSetExtractor for: {}', entityClassNode.name
+            log.debug 'Creating ResultSetExtractor for: {}', entityClassNode.name
 
             ClassNode extractorClassNode = buildAssociationExtractor(entityClassNode, source)
             injectExtractorAccessor(entityClassNode, extractorClassNode)
@@ -183,7 +183,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             returnS(ctorX(newClass(extractorClassNode)))
         ))
 
-        log.info 'Injected association extractor helper method for {}', entityClassNode.name
+        log.debug 'Injected association extractor helper method for {}', entityClassNode.name
     }
 
     /**
@@ -281,6 +281,6 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ]))))
         ))
 
-        log.info 'Injected collection association extractor helper method for {}', entityClassNode.name
+        log.debug 'Injected collection association extractor helper method for {}', entityClassNode.name
     }
 }

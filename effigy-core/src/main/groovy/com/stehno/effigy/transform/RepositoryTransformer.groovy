@@ -94,7 +94,7 @@ class RepositoryTransformer implements ASTTransformation {
     private static void removeAbstract(ClassNode repositoryClassNode) {
         if (isAbstract(repositoryClassNode.modifiers)) {
             repositoryClassNode.modifiers = PUBLIC
-            log.info 'Removed abstract from repository class ({}).', repositoryClassNode.name
+            log.debug 'Removed abstract from repository class ({}).', repositoryClassNode.name
         }
     }
 
@@ -130,6 +130,6 @@ class RepositoryTransformer implements ASTTransformation {
 
         repositoryNode.addProperty(jdbcTemplateNode)
 
-        log.info 'Added autowired JdbcTemplate property to repository class ({}).', repositoryNode.name
+        log.debug 'Added autowired JdbcTemplate property to repository class ({}).', repositoryNode.name
     }
 }

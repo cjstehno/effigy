@@ -3,9 +3,6 @@
 
 * more documentation around the sql template language support
 
-- audit the logging for message level and usefulness
-- need to be able to configure the logging from projects using the library
-
 FIXME: there are issues with primitive long id fields
 
 ///////////
@@ -115,3 +112,5 @@ use StoredProcedure or call()?
 @SqlBatchUpdate (has a setter allowed)
 
 * AST version of mapper dsl
+
+document how users can modify the logger settings for the transforms

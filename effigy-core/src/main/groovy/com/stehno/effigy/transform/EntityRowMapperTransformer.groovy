@@ -52,7 +52,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode entityClassNode = nodes[1] as ClassNode
 
-        log.info 'Creating RowMapper for: {}', entityClassNode.name
+        log.debug 'Creating RowMapper for: {}', entityClassNode.name
 
         ClassNode mapperClassNode = buildRowMapper(entityClassNode, source)
         injectRowMapperAccessor(entityClassNode, mapperClassNode)
@@ -109,7 +109,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
 
             source.AST.addClass(mapperClassNode)
 
-            log.info 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
+            log.debug 'Injected row mapper ({}) for {}', mapperClassNode.name, entityNode
 
             return mapperClassNode
 
@@ -138,6 +138,6 @@ class EntityRowMapperTransformer implements ASTTransformation {
             [param(STRING_TYPE, PREFIX, constX(''))] as Parameter[]
         ))
 
-        log.info 'Injected row mapper helper method for {}', entityClassNode
+        log.debug 'Injected row mapper helper method for {}', entityClassNode
     }
 }
