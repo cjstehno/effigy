@@ -102,7 +102,7 @@ class RepositoryTransformer implements ASTTransformation {
      * Apply the Spring Repository annotation so that the Effigy Repository is essentially an extension of it.
      */
     private static void applyRepositoryAnnotation(ClassNode repositoryNode) {
-        if (!hasAnnotation(repositoryNode, Repository)) {
+        if (!repositoryNode.getAnnotations(make(Repository))) {
             repositoryNode.addAnnotation(new AnnotationNode(make(Repository)))
         }
     }

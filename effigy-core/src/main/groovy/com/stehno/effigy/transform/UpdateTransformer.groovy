@@ -47,7 +47,6 @@ import static org.codehaus.groovy.syntax.Types.MINUS
 @Slf4j
 class UpdateTransformer extends MethodImplementingTransformation {
 
-    // FIXME: pull out common constants
     private static final String ENTITY = 'entity'
     private static final String COMMA = ','
     private static final String ID = 'id'

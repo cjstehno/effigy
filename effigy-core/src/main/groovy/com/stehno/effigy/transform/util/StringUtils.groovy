@@ -20,7 +20,6 @@ package com.stehno.effigy.transform.util
  * Some useful string utilities.
  */
 class StringUtils {
-    // FIXME: see if spring provides a utility for these
 
     static String underscoreToCamelCase(String underscore) {
         if (!underscore || underscore.isAllWhitespace()) {

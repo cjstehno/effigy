@@ -30,8 +30,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafeWithGener
  */
 class RowMapperRegistry {
 
-    // TODO: consider allowing custom global (or repo-scoped) registry of mappers by type
-
     private final Map<ClassNode, Expression> registry = prepareMapperRegistry()
 
     Expression findRowMapper(final ClassNode returnType) {
