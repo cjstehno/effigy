@@ -15,9 +15,8 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.jdbc.EffigyEntityRowMapper
-import com.stehno.effigy.logging.Logger
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
@@ -37,15 +36,13 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 /**
  * Transformer used for creating a RowMapper instance for the Component associations of an Entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-@SuppressWarnings('GStringExpressionWithinString')
+@SuppressWarnings('GStringExpressionWithinString') @Slf4j
 class ComponentRowMapperTransformer implements ASTTransformation {
 
-    private static final Logger log = Logger.factory(ComponentRowMapperTransformer)
     private static final String PREFIX = 'prefix'
     private static final String MAP = 'map'
 

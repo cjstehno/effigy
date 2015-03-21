@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.logging.Logger
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -33,9 +33,9 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 /**
  * Transformer used to process the <code>@Delete</code> annotation.
  */
+@Slf4j
 class DeleteTransformer extends MethodImplementingTransformation {
 
-    private static final Logger log = Logger.factory(DeleteTransformer)
     private static final String ENTITY_IDS = 'entityIds'
     private static final String ENTITY_ID = 'entityId'
 

@@ -18,7 +18,7 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
 import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
-import com.stehno.effigy.logging.Logger
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -43,10 +43,9 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
  * Transformer used for creating a <code>ResultSetExtractor</code> instance for the entity.
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
-@SuppressWarnings('GStringExpressionWithinString')
+@SuppressWarnings('GStringExpressionWithinString') @Slf4j
 class EntityResultSetExtractorTransformer implements ASTTransformation {
 
-    private static final Logger log = Logger.factory(EntityResultSetExtractorTransformer)
     private static final String ROW_MAPPER = 'rowMapper'
     private static final String MAP_ASSOCIATIONS = 'mapAssociations'
     private static final String RS = 'rs'

@@ -16,8 +16,8 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -37,10 +37,9 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 /**
  * Generates the entity association saving method for <cod>@Create</code> and <code>@Update</code> annotations.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION) @Slf4j
 class AssociationSaveMethodInjector implements RepositoryMethodVisitor {
 
-    private static final Logger log = Logger.factory(AssociationSaveMethodInjector)
     private static final String ENTITY = 'entity'
 
     @Override

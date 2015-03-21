@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.logging.Logger
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.EmptyExpression
 import org.codehaus.groovy.control.CompilePhase
@@ -37,10 +37,8 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.getAllMethods
 /**
  * Transformer used for processing the <code>EffigyRepository</code> annotation.
  */
-@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION) @Slf4j
 class RepositoryTransformer implements ASTTransformation {
-
-    private static final Logger log = Logger.factory(RepositoryTransformer)
 
     private static final List<String> SUPPORTED_ANNOTATIONS = [
         'Create', 'Retrieve', 'Update', 'Delete', 'Count', 'Exists',

@@ -16,11 +16,11 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.EntityPropertyModel
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -44,10 +44,9 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 /**
  * Transformer used to process the <code>@Create</code> annotation.
  */
-@SuppressWarnings('GStringExpressionWithinString')
+@SuppressWarnings('GStringExpressionWithinString') @Slf4j
 class CreateTransformer extends MethodImplementingTransformation {
 
-    private static final Logger log = Logger.factory(CreateTransformer)
     private static final String ID = 'id'
     private static final String ENTITY = 'entity'
     private static final String NEWLINE = '\n'

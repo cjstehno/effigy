@@ -16,11 +16,11 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.model.AssociationPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.sql.UpdateSqlBuilder
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -44,9 +44,8 @@ import static org.codehaus.groovy.syntax.Types.MINUS
 /**
  * Transformer used to process the <code>@Update</code> annotations.
  */
+@Slf4j
 class UpdateTransformer extends MethodImplementingTransformation {
-
-    private static final Logger log = Logger.factory(UpdateTransformer)
 
     // FIXME: pull out common constants
     private static final String ENTITY = 'entity'

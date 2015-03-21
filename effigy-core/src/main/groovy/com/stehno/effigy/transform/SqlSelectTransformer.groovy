@@ -15,12 +15,11 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.PreparedStatementSetter
 import com.stehno.effigy.annotation.ResultSetExtractor
 import com.stehno.effigy.annotation.RowMapper
 import com.stehno.effigy.jdbc.RowMapperRegistry
-import com.stehno.effigy.logging.Logger
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -34,13 +33,12 @@ import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
 import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
-
 /**
  * Transformer used to process <code>@SqlSelect</code> annotated methods.
  */
+@Slf4j
 class SqlSelectTransformer extends MethodImplementingTransformation {
 
-    private static final Logger log = Logger.factory(SqlSelectTransformer)
     private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
     private static final String RESULTS = 'results'
     private static final String VALUE = 'value'

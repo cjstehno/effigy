@@ -18,9 +18,9 @@ package com.stehno.effigy.transform
 
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
-import com.stehno.effigy.logging.Logger
 import com.stehno.effigy.transform.sql.Predicated
 import com.stehno.effigy.transform.sql.SqlTemplate
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -38,11 +38,10 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.varX
 /**
  * Abstract parent class for the Effigy repository method implementation annotation transformers.
  */
+@Slf4j
 abstract class MethodImplementingTransformation implements RepositoryMethodVisitor {
 
     boolean entityRequired = true
-
-    private static final Logger log = Logger.factory(MethodImplementingTransformation)
 
     @Override
     void visit(ClassNode repoNode, ClassNode entityNode, AnnotationNode annotationNode, MethodNode methodNode) {
