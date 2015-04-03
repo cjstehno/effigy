@@ -2,23 +2,7 @@
 # Things to do
 
 * more documentation around the sql template language support
-
-FIXME: there are issues with primitive long id fields
-
-///////////
-
-Enhanced property handling in the sql template language - need ability to do sql template operations on embedded/component and maybe associations
-
-@property.@property
-@name.@firstName
-
-:entity.@name.@lastName - sql gets the ? while the param gets the property lookup
-
-* support for large text/CLOB/BLOB fields
-* ability to supply custom field serializer/deserializer @Column(handlerName='', handlerClass='') - stateless class to read/write value (name allows to pull from spring)
-    - I dont think this would be something Id want at runtime, just compile time
-
-* better separation of internal vs external api
+* document how users can modify the logger settings for the transforms
 
 ---------------------------------------------
 
@@ -41,13 +25,6 @@ FIXME: mapped assocations require an instance of their collection by default - s
 
 * gmetrics reporting might be interesting
 
-////
-
-@Association
-@Collected(ordering=[@ListOrdering(property='lastName', direction=DESC)])
-List<Person> owner = []
-
-/////
 
 consider removing the version/id updates on create - since other fields may be updated by sql and not transferred, it's probably best to just leave
 everything to the client to call a retrieve method
@@ -95,22 +72,7 @@ Room
 
 FIXME: @SqlSelect support for Entities in mappers and where clauses (?)
 
-FIXME: allow for sql to be resolved from external source (like properties, or some other file ) - compile time or runtime?
-
-
-////////////
 
 * bring standard tests into main project and keep test as a full test project (spring)
-* consider alternative jdbc strategy (non-spring) - configurable switching with annotation @JdbcStrategy(Spring|Groovy) - seems like a waste of time also dbutil.
 
-//// stored procs
-use StoredProcedure or call()?
 
-//// batch
-@BatchUpdate
-@BatchCreate
-@SqlBatchUpdate (has a setter allowed)
-
-* AST version of mapper dsl
-
-document how users can modify the logger settings for the transforms
