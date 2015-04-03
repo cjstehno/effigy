@@ -1,9 +1,20 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.8'
+    }
+}
+
 subprojects {
     version = '0.3.0'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'
     apply plugin: 'codenarc'
+    apply plugin: 'com.github.ben-manes.versions'
 
     compileJava {
         sourceCompatibility = 8
@@ -23,13 +34,13 @@ subprojects {
     }
 
     dependencies {
-        compile 'org.codehaus.groovy:groovy-all:2.4.0'
+        compile 'org.codehaus.groovy:groovy-all:2.4.3'
 
-        testCompile 'junit:junit:4.11'
+        testCompile 'junit:junit:4.12'
         testCompile 'org.mockito:mockito-all:1.9.5'
 
-        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.0"
-        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.0"
+        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.3"
+        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.3"
     }
 
     test {
