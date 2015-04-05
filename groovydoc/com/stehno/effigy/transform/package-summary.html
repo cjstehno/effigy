@@ -1,8 +1,25 @@
+<!--
+
+    Copyright 2003-2015 the original author or authors.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
 
-<title>com.stehno.effigy.transform (effigy-core 0.2.0 API)</title>
+<title>com.stehno.effigy.transform (effigy-core 0.3.0 API)</title>
 <meta name="keywords" content="com.stehno.effigy.transform package">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel ="stylesheet" TYPE="text/css" HREF="../../../../stylesheet.css" title="Style">
@@ -11,7 +28,7 @@
 <script type="text/javascript">
 function windowTitle()
 {
-    parent.document.title="com.stehno.effigy.transform (effigy-core 0.2.0 API)";
+    parent.document.title="com.stehno.effigy.transform (effigy-core 0.3.0 API)";
 }
 </script>
 <noscript>
@@ -51,9 +68,7 @@ function windowTitle()
     <h1 class="title">Package com.stehno.effigy.transform</h1>
 </div>
 
-<div class="header">
-    <h2 title="" class="title"></h2>
-</div>
+
 
 <div class="contentContainer">
 
@@ -74,7 +89,7 @@ function windowTitle()
                                     RepositoryMethodVisitor
                                 </a></strong>
                             </td>
-                            <td>Created by cjstehno on 1/1/15.</td>
+                            <td>Defines a specialized AST node visitor used by the repository transformer.</td>
                         </tr>
 
                     </tbody>
@@ -102,7 +117,7 @@ function windowTitle()
                                     AnnotatedMethod
                                 </a></strong>
                             </td>
-                            <td>Created by cjstehno on 2/7/15.</td>
+                            <td>A helper object for bundling information about an annotated method.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -110,7 +125,7 @@ function windowTitle()
                                     AssociationSaveMethodInjector
                                 </a></strong>
                             </td>
-                            <td>Created by cjstehno on 12/28/14.</td>
+                            <td>Generates the entity association saving method for <cod>@Create</code> and <code>@Update</code> annotations.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -134,7 +149,7 @@ function windowTitle()
                                     CountTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Count annotations.</td>
+                            <td>Transformer used to process the <code>@Count</code> annotations.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -142,7 +157,7 @@ function windowTitle()
                                     CreateTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Create annotation.</td>
+                            <td>Transformer used to process the <code>@Create</code> annotation.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -150,7 +165,7 @@ function windowTitle()
                                     DeleteTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Delete annotation.</td>
+                            <td>Transformer used to process the <code>@Delete</code> annotation.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -158,7 +173,7 @@ function windowTitle()
                                     EntityResultSetExtractorTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used for creating a ResultSetExtractor instance for the entity.</td>
+                            <td>Transformer used for creating a <code>ResultSetExtractor</code> instance for the entity.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -166,7 +181,7 @@ function windowTitle()
                                     EntityRowMapperTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used for creating a RowMapper instance for the entity.</td>
+                            <td>Transformer used for creating a <code>RowMapper</code> instance for the entity.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -174,7 +189,7 @@ function windowTitle()
                                     ExistsTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Exists annotations.</td>
+                            <td>Transformer used to process the <code>@Exists</code> annotations.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -190,7 +205,7 @@ function windowTitle()
                                     RepositoryTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used for processing the EffigyRepository annotation.</td>
+                            <td>Transformer used for processing the <code>EffigyRepository</code> annotation.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -198,7 +213,7 @@ function windowTitle()
                                     RetrieveTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Retrieve annotations.</td>
+                            <td>Transformer used to process the <code>@Retrieve</code> annotations.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -214,7 +229,7 @@ function windowTitle()
                                     SqlSelectTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process @SqlSelect annotated methods.</td>
+                            <td>Transformer used to process <code>@SqlSelect</code> annotated methods.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -222,7 +237,7 @@ function windowTitle()
                                     SqlUpdateTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process @SqlUpdate annotated methods.</td>
+                            <td>Transformer used to process <code>@SqlUpdate</code> annotated methods.</td>
                         </tr>
 <tr class="altColor">
                             <td class="colOne">
@@ -230,7 +245,7 @@ function windowTitle()
                                     UpdateTransformer
                                 </a></strong>
                             </td>
-                            <td>Transformer used to process the @Update annotations.</td>
+                            <td>Transformer used to process the <code>@Update</code> annotations.</td>
                         </tr>
 
                     </tbody>
@@ -258,7 +273,7 @@ function windowTitle()
                                     EffigyTransformationException
                                 </a></strong>
                             </td>
-                            <td>Created by cjstehno on 12/28/14.</td>
+                            <td>Represents an exception caught and rethrown (or generated) during AST processing.</td>
                         </tr>
 
                     </tbody>

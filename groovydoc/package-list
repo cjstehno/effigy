@@ -1,6 +1,6 @@
 com.stehno.effigy.annotation
+com.stehno.effigy.dsl
 com.stehno.effigy.jdbc
-com.stehno.effigy.logging
 com.stehno.effigy.transform
 com.stehno.effigy.transform.model
 com.stehno.effigy.transform.sql

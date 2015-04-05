@@ -1,0 +1,180 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>RowMapper DSL - Effigy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/highlight.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/my.css">
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <i class="fa fa-bars sidebar-toggle"></i>
+        <span class="title"><a href="index.html">Effigy</a></span>
+      </div>
+      <div class="sidebar">
+        <ul>
+          <li class="unnumbered visible">
+            <a href="index.html" data-alt-hash="effigy-user-guide">Effigy User Guide</a>
+            <ul>
+              <li class="unnumbered visible"><a href="index.html#license">License</a></li>
+              <li class="unnumbered visible"><a href="index.html#relevant-links">Relevant Links</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="Introduction.html" data-alt-hash="introduction">Introduction</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Introduction.html#what-effigy-is">What Effigy Is</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#what-effigy-is-not">What Effigy Is Not</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#why-effigy-exists">Why Effigy Exists</a></li>
+              <li class="unnumbered visible"><a href="Introduction.html#how-the-sausage-is-made">How the Sausage Is Made</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="GettingStarted.html" data-alt-hash="getting-started">Getting Started</a>
+            <ul>
+              <li class="unnumbered visible"><a href="GettingStarted.html#support-and-requirements">Support and Requirements</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-development">Setup for Development</a></li>
+              <li class="unnumbered visible"><a href="GettingStarted.html#setup-for-use">Setup for Use</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="Entities.html" data-alt-hash="entities">Entities</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Entities.html#entity">@Entity</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#column">@Column</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#id">@Id</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#version">@Version</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#embedded">@Embedded</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#component">@Component</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#association">@Association</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#mapped-association">@Mapped Association</a></li>
+            </ul>
+          </li>
+          <li class="unnumbered visible">
+            <a href="Repositories.html" data-alt-hash="repositories">Repositories</a>
+            <ul>
+              <li class="unnumbered visible"><a href="Repositories.html#repository">@Repository</a></li>
+              <li class="unnumbered visible">
+                <a href="Repositories.html#crud-annotations">CRUD Annotations</a>
+                <ul>
+                  <li class="unnumbered visible"><a href="Repositories.html#create">@Create</a></li>
+                  <li class="unnumbered visible">
+                    <a href="Repositories.html#retrieve">@Retrieve</a>
+                    <ul>
+                      <li class="unnumbered invisible"><a href="Repositories.html#offset">@Offset</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#limit">@Limit</a></li>
+                    </ul>
+                  </li>
+                  <li class="unnumbered visible"><a href="Repositories.html#update">@Update</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#delete">@Delete</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#exists">@Exists</a></li>
+                  <li class="unnumbered visible"><a href="Repositories.html#count">@Count</a></li>
+                </ul>
+              </li>
+              <li class="unnumbered visible">
+                <a href="Repositories.html#sql-annotations">SQL Annotations</a>
+                <ul>
+                  <li class="unnumbered visible">
+                    <a href="Repositories.html#sqlselect">@SqlSelect</a>
+                    <ul>
+                      <li class="unnumbered invisible"><a href="Repositories.html#rowmapper">@RowMapper</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#resultsetextractor">@ResultSetExtractor</a></li>
+                      <li class="unnumbered invisible"><a href="Repositories.html#preparedstatementsetter">@PreparedStatementSetter</a></li>
+                    </ul>
+                  </li>
+                  <li class="unnumbered visible"><a href="Repositories.html#sqlupdate">@SqlUpdate</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li class="unnumbered visible"><a href="RowMapperDsl.html" data-alt-hash="rowmapper-dsl">RowMapper DSL</a></li>
+        </ul>
+      </div>
+      <div class="content">
+        <div class="content-handle"></div>
+        <div class="content-container">
+          <div class="content-nav content-nav-top">
+            <a class="prev-page" href="Repositories.html">
+            <i class="fa fa-angle-left"></i>
+            Repositories
+            </a>
+          </div>
+          <div class="page-toc">
+            <ul>
+              <li class="unnumbered visible"><a href="#rowmapper-dsl">RowMapper DSL</a></li>
+            </ul>
+          </div>
+          <div class="main-content">
+            <h1 id="rowmapper-dsl">RowMapper DSL</h1>
+            <p>The <code>com.stehno.effigy.dsl.RowMapperDsl</code> class provides a DSL used to define and configure Spring RowMappers.</p>
+            <p>Given a couple of domain objects to be mapped from the database:</p>
+            <pre><code class="groovy">@ToString
+class InterestingObject {
+
+    String partName
+    Date someDate
+    int lineNumber
+    List&lt;String&gt; items
+    EmbedddObject something
+}
+
+@ToString
+class EmbedddObject {
+    long id
+    String label
+}
+</code></pre>
+            <p>a <code>RowMapper</code> may be created using the DSL as follows:</p>
+            <pre><code class="groovy">RowMapper&lt;InterestingObject&gt; rowMapper = mapper(InterestingObject) {
+    map &#39;partName&#39;
+    map &#39;someDate&#39; using { x -&gt; new Date(x) }
+    map &#39;items&#39; from &#39;line_items&#39; using { x -&gt; x.split(&#39;;&#39;) }
+    map &#39;lineNumber&#39; from &#39;line_number&#39;
+    map &#39;something&#39; using mapper(EmbedddObject, &#39;obj_&#39;) {
+        map &#39;id&#39;
+        map &#39;label&#39;
+    }
+}
+</code></pre>
+            <p>Properties may be mapped in four methods:</p>
+            <pre><code class="groovy">map &#39;partName&#39;
+map &#39;lineNumber&#39; from &#39;line_number&#39;
+</code></pre>
+            <p>Where the property <code>partName</code> will be mapped from a database field named <code>part_name</code>. The default behavior when a &ldquo;from&rdquo; is not called is to convert the property name to underscore-case to find the field name.</p>
+            <p>In some cases, the incoming data from the database must be transformed in some manner before being applied to the target object. This may be accomplished with the &ldquo;using&rdquo; method call, which accepts a <code>Closure</code> or a <code>RowMapper</code>:</p>
+            <pre><code class="groovy">map &#39;items&#39; from &#39;line_items&#39; using { x -&gt; x.split(&#39;;&#39;) }
+</code></pre>
+            <p>The <code>RowMapper</code> case allows a property to be populated from multiple columns of the database table (such as for an embedded object):</p>
+            <pre><code class="groovy">map &#39;something&#39; using mapper(EmbedddObject, &#39;obj_&#39;) {
+    map &#39;id&#39;
+    map &#39;label&#39;
+}
+</code></pre>
+            <p>The generated <code>RowMappers</code> are not compiled code, but simply a convenient builder construct. Due to this fact, they are not recommended in cases where high-performance is desired.</p>
+            <blockquote>
+              <p>TBD: AST-based &ldquo;compiled&rdquo; RowMapper DSL&hellip;</p>
+            </blockquote>
+          </div>
+          <div class="content-nav content-nav-bottom">
+            <a class="prev-page" href="Repositories.html">
+            <i class="fa fa-angle-left"></i>
+            Repositories
+            </a>
+          </div>
+          <div class="footer">
+            <p class="version text-muted">Version 1.0</p>
+            <p class="credit text-muted">Powered by <a href="https://github.com/kobo/gaiden">Gaiden</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="js/jquery-2.1.1.min.js"></script>
+    <script src="js/highlight.js"></script>
+    <script src="js/application.js"></script>
+    <script src="js/my.js"></script>
+  </body>
+</html>

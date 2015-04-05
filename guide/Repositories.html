@@ -91,6 +91,7 @@
               </li>
             </ul>
           </li>
+          <li class="unnumbered visible"><a href="RowMapperDsl.html" data-alt-hash="rowmapper-dsl">RowMapper DSL</a></li>
         </ul>
       </div>
       <div class="content">
@@ -100,6 +101,10 @@
             <a class="prev-page" href="Entities.html">
             <i class="fa fa-angle-left"></i>
             Entities
+            </a>
+            <a class="next-page" href="RowMapperDsl.html">
+            RowMapper DSL
+            <i class="fa fa-angle-right"></i>
             </a>
           </div>
           <div class="page-toc">
@@ -286,6 +291,9 @@ abstract int countByAgeRange(int min, int max)
 @RowMapper(type=AbcMapper)
 abstract Collection&lt;Abc&gt; findByDAndE(String d, int e)
 </code></pre>
+            <blockquote>
+              <p>The <a href="RowMapperDsl.html">RowMapper Dsl</a> may be used to generate RowMappers (provided by a static factory method).</p>
+            </blockquote>
             <h4 id="resultsetextractor">@ResultSetExtractor</h4>
             <p>The <code>@ResultSetExtractor</code> annotation is used with a <code>@SqlSelect</code> annotation to provide information about the <code>ResultSetExtractor</code> to be used.</p>
             <p>There are three distinct configuration scenarios for extractor annotations, they can be defined by the annotations <code>bean</code>, or <code>type</code> properties, or by a combination of the <code>type</code> and <code>factory</code> properties.</p>
@@ -343,6 +351,10 @@ abstract boolean addPet(String name, String breed)
             <a class="prev-page" href="Entities.html">
             <i class="fa fa-angle-left"></i>
             Entities
+            </a>
+            <a class="next-page" href="RowMapperDsl.html">
+            RowMapper DSL
+            <i class="fa fa-angle-right"></i>
             </a>
           </div>
           <div class="footer">
