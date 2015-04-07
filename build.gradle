@@ -16,10 +16,8 @@ subprojects {
     apply plugin: 'codenarc'
     apply plugin: 'com.github.ben-manes.versions'
 
-    compileJava {
-        sourceCompatibility = 8
-        targetCompatibility = 8
-    }
+    sourceCompatibility = 8
+    targetCompatibility = 8
 
     compileGroovy {
         groovyOptions.optimizationOptions.indy = false
