@@ -36,8 +36,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
  */
 class AstUtils {
 
-    private static final String SEPARATOR_LINE = '-' * 50
-
     static List<ASTNode> code(Map bindings = [:], String text) {
         new AstBuilder().buildFromString(
             CompilePhase.CANONICALIZATION,

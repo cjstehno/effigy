@@ -49,7 +49,7 @@ import java.lang.annotation.*
      * The class implementing <code>PreparedStatementSetter</code> that is to be used by the query. If the default value is used, this property will
      * be ignored.
      */
-    Class type() default Void.class
+    Class type() default Void
 
     /**
      * The name of a static factory method on the class provided by the 'type' property. This property is ignored unless a 'type' value is specified.

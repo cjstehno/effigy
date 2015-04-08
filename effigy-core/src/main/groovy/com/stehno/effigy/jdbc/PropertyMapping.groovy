@@ -30,7 +30,7 @@ class PropertyMapping {
     private String fieldName
     private Closure transformer
     private RowMapper rowMapper
-    private String prefix
+    private final String prefix
 
     PropertyMapping(String propertyName, String prefix) {
         this.propertyName = propertyName

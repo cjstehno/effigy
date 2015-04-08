@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.transform.jdbc.EntityRowMapper
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
@@ -36,6 +37,7 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+
 /**
  * Transformer used for creating a RowMapper instance for the Component associations of an Entity.
  */

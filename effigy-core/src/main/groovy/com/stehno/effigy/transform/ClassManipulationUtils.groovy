@@ -70,6 +70,7 @@ class ClassManipulationUtils {
 
     private static final String SET_METHOD_ARGUMENTS = 'setMethodArguments'
 
+    @SuppressWarnings('ParameterReassignment')
     static Expression applyArguments(MethodNode methodNode, Class helperType, BlockStatement code, Expression generator) {
         if (helperFrom(methodNode, helperType)?.arguments) {
             String varName = "__${helperType.simpleName}"

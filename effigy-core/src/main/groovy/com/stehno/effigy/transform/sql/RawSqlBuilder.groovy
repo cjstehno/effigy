@@ -30,7 +30,7 @@ class RawSqlBuilder {
 
     private static final VARIABLE_PATTERN = /:[A-Za-z0-9]*/
     private final String text
-    private final paramExpressions = [:] as Map<String, Expression>
+    private final Map<String, Expression> paramExpressions = [:]
 
     /**
      * Creates the SQL builder with the given SQL String.

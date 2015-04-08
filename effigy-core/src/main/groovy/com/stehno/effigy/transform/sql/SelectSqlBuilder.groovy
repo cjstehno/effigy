@@ -45,9 +45,17 @@ class SelectSqlBuilder implements Predicated<SelectSqlBuilder> {
     @Override
     List<Expression> getParams() {
         def result = []
+
         result.addAll(getWhereParams())
-        if (limitParam) result.add(limitParam)
-        if (offsetParam) result.add(offsetParam)
+
+        if (limitParam) {
+            result.add(limitParam)
+        }
+
+        if (offsetParam) {
+            result.add(offsetParam)
+        }
+
         result
     }
 
