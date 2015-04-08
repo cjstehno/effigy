@@ -24,17 +24,11 @@ import static groovy.lang.Closure.DELEGATE_FIRST
  * Builder used to create RowMapper instances based on the RowMapper DSL.
  * This API is not intended for direct use, but rather through the DSL.
  *
- * <pre>RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {
- *       map 'partName'
- *       map 'someDate' using { x -> new Date(x) }
- *       map 'items' from 'line_items' using { x -> x.split(';') }
- *       map 'lineNumber' from 'line_number'
- *       map 'something' using mapper(EmbedddObject, 'obj_') {
- *           map 'id'
+ * <pre>RowMapper<InterestingObject> rowMapper = mapper(InterestingObject) {*       map 'partName'
+ *       map 'someDate' using { x -> new Date(x) }*       map 'items' from 'line_items' using { x -> x.split(';') }*       map 'lineNumber' from 'line_number'
+ *       map 'something' using mapper(EmbedddObject, 'obj_') {*           map 'id'
  *           map 'label'
- *       }
- *     }
- * </pre>
+ *}*}* </pre>
  */
 class RowMapperBuilder<T> {
 
@@ -70,7 +64,7 @@ class RowMapperBuilder<T> {
     static <T> RowMapper<T> mapper(
         Class<? extends T> mappedType,
         String prefix = '',
-        @DelegatesTo(value=RowMapperBuilder, strategy = DELEGATE_FIRST) Closure closure
+        @DelegatesTo(value = RowMapperBuilder, strategy = DELEGATE_FIRST) Closure closure
     ) {
         def builder = new RowMapperBuilder<T>(mappedType, prefix)
         closure.delegate = builder
@@ -79,6 +73,7 @@ class RowMapperBuilder<T> {
         builder.build()
     }
 
+    @SuppressWarnings('UnusedPrivateMethod')
     private RowMapper<T> build() {
         new DynamicRowMapper<T>(mappedType, mappings.asImmutable())
     }

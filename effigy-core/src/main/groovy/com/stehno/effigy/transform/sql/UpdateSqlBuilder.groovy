@@ -41,7 +41,7 @@ class UpdateSqlBuilder implements Predicated<UpdateSqlBuilder> {
             result.addAll(setterParams)
         }
 
-        result.addAll(getWhereParams())
+        result.addAll(whereParams)
 
         result
     }
