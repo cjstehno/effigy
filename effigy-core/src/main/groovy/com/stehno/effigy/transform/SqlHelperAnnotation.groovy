@@ -57,7 +57,7 @@ class SqlHelperAnnotation {
 
             return new SqlHelperAnnotation(
                 AnnotationUtils.extractString(annot, BEAN, DEFAULT_EMPTY),
-                helperNode != ClassHelper.VOID_TYPE ? helperNode : null,
+                helperNode == ClassHelper.VOID_TYPE ? null : helperNode,
                 AnnotationUtils.extractString(annot, FACTORY, DEFAULT_EMPTY),
                 args ? false : AnnotationUtils.extractBoolean(annot, 'singleton', true),
                 args
@@ -101,16 +101,15 @@ class SqlHelperAnnotation {
             }
 
             return varX(name)
-
-        } else {
-            if (!hasField(repoNode, APPLICATION_CONTEXT)) {
-                FieldNode contextNode = addSafeField(repoNode, ApplicationContext, APPLICATION_CONTEXT, new EmptyExpression())
-                autowireField contextNode
-                addFieldProperty repoNode, contextNode
-            }
-
-            return callX(varX(APPLICATION_CONTEXT), 'getBean', args(constX(name), classX(PreparedStatementSetter)))
         }
+
+        if (!hasField(repoNode, APPLICATION_CONTEXT)) {
+            FieldNode contextNode = addSafeField(repoNode, ApplicationContext, APPLICATION_CONTEXT, new EmptyExpression())
+            autowireField contextNode
+            addFieldProperty repoNode, contextNode
+        }
+
+        return callX(varX(APPLICATION_CONTEXT), 'getBean', args(constX(name), classX(PreparedStatementSetter)))
     }
 
     private static Expression applySharedField(ClassNode repoNode, Class helperType, String name, Expression generator, boolean singleton) {
@@ -120,9 +119,8 @@ class SqlHelperAnnotation {
             }
 
             return varX(name)
-
-        } else {
-            return generator
         }
+
+        return generator
     }
 }

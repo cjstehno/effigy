@@ -50,7 +50,7 @@ subprojects {
     }
 
     codenarc {
-        toolVersion = '0.22'
+        toolVersion = '0.23'
     }
 
     codenarcMain {
