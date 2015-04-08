@@ -14,6 +14,7 @@
           <ul class="nav navbar-nav">
             <li><a href="<%if (content.rootpath) {%>${content.rootpath}<% } else { %><% }%>index.html">Home</a></li>
             <li><a href="<%if (content.rootpath) {%>${content.rootpath}<% } else { %><% }%>about.html">About</a></li>
+            <li><a href="https://github.com/cjstehno/effigy/issues">Issues</a></li>
               <li><a href="<% if (content.rootpath) { %>${content.rootpath}<% } else { %><% } %>guide" target="_blank">User Guide</a></li>
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reports <b class="caret"></b></a>
