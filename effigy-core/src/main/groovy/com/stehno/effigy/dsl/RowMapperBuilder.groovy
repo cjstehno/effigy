@@ -18,6 +18,8 @@ package com.stehno.effigy.dsl
 
 import org.springframework.jdbc.core.RowMapper
 
+import static groovy.lang.Closure.DELEGATE_FIRST
+
 /**
  * Builder used to create RowMapper instances based on the RowMapper DSL.
  * This API is not intended for direct use, but rather through the DSL.
@@ -59,10 +61,10 @@ class RowMapperBuilder<T> {
      * @param closure the DSL closure
      * @return the generated mapper
      */
-    static <T> RowMapper<T> mapper(Class<? extends T> mappedType, String prefix = '', Closure closure) {
+    static <T> RowMapper<T> mapper(Class<? extends T> mappedType, String prefix = '', @DelegatesTo(value=RowMapperBuilder, strategy = DELEGATE_FIRST) Closure closure) {
         def builder = new RowMapperBuilder<T>(mappedType, prefix)
         closure.delegate = builder
-        closure.resolveStrategy = Closure.DELEGATE_ONLY
+        closure.resolveStrategy = DELEGATE_FIRST
         closure()
         builder.build()
     }
