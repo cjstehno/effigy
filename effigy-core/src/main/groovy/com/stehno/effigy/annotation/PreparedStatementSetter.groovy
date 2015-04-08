@@ -31,8 +31,8 @@ import java.lang.annotation.*
  *     will be called to create the instance, rather than the constructor.</li>
  * </ul>
  *
- * Any implementation of <code>PreparedStatementSetter</code> may be used; however, if an extension of the <code>EffigyPreparedStatementSetter</code>
- * is used, the instance will have access to the arguments of the decorated method at runtime.
+ * Any implementation of <code>PreparedStatementSetter</code> may be used; however, if an extension of the
+ * <code>ArgumentAwarePreparedStatementSetter</code> is used, the instance will have access to the arguments of the decorated method at runtime.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

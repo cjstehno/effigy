@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.dsl
+package com.stehno.effigy.jdbc
 
 import com.stehno.effigy.transform.util.StringUtils
 import org.springframework.jdbc.core.RowMapper

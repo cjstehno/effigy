@@ -25,7 +25,7 @@ import org.springframework.jdbc.core.RowMapper
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.dsl.RowMapperBuilder.mapper
+import static com.stehno.effigy.jdbc.RowMapperBuilder.mapper
 import static org.mockito.Mockito.when
 
 @RunWith(MockitoJUnitRunner)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.jdbc
+package com.stehno.effigy.transform.jdbc
 
 import org.springframework.dao.DataAccessException
 import org.springframework.jdbc.core.ResultSetExtractor
@@ -27,7 +27,7 @@ import java.sql.SQLException
  * Spring <code>ResultSetExtractor</code> used internally by the Effigy entity transformers to build extractors for handling entity associations.
  * This class is not really intended for use outside of the framework.
  */
-abstract class EffigyAssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
+abstract class AssociationResultSetExtractor<T> implements ResultSetExtractor<T> {
 
     @Override
     T extractData(final ResultSet rs) throws SQLException, DataAccessException {

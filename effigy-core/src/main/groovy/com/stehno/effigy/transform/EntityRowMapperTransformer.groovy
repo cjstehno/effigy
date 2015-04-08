@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.jdbc.EffigyEntityRowMapper
+import com.stehno.effigy.transform.jdbc.EntityRowMapper
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -68,7 +68,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
     private static ClassNode buildRowMapper(ClassNode entityNode, SourceUnit source) {
         String mapperName = "${entityNode.packageName}.${entityNode.nameWithoutPackage}RowMapper"
         try {
-            ClassNode mapperClassNode = classN(mapperName, EffigyEntityRowMapper)
+            ClassNode mapperClassNode = classN(mapperName, EntityRowMapper)
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'newEntity', newClass(entityNode), returnS(ctorX(newClass(entityNode)))))
 

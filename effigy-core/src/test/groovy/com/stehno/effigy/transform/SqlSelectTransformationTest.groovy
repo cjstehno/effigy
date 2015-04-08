@@ -16,7 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.jdbc.EffigyPreparedStatementSetter
+import com.stehno.effigy.jdbc.ArgumentAwarePreparedStatementSetter
 import com.stehno.effigy.test.ClassAssertions
 import com.stehno.effigy.test.ClassBuilderEnvironment
 import com.stehno.effigy.test.DatabaseEnvironment
@@ -320,7 +320,7 @@ class AgeRangeSetter implements PreparedStatementSetter {
     }
 }
 
-class NameSearchSetter extends EffigyPreparedStatementSetter {
+class NameSearchSetter extends ArgumentAwarePreparedStatementSetter {
 
     @Override
     void setValues(PreparedStatement ps, Map<String, Object> arguments) {

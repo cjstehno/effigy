@@ -26,7 +26,7 @@ import java.sql.SQLException
  * annotated with <code>@PreparedStatementSetter</code> using an implementation of this abstract class will be able to access the method arguments at
  * runtime for use within the setter.
  */
-abstract class EffigyPreparedStatementSetter implements PreparedStatementSetter, ArgumentAwareHelper {
+abstract class ArgumentAwarePreparedStatementSetter implements PreparedStatementSetter, ArgumentAwareHelper {
 
     /**
      * The arguments passed into the method. The key will be the argument name and the value will be the argument value.

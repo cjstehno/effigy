@@ -18,7 +18,7 @@ package com.stehno.effigy.transform
 import com.stehno.effigy.annotation.PreparedStatementSetter
 import com.stehno.effigy.annotation.ResultSetExtractor
 import com.stehno.effigy.annotation.RowMapper
-import com.stehno.effigy.jdbc.RowMapperRegistry
+import com.stehno.effigy.transform.jdbc.RowMapperRegistry
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode

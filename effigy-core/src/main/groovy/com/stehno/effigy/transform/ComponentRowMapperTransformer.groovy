@@ -15,7 +15,7 @@
  */
 
 package com.stehno.effigy.transform
-import com.stehno.effigy.jdbc.EffigyEntityRowMapper
+import com.stehno.effigy.transform.jdbc.EntityRowMapper
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -83,7 +83,7 @@ class ComponentRowMapperTransformer implements ASTTransformation {
         String mapperName = rowMapperName(assocNode)
 
         try {
-            ClassNode mapperClassNode = classN(mapperName, EffigyEntityRowMapper)
+            ClassNode mapperClassNode = classN(mapperName, EntityRowMapper)
 
             // TODO: need to refactor this away - since its not used here
             mapperClassNode.addMethod(methodN(PROTECTED, 'newEntity', newClass(assocNode), returnS(ctorX(newClass(assocNode)))))

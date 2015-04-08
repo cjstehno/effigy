@@ -16,8 +16,8 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.jdbc.EffigyAssociationResultSetExtractor
-import com.stehno.effigy.jdbc.EffigyCollectionAssociationResultSetExtractor
+import com.stehno.effigy.transform.jdbc.AssociationResultSetExtractor
+import com.stehno.effigy.transform.jdbc.CollectionAssociationResultSetExtractor
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.MapEntryExpression
@@ -105,7 +105,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ClassNode classNode = new ClassNode(
                 extractorName,
                 Modifier.PUBLIC,
-                makeClassSafe(EffigyAssociationResultSetExtractor),
+                makeClassSafe(AssociationResultSetExtractor),
                 [] as ClassNode[],
                 [] as MixinNode[]
             )
@@ -199,7 +199,7 @@ class EntityResultSetExtractorTransformer implements ASTTransformation {
             ClassNode classNode = new ClassNode(
                 extractorName,
                 Modifier.PUBLIC,
-                makeClassSafe(EffigyCollectionAssociationResultSetExtractor),
+                makeClassSafe(CollectionAssociationResultSetExtractor),
                 [] as ClassNode[],
                 [] as MixinNode[]
             )

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.jdbc
+package com.stehno.effigy.transform.jdbc
 
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.expr.Expression

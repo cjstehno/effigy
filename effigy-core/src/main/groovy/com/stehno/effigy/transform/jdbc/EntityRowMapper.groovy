@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.jdbc
+package com.stehno.effigy.transform.jdbc
 
 import org.springframework.jdbc.core.RowMapper
 
@@ -24,7 +24,7 @@ import java.sql.SQLException
 /**
  * Used internally as a basis for the generated Effigy entity row mappers.
  */
-abstract class EffigyEntityRowMapper<E> implements RowMapper<E> {
+abstract class EntityRowMapper<E> implements RowMapper<E> {
 
     /**
      * The column name prefix to be used in column data retrieval. Defaults to an empty string.

@@ -1,12 +1,12 @@
 
 # Things to do
 
+> This is just notes to myself - don't try to figure it out :-)
+
 * more documentation around the sql template language support
 * document how users can modify the logger settings for the transforms
 
 ---------------------------------------------
-
-> This is just notes to myself - don't try to figure it out :-)
 
 * Add support for naked non-entity field types auto-mapping to Embedded
 * Add support for collection fields without annotations
@@ -23,47 +23,14 @@ FIXME: @Retrieve support offset with association queries
 
 FIXME: mapped assocations require an instance of their collection by default - should allow null by default
 
-* gmetrics reporting might be interesting
-
-
 consider removing the version/id updates on create - since other fields may be updated by sql and not transferred, it's probably best to just leave
 everything to the client to call a retrieve method
 
-Should Effigy provide any kind of validation and/or validation hooks?
-- annotation-driven validation support hooks
-    length(min,max,range)
-    notnull
-    number(min,max,range)
-    (are there already spring annotations for thsi stuff)
-
-support for result caching - basically integrate with the spring caching mechanism (optional)
-
-
-* ability to create and retrieve entity
-    Job job = jobRepository.create(attributes:[user:'admin'])
-
+? should Effigy provide/support any sort of validation framework
+? should Effigy support query/result caching (spring-based)
+? should Effigy support gmetrics around CRUD/SQL methods
 
 /////////////////////////
-
-Person
-    Name (first, middle, last)
-    dob
-    married
-    gender (male|female)
-    EmploymentInfo (title, salary) 1:1
-    Map<label, Address> addresses
-    List<Appointment> appointments
-
-Appointment
-    start
-    end
-    description
-    Set<Person> attendees
-    Room room
-
-Room
-    name
-    capacity
 
 ! retrieve based on association criteria
 ! allow for cascade operations on associations (create, update, delete)?
@@ -73,6 +40,42 @@ Room
 FIXME: @SqlSelect support for Entities in mappers and where clauses (?)
 
 
-* bring standard tests into main project and keep test as a full test project (spring)
+/////////////
 
+## New test schema
 
+Room
+    Long id
+    Name name (number,label) 1:1
+    byte capacity
+    Location location (lat, lon) embedded
+    Map<Scale,Image> images
+    
+Meeting
+    id 
+    version
+    Date startDate
+    Date endDate
+    Room room (how does this translate)
+    Person organizer
+    Set<Person> attendees
+    Collection<Feature> features
+    
+Feature
+    id
+    Feature.Type (enum) type
+    String description
+    
+Person
+    id
+    version
+    Name name (first, middle, last) embedded
+    CompanyId (some custom type like a serialized obj or something)
+    
+Image
+    id
+    byte[] content
+    int width
+    int height
+    Scale scale (enum)
+    String contentType
