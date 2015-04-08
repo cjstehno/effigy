@@ -58,7 +58,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
     }
 
     @Override
-    @SuppressWarnings(['GroovyAssignabilityCheck', 'GStringExpressionWithinString','DuplicateNumberLiteral'])
+    @SuppressWarnings(['GroovyAssignabilityCheck', 'GStringExpressionWithinString', 'DuplicateNumberLiteral'])
     protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
         ensureParameters methodNode
 

@@ -36,8 +36,13 @@ class UpdateSqlBuilder implements Predicated<UpdateSqlBuilder> {
     @Override
     List<Expression> getParams() {
         def result = []
-        if (setterParams) result.addAll(setterParams)
+
+        if (setterParams) {
+            result.addAll(setterParams)
+        }
+
         result.addAll(getWhereParams())
+
         result
     }
 
