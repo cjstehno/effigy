@@ -15,7 +15,6 @@
  */
 
 package com.stehno.effigy.transform.model
-
 import com.stehno.effigy.annotation.*
 import com.stehno.effigy.transform.util.StringUtils
 import org.codehaus.groovy.ast.AnnotatedNode
@@ -26,10 +25,11 @@ import org.codehaus.groovy.ast.FieldNode
 import java.sql.Types
 
 import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
 import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static java.lang.Integer.MIN_VALUE
 import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
-
 /**
  * Utility functions for working with the Effigy entity model.
  */
@@ -248,36 +248,48 @@ class EntityModel {
         return StringUtils.camelCaseToUnderscore(field.name)
     }
 
-    // FIXME: need to expand the support here (and allow for custom conversions)
     private static int sqlType(final FieldNode fieldNode) {
-        if (fieldNode.type.enum) {
-            return Types.VARCHAR
+        int typeValue = MIN_VALUE
+        AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
+        if (fieldColumnAnnot) {
+            typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
         }
 
-        switch (fieldNode.type.name) {
-            case 'java.lang.String': return Types.VARCHAR
-            case 'java.sql.Date':
-            case 'java.util.Date':
-                return Types.TIMESTAMP
-            case 'java.lang.Boolean':
-            case 'boolean':
-                return Types.BOOLEAN
-            case 'java.lang.Integer':
-            case 'int':
-                return Types.INTEGER
-            case 'java.lang.Long':
-            case 'long':
-                return Types.BIGINT
-            case 'java.lang.Double':
-            case 'double':
-                return Types.DOUBLE
-            case 'java.lang.Float':
-            case 'float':
-                return Types.FLOAT
-            case 'java.lang.Short':
-            case 'short':
-                return Types.TINYINT
-            default: return Types.JAVA_OBJECT
+        if (typeValue != MIN_VALUE) {
+            return typeValue
+
+        } else {
+            // use the provided default mappings
+
+            if (fieldNode.type.enum) {
+                return Types.VARCHAR
+            }
+
+            switch (fieldNode.type.name) {
+                case 'java.lang.String': return Types.VARCHAR
+                case 'java.sql.Date':
+                case 'java.util.Date':
+                    return Types.TIMESTAMP
+                case 'java.lang.Boolean':
+                case 'boolean':
+                    return Types.BOOLEAN
+                case 'java.lang.Integer':
+                case 'int':
+                    return Types.INTEGER
+                case 'java.lang.Long':
+                case 'long':
+                    return Types.BIGINT
+                case 'java.lang.Double':
+                case 'double':
+                    return Types.DOUBLE
+                case 'java.lang.Float':
+                case 'float':
+                    return Types.FLOAT
+                case 'java.lang.Short':
+                case 'short':
+                    return Types.TINYINT
+                default: return Types.JAVA_OBJECT
+            }
         }
     }
 

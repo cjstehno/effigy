@@ -33,6 +33,9 @@ The `@Column` annotation is an optional one applied to the entity properties. It
 with the property. By default, if this annotation is not used, the property name will be converted from camel-case to underscore-case (e.g. firstName 
 becomes first_name).
 
+The `@Column` annotation also provides an optional `type` property which allows the SQL type of the column to be explicitly specified as one of the 
+`java.sql.Types` value constants. If no value is provided, the default set of simple Java-to-SQL type mappings will be used.
+
 ## @Id
 
 The `@Id` annotation is applied to an entity property that is to be defined as the unique identifier for an instance of the entity. While an id is not

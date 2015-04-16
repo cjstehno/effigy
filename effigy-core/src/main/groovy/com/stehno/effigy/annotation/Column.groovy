@@ -31,4 +31,24 @@ import java.lang.annotation.*
      * column name in the database.
      */
     String value()
+
+    /**
+     * Used to specify the SQL type of the column (java.sql.Types value). If not set, the default simple type mappings will be used.
+     */
+    int type() default -2147483648
+
+    // Integer.MIN_VALUE
+
+    /**
+     * FIXME: document
+     */
+    Class handler() default Void
+}
+
+// FIXME: move this out
+interface FieldTypeHandler<T> {
+
+    T readField()
+
+    void writeField(T)
 }
