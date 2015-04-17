@@ -38,7 +38,7 @@ import java.lang.annotation.*
     int type() default -2147483648
 
     /**
-     * FIXME: document
+     * FIXME: document - the methods are expected static with specific names
      */
     Class handler() default Void
 }

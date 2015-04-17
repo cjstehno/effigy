@@ -26,7 +26,8 @@ import java.sql.Types
 
 import static com.stehno.effigy.transform.model.ColumnModelType.*
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
 import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 import static java.lang.Integer.MIN_VALUE
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -262,7 +263,8 @@ class EntityModel {
         AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
 
         if (fieldColumnAnnot) {
-            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
+            int typeValue = fieldColumnAnnot?.getMember('type')?.value as Integer ?: MIN_VALUE
+            //            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
             ClassNode handlerNode = extractClass(fieldColumnAnnot, 'handler')
 
             return new ColumnModel(

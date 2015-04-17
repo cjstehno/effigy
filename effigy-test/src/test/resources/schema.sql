@@ -62,3 +62,10 @@ CREATE TABLE rooms_features (
   features_id BIGINT REFERENCES features (id),
   UNIQUE (rooms_id, features_id)
 );
+
+CREATE TABLE images (
+  id          BIGINT AUTO_INCREMENT NOT NULL PRIMARY KEY,
+  version     BIGINT                NOT NULL,
+  description VARCHAR(255)          NOT NULL,
+  cont_len    VARCHAR(100)          NOT NULL
+)
