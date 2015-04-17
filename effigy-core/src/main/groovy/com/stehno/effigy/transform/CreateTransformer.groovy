@@ -88,7 +88,7 @@ class CreateTransformer extends MethodImplementingTransformation {
             ))),
 
             stmt(callX(varX(FACTORY), 'setReturnGeneratedKeys', args(constX(true)))),
-            stmt(callX(varX(FACTORY), 'setGeneratedKeysColumnNames', args(constX(identifier(entityNode).columnName)))),
+            stmt(callX(varX(FACTORY), 'setGeneratedKeysColumnNames', args(constX(identifier(entityNode).column.name)))),
 
             stmt(callX(varX('jdbcTemplate'), 'update', args(
                 callX(varX(FACTORY), 'newPreparedStatementCreator', args(castX(make(Object[]), new ListExpression(sql.values)))),
@@ -150,10 +150,10 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             } else {
                 if (pi.type.enum) {
-                    sql.column(pi.columnName, safeCallX(propX(varX(entityVar), pi.propertyName), 'name'))
+                    sql.column(pi.column.name, safeCallX(propX(varX(entityVar), pi.propertyName), 'name'))
 
                 } else {
-                    sql.column(pi.columnName, propX(varX(entityVar), pi.propertyName))
+                    sql.column(pi.column.name, propX(varX(entityVar), pi.propertyName))
                 }
             }
         }

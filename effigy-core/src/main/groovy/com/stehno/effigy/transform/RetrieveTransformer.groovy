@@ -15,12 +15,11 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.annotation.Limit
 import com.stehno.effigy.annotation.Offset
+import com.stehno.effigy.transform.model.ColumnPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.model.EntityPropertyModel
-import com.stehno.effigy.transform.model.IdentifierPropertyModel
 import com.stehno.effigy.transform.sql.SelectSqlBuilder
 import com.stehno.effigy.transform.sql.SqlTemplate
 import org.codehaus.groovy.ast.AnnotationNode
@@ -38,7 +37,6 @@ import static com.stehno.effigy.transform.util.JdbcTemplateHelper.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
-
 /**
  * Transformer used to process the <code>@Retrieve</code> annotations.
  */
@@ -109,7 +107,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
         // add component cols
         components(entityNode).each { ap ->
             entityProperties(ap.type).each { p ->
-                sql.column(ap.lookupTable, p.columnName as String, "${ap.propertyName}_${p.columnName}")
+                sql.column(ap.lookupTable, p.column.name as String, "${ap.propertyName}_${p.column.name}")
             }
         }
 
@@ -119,14 +117,14 @@ class RetrieveTransformer extends MethodImplementingTransformation {
 
         associations(entityNode).each { ap ->
             String associatedTable = entityTable(ap.associatedType)
-            IdentifierPropertyModel associatedIdentifier = identifier(ap.associatedType)
+            ColumnPropertyModel associatedIdentifier = identifier(ap.associatedType)
 
-            sql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
-            sql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.columnName)
+            sql.leftOuterJoin(ap.joinTable, ap.joinTable, ap.entityColumn, entityTableName, entityIdentifier.column.name)
+            sql.leftOuterJoin(associatedTable, ap.joinTable, ap.assocColumn, associatedTable, associatedIdentifier.column.name)
         }
 
         components(entityNode).each { ap ->
-            sql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.columnName)
+            sql.leftOuterJoin(ap.lookupTable, ap.lookupTable, ap.entityColumn, entityTableName, entityIdentifier.column.name)
         }
 
         applyParameters(sql, new AnnotatedMethod(annotationNode, entityNode, methodNode))
@@ -149,7 +147,7 @@ class RetrieveTransformer extends MethodImplementingTransformation {
                 selectSql.column(table, cn, "${prefix}_$cn")
             }
         } else {
-            selectSql.column(table, p.columnName as String, "${prefix}_${p.columnName}")
+            selectSql.column(table, p.column.name as String, "${prefix}_${p.column.name}")
         }
     }
 

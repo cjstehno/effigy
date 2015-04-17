@@ -15,8 +15,8 @@
  */
 
 package com.stehno.effigy.transform.model
+
 import com.stehno.effigy.annotation.*
-import com.stehno.effigy.transform.util.StringUtils
 import org.codehaus.groovy.ast.AnnotatedNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -24,45 +24,43 @@ import org.codehaus.groovy.ast.FieldNode
 
 import java.sql.Types
 
+import static com.stehno.effigy.transform.model.ColumnModelType.*
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractInteger
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.AnnotationUtils.*
+import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 import static java.lang.Integer.MIN_VALUE
 import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE
 import static org.codehaus.groovy.ast.ClassHelper.make
+
 /**
  * Utility functions for working with the Effigy entity model.
  */
 class EntityModel {
-    // TODO: consider a trait-base approach to clean up some of the model oddness
 
     private static final String PLURAL = 's'
     private static final String DOLLAR_SIGN = '$'
     private static final String COMMA = ','
     private static final String ENTITY_COLUMN = 'entityColumn'
 
-    static IdentifierPropertyModel identifier(ClassNode entityNode) {
+    static ColumnPropertyModel identifier(ClassNode entityNode) {
         FieldNode idFieldNode = entityNode.fields.find { annotatedWith(it, Id) }
-        idFieldNode ? extractIdentifier(idFieldNode) : null
+
+        idFieldNode ? new ColumnPropertyModel(
+            ID,
+            idFieldNode.name,
+            idFieldNode.type,
+            extractColumnModel(idFieldNode)
+        ) : null
     }
 
-    private static IdentifierPropertyModel extractIdentifier(FieldNode idFieldNode) {
-        new IdentifierPropertyModel(
-            columnName: extractFieldName(idFieldNode),
-            propertyName: idFieldNode.name,
-            type: idFieldNode.type,
-            columnType: sqlType(idFieldNode)
-        )
-    }
-
-    static VersionerPropertyModel versioner(ClassNode entityNode) {
+    static ColumnPropertyModel versioner(ClassNode entityNode) {
         FieldNode versionFieldNode = entityNode.fields.find { annotatedWith(it, Version) }
 
-        return versionFieldNode ? new VersionerPropertyModel(
-            columnName: extractFieldName(versionFieldNode),
-            propertyName: versionFieldNode.name,
-            type: versionFieldNode.type,
-            columnType: sqlType(versionFieldNode)
+        versionFieldNode ? new ColumnPropertyModel(
+            VERSION,
+            versionFieldNode.name,
+            versionFieldNode.type,
+            extractColumnModel(versionFieldNode)
         ) : null
     }
 
@@ -82,32 +80,18 @@ class EntityModel {
     private static EntityPropertyModel extractProperty(FieldNode f) {
         if (!f) {
             null
+
         } else if (annotatedWith(f, Id)) {
-            new IdentifierPropertyModel(
-                columnName: extractFieldName(f),
-                propertyName: f.name,
-                type: f.type,
-                columnType: sqlType(f)
-            )
+            new ColumnPropertyModel(ID, f.name, f.type, extractColumnModel(f))
 
         } else if (annotatedWith(f, Version)) {
-            new VersionerPropertyModel(
-                columnName: extractFieldName(f),
-                propertyName: f.name,
-                type: f.type,
-                columnType: sqlType(f)
-            )
+            new ColumnPropertyModel(VERSION, f.name, f.type, extractColumnModel(f))
 
         } else if (annotatedWith(f, Embedded)) {
             extractEmbeddedProperty(f)
 
         } else {
-            new FieldPropertyModel(
-                columnName: extractFieldName(f),
-                propertyName: f.name,
-                type: f.type,
-                columnType: sqlType(f)
-            )
+            new ColumnPropertyModel(STANDARD, f.name, f.type, extractColumnModel(f))
         }
     }
 
@@ -187,30 +171,25 @@ class EntityModel {
         }
     }
 
+    // FIXME: seems like this should live in the SQL stuff (or somewhere else)
     static List<String> listColumnNames(ClassNode entityNode, boolean includeId = true) {
         def values = []
         entityProperties(entityNode, includeId).each {
             if (it instanceof EmbeddedPropertyModel) {
                 values.addAll(it.columnNames)
             } else {
-                values << it.columnName
+                values << it.column.name
             }
         }
         values
     }
 
+    // FIXME: seems like this should live in the SQL stuff (or somewhere else)
     static String columnNames(ClassNode entityNode, boolean includeId = true) {
-        def values = []
-        entityProperties(entityNode, includeId).each {
-            if (it instanceof EmbeddedPropertyModel) {
-                values.addAll(it.columnNames)
-            } else {
-                values << it.columnName
-            }
-        }
-        values.join(COMMA)
+        listColumnNames(entityNode, includeId).join(COMMA)
     }
 
+    // FIXME: seems like this should live in the SQL stuff (or somewhere else)
     static String columnPlaceholders(ClassNode entityNode, boolean includeId = true) {
         def values = []
         entityProperties(entityNode, includeId).each {
@@ -229,7 +208,7 @@ class EntityModel {
             if (it instanceof EmbeddedPropertyModel) {
                 values.addAll(it.columnTypes)
             } else {
-                values << it.columnType
+                values << it.column.type
             }
         }
         values
@@ -237,60 +216,6 @@ class EntityModel {
 
     private static boolean annotatedWith(AnnotatedNode node, Class annotClass) {
         node.getAnnotations(make(annotClass))
-    }
-
-    private static String extractFieldName(final FieldNode field) {
-        AnnotationNode fieldColumnAnnot = field.getAnnotations(make(Column))[0]
-        if (fieldColumnAnnot) {
-            return extractString(fieldColumnAnnot, 'value')
-
-        }
-        return StringUtils.camelCaseToUnderscore(field.name)
-    }
-
-    private static int sqlType(final FieldNode fieldNode) {
-        int typeValue = MIN_VALUE
-        AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
-        if (fieldColumnAnnot) {
-            typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
-        }
-
-        if (typeValue != MIN_VALUE) {
-            return typeValue
-
-        } else {
-            // use the provided default mappings
-
-            if (fieldNode.type.enum) {
-                return Types.VARCHAR
-            }
-
-            switch (fieldNode.type.name) {
-                case 'java.lang.String': return Types.VARCHAR
-                case 'java.sql.Date':
-                case 'java.util.Date':
-                    return Types.TIMESTAMP
-                case 'java.lang.Boolean':
-                case 'boolean':
-                    return Types.BOOLEAN
-                case 'java.lang.Integer':
-                case 'int':
-                    return Types.INTEGER
-                case 'java.lang.Long':
-                case 'long':
-                    return Types.BIGINT
-                case 'java.lang.Double':
-                case 'double':
-                    return Types.DOUBLE
-                case 'java.lang.Float':
-                case 'float':
-                    return Types.FLOAT
-                case 'java.lang.Short':
-                case 'short':
-                    return Types.TINYINT
-                default: return Types.JAVA_OBJECT
-            }
-        }
     }
 
     /**
@@ -303,15 +228,11 @@ class EntityModel {
         node.getAnnotations(make(Entity))
     }
 
-    static boolean isRepository(final ClassNode node) {
-        node.getAnnotations(make(Repository))
-    }
-
     private static boolean isAssociation(FieldNode fieldNode) {
         annotatedWith(fieldNode, Association) || annotatedWith(fieldNode, Component)
     }
 
-    private static EntityPropertyModel extractEmbeddedProperty(FieldNode f) {
+    private static EmbeddedPropertyModel extractEmbeddedProperty(FieldNode f) {
         String prefix = extractString(f.getAnnotations(make(Embedded))[0], 'prefix', f.name)
 
         def fldNames = []
@@ -321,8 +242,10 @@ class EntityModel {
         f.type.fields.each { embfld ->
             if (!embfld.static && !embfld.name.startsWith(DOLLAR_SIGN)) {
                 fldNames << embfld.name
-                colNames << "${prefix}_${extractFieldName(embfld)}"
-                colTypes << sqlType(embfld)
+
+                ColumnModel columnModel = extractColumnModel(embfld)
+                colNames << "${prefix}_${columnModel.name}"
+                colTypes << columnModel.type
             }
         }
 
@@ -333,5 +256,58 @@ class EntityModel {
             columnNames: colNames.asImmutable(),
             columnTypes: colTypes.asImmutable()
         )
+    }
+
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    private static ColumnModel extractColumnModel(FieldNode fieldNode) {
+        AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
+
+        if (fieldColumnAnnot) {
+            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
+
+            return new ColumnModel(
+                extractString(fieldColumnAnnot, 'value') ?: camelCaseToUnderscore(fieldNode.name),
+                typeValue != MIN_VALUE ? typeValue : resolveDefaultSqlType(fieldNode),
+                extractClass(fieldColumnAnnot, 'handler')
+            )
+        }
+
+        return new ColumnModel(
+            camelCaseToUnderscore(fieldNode.name),
+            resolveDefaultSqlType(fieldNode),
+            null
+        )
+    }
+
+    private static int resolveDefaultSqlType(final FieldNode fieldNode) {
+        if (fieldNode.type.enum) {
+            return Types.VARCHAR
+        }
+
+        switch (fieldNode.type.name) {
+            case 'java.lang.String': return Types.VARCHAR
+            case 'java.sql.Date':
+            case 'java.util.Date':
+                return Types.TIMESTAMP
+            case 'java.lang.Boolean':
+            case 'boolean':
+                return Types.BOOLEAN
+            case 'java.lang.Integer':
+            case 'int':
+                return Types.INTEGER
+            case 'java.lang.Long':
+            case 'long':
+                return Types.BIGINT
+            case 'java.lang.Double':
+            case 'double':
+                return Types.DOUBLE
+            case 'java.lang.Float':
+            case 'float':
+                return Types.FLOAT
+            case 'java.lang.Short':
+            case 'short':
+                return Types.TINYINT
+            default: return Types.JAVA_OBJECT
+        }
     }
 }

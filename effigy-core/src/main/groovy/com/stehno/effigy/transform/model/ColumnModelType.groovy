@@ -16,18 +16,9 @@
 
 package com.stehno.effigy.transform.model
 
-import groovy.transform.CompileStatic
-import groovy.transform.Immutable
-import org.codehaus.groovy.ast.ClassNode
-
 /**
- * Effigy property model representing an id field.
+ * Differentiates between the different column model types.
  */
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class IdentifierPropertyModel implements EntityPropertyModel {
-
-    String propertyName
-    ClassNode type
-    String columnName
-    int columnType
+enum ColumnModelType {
+    ID, VERSION, STANDARD
 }

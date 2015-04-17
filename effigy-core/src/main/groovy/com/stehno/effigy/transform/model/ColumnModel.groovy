@@ -16,18 +16,27 @@
 
 package com.stehno.effigy.transform.model
 
-import groovy.transform.CompileStatic
 import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Effigy property model representing a field.
+ * Model for the database column information of an entity.
  */
-@Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class FieldPropertyModel implements EntityPropertyModel {
+@Immutable(knownImmutableClasses = [ClassNode])
+class ColumnModel {
 
-    String propertyName
-    ClassNode type
-    String columnName
-    int columnType
+    /**
+     * The column name.
+     */
+    String name
+
+    /**
+     * The SQL type (java.sql.Types) value of the column.
+     */
+    int type
+
+    /**
+     * The column conversion handler class.
+     */
+    ClassNode handler
 }

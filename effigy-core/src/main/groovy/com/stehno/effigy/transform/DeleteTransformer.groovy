@@ -91,7 +91,7 @@ class DeleteTransformer extends MethodImplementingTransformation {
     private static void injectEntityIdSelection(ClassNode entityNode, MethodNode methodNode, AnnotationNode deleteNode, BlockStatement code) {
         def ident = identifier(entityNode)
 
-        def sql = select().column(ident.columnName).from(entityTable(entityNode))
+        def sql = select().column(ident.column.name).from(entityTable(entityNode))
 
         applyParameters(sql, new AnnotatedMethod(deleteNode, entityNode, methodNode))
 

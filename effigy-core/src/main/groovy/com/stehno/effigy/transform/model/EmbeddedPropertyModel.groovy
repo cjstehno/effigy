@@ -31,6 +31,7 @@ class EmbeddedPropertyModel implements EntityPropertyModel {
     List<String> columnNames
     List<Integer> columnTypes
 
+    @SuppressWarnings('GroovyUnusedDeclaration')
     List collectSubProperties(Closure closure) {
         def list = []
         fieldNames.eachWithIndex { fn, i ->

@@ -116,7 +116,7 @@ abstract class MethodImplementingTransformation implements RepositoryMethodVisit
                 !p.getAnnotations(make(Limit)) && !p.getAnnotations(make(Offset))
             }.each { mp ->
                 predicatedSql.where(
-                    "${entityTable(annotatedMethod.entity)}.${entityProperty(annotatedMethod.entity, mp.name).columnName}=?",
+                    "${entityTable(annotatedMethod.entity)}.${entityProperty(annotatedMethod.entity, mp.name).column.name}=?",
                     varX(mp.name)
                 )
             }

@@ -3,6 +3,18 @@
 
 > This is just notes to myself - don't try to figure it out :-)
 
+Field type mappings
+    create 
+    update
+    retrieve
+    delete
+        
+    (sql-insert, sql-update)?
+
+
+
+================================================
+
 * more documentation around the sql template language support
 * document how users can modify the logger settings for the transforms
 

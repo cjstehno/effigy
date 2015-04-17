@@ -30,7 +30,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.transform.model.EntityModel.*
+import static com.stehno.effigy.transform.model.EntityModel.embeddedEntityProperties
+import static com.stehno.effigy.transform.model.EntityModel.entityProperties
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -95,15 +96,14 @@ class EntityRowMapperTransformer implements ASTTransformation {
                                         entity.${p.propertyName} = new${p.propertyName.capitalize()}( ${p.propertyName}_map )
                                     }
                         <%      } else { %>
-                                    entity.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
+                                    entity.${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
                         <%      } %>
                                 emptyEntity = emptyEntity && (entity.${p.propertyName} == null)
                         <%  } %>
 
                             return emptyEntity ? null : entity
                         ''',
-                    props: entityProperties(entityNode),
-                    identifier: identifier(entityNode)
+                    props: entityProperties(entityNode)
                 )
             ), [param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[]))
 

@@ -77,12 +77,12 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
         // if no sql template is defined, we want default behavior
         if (!sql.wheres) {
-            sql.where("${entityIdent.columnName} = ?", propX(varX(entityVar), entityIdent.propertyName))
+            sql.where("${entityIdent.column.name} = ?", propX(varX(entityVar), entityIdent.propertyName))
 
             if (versioner) {
                 // minus one since we need the old version in the where clause
                 sql.where(
-                    "${versioner.columnName} = ?",
+                    "${versioner.column.name} = ?",
                     new BinaryExpression(propX(varX(entityVar), versioner.propertyName), newSymbol(MINUS, -1, -1), constX(1))
                 )
             }
@@ -134,7 +134,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
                     sql.set("${p.columnNames[idx]}=?", new PropertyExpression(propX(varX(entityVar), p.propertyName), constX(pf), true))
                 }
             } else {
-                sql.set("${p.columnName}=?", propX(varX(entityVar), p.propertyName))
+                sql.set("${p.column.name}=?", propX(varX(entityVar), p.propertyName))
             }
         }
     }
@@ -149,7 +149,7 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
             components(entityNode).each { ap ->
                 entityProperties(ap.type).collect { p ->
-                    colUpdates << "${p.columnName} = ?"
+                    colUpdates << "${p.column.name} = ?"
                     varUpdates << "entity.${p.propertyName}"
                 }.join(COMMA)
             }

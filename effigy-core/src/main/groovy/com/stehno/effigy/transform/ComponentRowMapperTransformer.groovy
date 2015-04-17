@@ -103,7 +103,7 @@ class ComponentRowMapperTransformer implements ASTTransformation {
                     '''
                         def map = [:]
                         <%  props.each { p-> %>
-                                map.${p.propertyName} = rs.getObject( prefix + '${p.columnName}' )
+                                map.${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
                         <%  } %>
                         return map.find { k,v-> v != null } ? createEntity(map) : null
                     ''',

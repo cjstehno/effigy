@@ -21,13 +21,29 @@ import groovy.transform.Immutable
 import org.codehaus.groovy.ast.ClassNode
 
 /**
- * Effigy property model representing a version field.
+ * Property model used to represent column properties, id properties and version field
+ * properties.
  */
 @Immutable(knownImmutableClasses = [ClassNode]) @CompileStatic
-class VersionerPropertyModel implements EntityPropertyModel {
+class ColumnPropertyModel implements EntityPropertyModel {
 
+    /**
+     * Differentiates the type of column being modelled.
+     */
+    ColumnModelType modelType
+
+    /**
+     * The name of the domain object property for the column mapping.
+     */
     String propertyName
+
+    /**
+     * The type of the domain object property for the column mapping.
+     */
     ClassNode type
-    String columnName
-    int columnType
+
+    /**
+     * The database column model for the column property.
+     */
+    ColumnModel column
 }
