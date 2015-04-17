@@ -15,8 +15,9 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.transform.jdbc.EntityRowMapper
+import com.stehno.effigy.transform.model.ColumnPropertyModel
+import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
@@ -33,12 +34,12 @@ import java.sql.ResultSet
 import static com.stehno.effigy.transform.model.EntityModel.embeddedEntityProperties
 import static com.stehno.effigy.transform.model.EntityModel.entityProperties
 import static com.stehno.effigy.transform.util.AstUtils.*
+import static com.stehno.effigy.transform.util.FieldTypeHandlerHelper.callReadFieldX
 import static java.lang.reflect.Modifier.*
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 /**
  * Transformer used for creating a <code>RowMapper</code> instance for the entity.
  */
@@ -83,6 +84,19 @@ class EntityRowMapperTransformer implements ASTTransformation {
                 ))
             }
 
+            def entityProps = entityProperties(entityNode)
+
+            // add the custom field mappers (if any)
+            entityProps.findAll { ep -> !(ep instanceof EmbeddedPropertyModel) && ep.column.handler }.each { ep ->
+                mapperClassNode.addMethod(methodN(
+                    PRIVATE,
+                    "map${ep.propertyName.capitalize()}",
+                    newClass(ep.type),
+                    returnS(callReadFieldX(ep as ColumnPropertyModel, 'data')),
+                    params(param(OBJECT_TYPE, 'data'))
+                ))
+            }
+
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(entityNode), block(
                 codeS(
                     '''
@@ -95,15 +109,19 @@ class EntityRowMapperTransformer implements ASTTransformation {
                                     if( ${p.propertyName}_map.find {k,v-> v != null } ){
                                         entity.${p.propertyName} = new${p.propertyName.capitalize()}( ${p.propertyName}_map )
                                     }
-                        <%      } else { %>
-                                    entity.${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
-                        <%      } %>
+                        <%      } else {
+                                    if( p.column.handler ){ %>
+                                        entity.${p.propertyName} = map${p.propertyName.capitalize()}(rs.getObject( prefix + '${p.column.name}' ))
+                        <%          } else { %>
+                                        entity.${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
+                        <%          }
+                                } %>
                                 emptyEntity = emptyEntity && (entity.${p.propertyName} == null)
                         <%  } %>
 
                             return emptyEntity ? null : entity
                         ''',
-                    props: entityProperties(entityNode)
+                    props: entityProps
                 )
             ), [param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[]))
 

@@ -29,8 +29,7 @@ import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AnnotationUtils.*
 import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 import static java.lang.Integer.MIN_VALUE
-import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE
-import static org.codehaus.groovy.ast.ClassHelper.make
+import static org.codehaus.groovy.ast.ClassHelper.*
 
 /**
  * Utility functions for working with the Effigy entity model.
@@ -264,11 +263,12 @@ class EntityModel {
 
         if (fieldColumnAnnot) {
             int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
+            ClassNode handlerNode = extractClass(fieldColumnAnnot, 'handler')
 
             return new ColumnModel(
                 extractString(fieldColumnAnnot, 'value') ?: camelCaseToUnderscore(fieldNode.name),
                 typeValue != MIN_VALUE ? typeValue : resolveDefaultSqlType(fieldNode),
-                extractClass(fieldColumnAnnot, 'handler')
+                handlerNode == VOID_TYPE ? null : handlerNode
             )
         }
 

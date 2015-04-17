@@ -17,37 +17,36 @@
 package com.stehno.effigy.jdbc
 
 import java.sql.Clob
-import java.sql.ResultSet
 
 /**
  * Used to define a handler for reading/writing field data to and from the database.
  */
-interface FieldTypeHandler<T> {
+interface FieldTypeHandler<STORAGE, ENTITY> {
 
     /**
      * Reads the field data from the database and converts it to the specific type.
      *
      * @return the database field data converted to the specific type
      */
-    T readField(ResultSet rs, String fieldName)
+    ENTITY readField(STORAGE obj)
 
     /**
      * Writes the field data to the database by converting it from the specific type to the database type.
      *
      * @param T the value being written
      */
-    void writeField(T obj)
+    STORAGE writeField(ENTITY obj)
 }
 
-class ClobFieldHandler implements FieldTypeHandler<Clob> {
+class ClobFieldHandler implements FieldTypeHandler<Clob, byte[]> {
 
     @Override
-    Clob readField(ResultSet rs, String fieldName) {
-        return null
+    byte[] readField(Clob obj) {
+        return new byte[0]
     }
 
     @Override
-    void writeField(Clob obj) {
-
+    Clob writeField(byte[] obj) {
+        return null
     }
 }

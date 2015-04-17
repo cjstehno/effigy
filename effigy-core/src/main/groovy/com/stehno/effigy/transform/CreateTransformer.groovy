@@ -16,10 +16,7 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.transform.model.AssociationPropertyModel
-import com.stehno.effigy.transform.model.ComponentPropertyModel
-import com.stehno.effigy.transform.model.EmbeddedPropertyModel
-import com.stehno.effigy.transform.model.EntityPropertyModel
+import com.stehno.effigy.transform.model.*
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -36,6 +33,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.sql.InsertSqlBuilder.insert
 import static com.stehno.effigy.transform.util.AstUtils.*
+import static com.stehno.effigy.transform.util.FieldTypeHandlerHelper.callWriteFieldX
 import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
@@ -153,7 +151,12 @@ class CreateTransformer extends MethodImplementingTransformation {
                     sql.column(pi.column.name, safeCallX(propX(varX(entityVar), pi.propertyName), 'name'))
 
                 } else {
-                    sql.column(pi.column.name, propX(varX(entityVar), pi.propertyName))
+                    if (pi.column.handler) {
+                        sql.column(pi.column.name, callWriteFieldX(pi as ColumnPropertyModel, entityVar))
+
+                    } else {
+                        sql.column(pi.column.name, propX(varX(entityVar), pi.propertyName))
+                    }
                 }
             }
         }

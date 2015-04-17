@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform
 
 import com.stehno.effigy.transform.model.AssociationPropertyModel
+import com.stehno.effigy.transform.model.ColumnPropertyModel
 import com.stehno.effigy.transform.model.ComponentPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
 import com.stehno.effigy.transform.sql.UpdateSqlBuilder
@@ -33,6 +34,7 @@ import static com.stehno.effigy.transform.CreateTransformer.resolveEntityVariabl
 import static com.stehno.effigy.transform.model.EntityModel.*
 import static com.stehno.effigy.transform.util.AstUtils.codeS
 import static com.stehno.effigy.transform.util.AstUtils.methodN
+import static com.stehno.effigy.transform.util.FieldTypeHandlerHelper.callWriteFieldX
 import static com.stehno.effigy.transform.util.JdbcTemplateHelper.updateX
 import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -77,9 +79,14 @@ class UpdateTransformer extends MethodImplementingTransformation {
 
         // if no sql template is defined, we want default behavior
         if (!sql.wheres) {
-            sql.where("${entityIdent.column.name} = ?", propX(varX(entityVar), entityIdent.propertyName))
+            if (entityIdent.column.handler) {
+                sql.where("${entityIdent.column.name} = ?", callWriteFieldX(entityIdent, entityVar))
+            } else {
+                sql.where("${entityIdent.column.name} = ?", propX(varX(entityVar), entityIdent.propertyName))
+            }
 
             if (versioner) {
+                // Note: versions probably should not support type conversion - so not doing it here
                 // minus one since we need the old version in the where clause
                 sql.where(
                     "${versioner.column.name} = ?",
@@ -134,7 +141,12 @@ class UpdateTransformer extends MethodImplementingTransformation {
                     sql.set("${p.columnNames[idx]}=?", new PropertyExpression(propX(varX(entityVar), p.propertyName), constX(pf), true))
                 }
             } else {
-                sql.set("${p.column.name}=?", propX(varX(entityVar), p.propertyName))
+                if (p.column.handler) {
+                    sql.set("${p.column.name}=?", callWriteFieldX(p as ColumnPropertyModel, entityVar))
+
+                } else {
+                    sql.set("${p.column.name}=?", propX(varX(entityVar), p.propertyName))
+                }
             }
         }
     }

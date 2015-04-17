@@ -3,15 +3,6 @@
 
 > This is just notes to myself - don't try to figure it out :-)
 
-Field type mappings
-    create 
-    update
-    retrieve
-    delete
-        
-    (sql-insert, sql-update)?
-
-
 
 ================================================
 
