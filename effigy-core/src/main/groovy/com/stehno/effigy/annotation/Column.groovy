@@ -38,7 +38,8 @@ import java.lang.annotation.*
     int type() default -2147483648
 
     /**
-     * FIXME: document - the methods are expected static with specific names
+     * Specifies the Class to be used as a read/write converter for the data field. The class is expected to have two static methods:
+     * See the <a href="http://stehno.com/effigy/guide/Entities.html#column">User Guide: Column</a> annotation documentation for more details.
      */
     Class handler() default Void
 }

@@ -36,6 +36,26 @@ becomes first_name).
 The `@Column` annotation also provides an optional `type` property which allows the SQL type of the column to be explicitly specified as one of the 
 `java.sql.Types` value constants. If no value is provided, the default set of simple Java-to-SQL type mappings will be used.
 
+> BUG: Currently, using `java.sql.Types` constant values is not supported; however, using the equivalent number value will work. See [Effigy-16](https://github.com/cjstehno/effigy/issues/16)
+for more details.
+
+The `@Column` annotation provides an optional `handler` property. This property allow the developer to specify a Class which will be used to convert 
+the column property value to and from the database value. The class is expected to have two static methods:
+
+```groovy
+static ENTITY readField(DATABASE db_value)
+```
+
+Which will be used to convert the database field value to that required by the entity property object.
+
+```groovy
+static DATABASE writeField(ENTITY domainValue)
+```
+
+Which will be used to convert the entity property object value to that required by the storage database.
+
+These methods should be stateless and the conversion types on both sides of the read/write should match what is expected by the entity or database respectively.
+
 ## @Id
 
 The `@Id` annotation is applied to an entity property that is to be defined as the unique identifier for an instance of the entity. While an id is not

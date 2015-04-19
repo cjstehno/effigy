@@ -23,12 +23,11 @@ import com.stehno.effigy.annotation.Retrieve
 import people.entity.Job
 
 /**
- * Created by cjstehno on 1/3/15.
  */
 @Repository(Job)
 abstract class EffigyJobRepository implements JobRepository {
 
-    // FIXME: this broke when I converted the id to primitive - figure out why
+    // FIXME: this broke when I converted the id to primitive - figure out why (https://github.com/cjstehno/effigy/issues/7)
 
     @Create
     abstract Long create(Map map)

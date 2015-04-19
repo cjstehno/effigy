@@ -34,8 +34,6 @@ class Image {
     long contentLength
 }
 
-// FIXME: might be better to have a handlerClass and handlerMethod to allow multiple handlers in same class
-
 class ContentLengthHandler {
 
     static long readField(String field) {
