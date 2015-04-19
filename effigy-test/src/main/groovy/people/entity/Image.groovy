@@ -15,15 +15,12 @@
  */
 
 package people.entity
-
 import com.stehno.effigy.annotation.Column
 import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.annotation.Version
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
-
-import java.sql.Types
 
 @Entity @EqualsAndHashCode @ToString(includeNames = true)
 class Image {
@@ -33,11 +30,8 @@ class Image {
 
     String description
 
-    @Column(value = 'cont_len', type = Types.VARCHAR, handler = ContentLengthHandler)
+    @Column(value = 'cont_len', type = 12 /*Types.VARCHAR*/, handler = ContentLengthHandler)
     long contentLength
-
-    //    @Column(value = 'content', type=Types.BLOB, handler = ImageBlobHandler)
-    //    byte[] content
 }
 
 // FIXME: might be better to have a handlerClass and handlerMethod to allow multiple handlers in same class
@@ -52,14 +46,3 @@ class ContentLengthHandler {
         "$value bytes"
     }
 }
-
-//class ImageBlobHandler {
-//
-//    static byte[] readField(Blob blob) {
-//        blob.binaryStream.bytes
-//    }
-//
-//    static Blob writeField(byte[] bytes) {
-//
-//    }
-//}

@@ -44,9 +44,9 @@ class ImageRepositoryTest {
     @Test void 'retrieve: one'() {
         def (idA, idB, idC) = createThree()
 
-        assert imageRepository.retrieve(idA).description == 'Photo-A'
-        assert imageRepository.retrieve(idB).description == 'Photo-B'
-        assert imageRepository.retrieve(idC).description == 'Photo-C'
+        assertImage imageRepository.retrieve(idA), id: idA, description: 'Photo-A', contentLength: 100
+        assertImage imageRepository.retrieve(idB), id: idB, description: 'Photo-B', contentLength: 110
+        assertImage imageRepository.retrieve(idC), id: idC, description: 'Photo-C', contentLength: 120
     }
 
     @Test void 'retrieve: all'() {
@@ -55,17 +55,21 @@ class ImageRepositoryTest {
         def images = imageRepository.retrieveAll()
 
         assert images.size() == 3
+        assertImage imageRepository.retrieve(idA), id: idA, description: 'Photo-A', contentLength: 100
+        assertImage imageRepository.retrieve(idB), id: idB, description: 'Photo-B', contentLength: 110
+        assertImage imageRepository.retrieve(idC), id: idC, description: 'Photo-C', contentLength: 120
     }
 
     @Test void 'update'() {
         def orig = imageRepository.retrieve(imageRepository.create(new Image(description: 'Some photo', contentLength: 200)))
 
         orig.description = 'Updated'
+        orig.contentLength = 250
 
         assert imageRepository.update(orig)
 
         assert countRowsInTable(database.jdbcTemplate, 'images') == 1
-        assert imageRepository.retrieve(orig.id).description == 'Updated'
+        assertImage imageRepository.retrieve(orig.id), id: orig.id, description: 'Updated', contentLength: 250
     }
 
     private createThree() {
@@ -73,5 +77,11 @@ class ImageRepositoryTest {
         def b = imageRepository.create(new Image(description: 'Photo-B', contentLength: 110))
         def c = imageRepository.create(new Image(description: 'Photo-C', contentLength: 120))
         [a, b, c]
+    }
+
+    private static void assertImage(Map expected, Image actual) {
+        expected.each { k, v ->
+            assert actual[k] == v
+        }
     }
 }

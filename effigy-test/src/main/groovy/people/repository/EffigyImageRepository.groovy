@@ -31,7 +31,7 @@ abstract class EffigyImageRepository {
     @Retrieve
     abstract Image retrieve(Long id)
 
-    @Retrieve
+    @Retrieve(order = 'id asc')
     abstract List<Image> retrieveAll()
 
     @Update

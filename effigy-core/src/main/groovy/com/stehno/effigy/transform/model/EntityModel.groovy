@@ -17,6 +17,7 @@
 package com.stehno.effigy.transform.model
 
 import com.stehno.effigy.annotation.*
+import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotatedNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
@@ -26,8 +27,7 @@ import java.sql.Types
 
 import static com.stehno.effigy.transform.model.ColumnModelType.*
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractClass
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static com.stehno.effigy.transform.util.AnnotationUtils.*
 import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
 import static java.lang.Integer.MIN_VALUE
 import static org.codehaus.groovy.ast.ClassHelper.*
@@ -35,6 +35,7 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 /**
  * Utility functions for working with the Effigy entity model.
  */
+@Slf4j
 class EntityModel {
 
     private static final String PLURAL = 's'
@@ -263,8 +264,8 @@ class EntityModel {
         AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
 
         if (fieldColumnAnnot) {
-            int typeValue = fieldColumnAnnot?.getMember('type')?.value as Integer ?: MIN_VALUE
-            //            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
+            // FIXME: #16 this will be a PropertyExpression when using Types.XXX rather than int value
+            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
             ClassNode handlerNode = extractClass(fieldColumnAnnot, 'handler')
 
             return new ColumnModel(

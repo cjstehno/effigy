@@ -18,11 +18,14 @@ package com.stehno.effigy.transform.util
 
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.expr.Expression
 
 /**
  * Utilities for working with annotations and AST transformations.
  */
 class AnnotationUtils {
+
+    // FIXME: most of these will only work with constant expressions - document and/or refactor
 
     static ClassNode extractClass(AnnotationNode annotation, String key) {
         def pair = annotation.members.find { pair -> pair.key == key }
@@ -45,5 +48,9 @@ class AnnotationUtils {
     static Integer extractInteger(AnnotationNode annotation, String key, Integer defvalue = null) {
         def pair = annotation.members.find { pair -> pair.key == key }
         return pair ? pair.value.value : defvalue
+    }
+
+    static extractExpression(AnnotationNode node, String name, Expression defaultValue = null) {
+        node?.getMember(name) ?: defaultValue
     }
 }
