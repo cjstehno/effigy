@@ -27,7 +27,7 @@ import groovy.transform.ToString
 class Person {
 
     @Id Long id
-    @Version Long version
+    @Version long version
 
     String firstName
     String middleName
