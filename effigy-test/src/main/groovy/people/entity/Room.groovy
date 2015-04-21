@@ -28,7 +28,7 @@ import groovy.transform.Canonical
 @Entity @Canonical
 class Room {
 
-    @Id Long id
+    @Id long id
     String name
     int capacity
 

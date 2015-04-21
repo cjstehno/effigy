@@ -27,8 +27,6 @@ import people.entity.Job
 @Repository(Job)
 abstract class EffigyJobRepository implements JobRepository {
 
-    // FIXME: this broke when I converted the id to primitive - figure out why (https://github.com/cjstehno/effigy/issues/7)
-
     @Create
     abstract Long create(Map map)
 

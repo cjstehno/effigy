@@ -23,13 +23,13 @@ import people.entity.Room
  */
 interface RoomRepository {
 
-    Long create(Room room)
+    long create(Room room)
 
-    Long create(String name, int capacity)
+    long create(String name, int capacity)
 
-    Long create(Map<String, Object> map)
+    long create(Map<String, Object> map)
 
-    boolean delete(Long id)
+    boolean delete(long id)
 
     int deleteAll()
 
@@ -37,13 +37,13 @@ interface RoomRepository {
 
     int deleteSmall(int min)
 
-    int count(Long id)
+    int count(long id)
 
     int count()
 
     int countByRange(int min, int max)
 
-    boolean exists(Long id)
+    boolean exists(long id)
 
     boolean exists()
 
@@ -55,9 +55,9 @@ interface RoomRepository {
 
     List<Room> retrieveAll()
 
-    Room retrieve(Long id)
+    Room retrieve(long id)
 
-    Room retrieveOne(Long entityId)
+    Room retrieveOne(long entityId)
 
     List<Room> retrieveSmall(int min)
 
