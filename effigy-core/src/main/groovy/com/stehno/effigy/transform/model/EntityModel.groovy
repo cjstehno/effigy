@@ -23,14 +23,12 @@ import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.FieldNode
 
-import java.sql.Types
-
+import static com.stehno.effigy.transform.model.ColumnModel.extract
 import static com.stehno.effigy.transform.model.ColumnModelType.*
 import static com.stehno.effigy.transform.model.EntityModel.*
-import static com.stehno.effigy.transform.util.AnnotationUtils.*
-import static com.stehno.effigy.transform.util.StringUtils.camelCaseToUnderscore
-import static java.lang.Integer.MIN_VALUE
-import static org.codehaus.groovy.ast.ClassHelper.*
+import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
+import static org.codehaus.groovy.ast.ClassHelper.MAP_TYPE
+import static org.codehaus.groovy.ast.ClassHelper.make
 
 /**
  * Utility functions for working with the Effigy entity model.
@@ -50,7 +48,7 @@ class EntityModel {
             ID,
             idFieldNode.name,
             idFieldNode.type,
-            extractColumnModel(idFieldNode)
+            extract(idFieldNode)
         ) : null
     }
 
@@ -61,7 +59,7 @@ class EntityModel {
             VERSION,
             versionFieldNode.name,
             versionFieldNode.type,
-            extractColumnModel(versionFieldNode)
+            extract(versionFieldNode)
         ) : null
     }
 
@@ -83,16 +81,16 @@ class EntityModel {
             null
 
         } else if (annotatedWith(f, Id)) {
-            new ColumnPropertyModel(ID, f.name, f.type, extractColumnModel(f))
+            new ColumnPropertyModel(ID, f.name, f.type, extract(f))
 
         } else if (annotatedWith(f, Version)) {
-            new ColumnPropertyModel(VERSION, f.name, f.type, extractColumnModel(f))
+            new ColumnPropertyModel(VERSION, f.name, f.type, extract(f))
 
         } else if (annotatedWith(f, Embedded)) {
             extractEmbeddedProperty(f)
 
         } else {
-            new ColumnPropertyModel(STANDARD, f.name, f.type, extractColumnModel(f))
+            new ColumnPropertyModel(STANDARD, f.name, f.type, extract(f))
         }
     }
 
@@ -203,18 +201,6 @@ class EntityModel {
         values.join(COMMA)
     }
 
-    static List<Integer> columnTypes(ClassNode entityNode, boolean includeId = true) {
-        def values = []
-        entityProperties(entityNode, includeId).each {
-            if (it instanceof EmbeddedPropertyModel) {
-                values.addAll(it.columnTypes)
-            } else {
-                values << it.column.type
-            }
-        }
-        values
-    }
-
     private static boolean annotatedWith(AnnotatedNode node, Class annotClass) {
         node.getAnnotations(make(annotClass))
     }
@@ -244,7 +230,7 @@ class EntityModel {
             if (!embfld.static && !embfld.name.startsWith(DOLLAR_SIGN)) {
                 fldNames << embfld.name
 
-                ColumnModel columnModel = extractColumnModel(embfld)
+                ColumnModel columnModel = extract(embfld)
                 colNames << "${prefix}_${columnModel.name}"
                 colTypes << columnModel.type
             }
@@ -257,60 +243,5 @@ class EntityModel {
             columnNames: colNames.asImmutable(),
             columnTypes: colTypes.asImmutable()
         )
-    }
-
-    @SuppressWarnings('GroovyAssignabilityCheck')
-    private static ColumnModel extractColumnModel(FieldNode fieldNode) {
-        AnnotationNode fieldColumnAnnot = fieldNode.getAnnotations(make(Column))[0]
-
-        if (fieldColumnAnnot) {
-            // FIXME: #16 this will be a PropertyExpression when using Types.XXX rather than int value
-            int typeValue = extractInteger(fieldColumnAnnot, 'type', MIN_VALUE)
-            ClassNode handlerNode = extractClass(fieldColumnAnnot, 'handler')
-
-            return new ColumnModel(
-                extractString(fieldColumnAnnot, 'value') ?: camelCaseToUnderscore(fieldNode.name),
-                typeValue != MIN_VALUE ? typeValue : resolveDefaultSqlType(fieldNode),
-                handlerNode == VOID_TYPE ? null : handlerNode
-            )
-        }
-
-        return new ColumnModel(
-            camelCaseToUnderscore(fieldNode.name),
-            resolveDefaultSqlType(fieldNode),
-            null
-        )
-    }
-
-    private static int resolveDefaultSqlType(final FieldNode fieldNode) {
-        if (fieldNode.type.enum) {
-            return Types.VARCHAR
-        }
-
-        switch (fieldNode.type.name) {
-            case 'java.lang.String': return Types.VARCHAR
-            case 'java.sql.Date':
-            case 'java.util.Date':
-                return Types.TIMESTAMP
-            case 'java.lang.Boolean':
-            case 'boolean':
-                return Types.BOOLEAN
-            case 'java.lang.Integer':
-            case 'int':
-                return Types.INTEGER
-            case 'java.lang.Long':
-            case 'long':
-                return Types.BIGINT
-            case 'java.lang.Double':
-            case 'double':
-                return Types.DOUBLE
-            case 'java.lang.Float':
-            case 'float':
-                return Types.FLOAT
-            case 'java.lang.Short':
-            case 'short':
-                return Types.TINYINT
-            default: return Types.JAVA_OBJECT
-        }
     }
 }

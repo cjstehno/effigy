@@ -15,13 +15,13 @@
  */
 
 package com.stehno.effigy.transform
-
 import com.stehno.effigy.transform.model.*
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.expr.ListExpression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
@@ -38,7 +38,6 @@ import static java.lang.reflect.Modifier.PROTECTED
 import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
-
 /**
  * Transformer used to process the <code>@Create</code> annotation.
  */
@@ -80,9 +79,7 @@ class CreateTransformer extends MethodImplementingTransformation {
 
             declS(varX(FACTORY), ctorX(make(PreparedStatementCreatorFactory), args(
                 constX(sql.build()),
-                arrayX(int_TYPE, columnTypes(entityNode, false).collect { typ ->
-                    constX(typ)
-                })
+                arrayX(int_TYPE, columnTypes(entityNode))
             ))),
 
             stmt(callX(varX(FACTORY), 'setReturnGeneratedKeys', args(constX(true)))),
@@ -114,6 +111,20 @@ class CreateTransformer extends MethodImplementingTransformation {
         )
 
         updateMethod repoNode, methodNode, statement
+    }
+
+    static List<Expression> columnTypes(ClassNode entityNode) {
+        def values = []
+        entityProperties(entityNode, false).each {
+            if (it instanceof EmbeddedPropertyModel) {
+                it.columnTypes.each { ct ->
+                    values << constX(ct)
+                }
+            } else {
+                values << constX(it.column.type)
+            }
+        }
+        values
     }
 
     static List resolveEntityVariable(ClassNode entityNode, MethodNode methodNode) {

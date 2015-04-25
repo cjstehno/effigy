@@ -15,12 +15,15 @@
  */
 
 package people.entity
+
 import com.stehno.effigy.annotation.Column
 import com.stehno.effigy.annotation.Entity
 import com.stehno.effigy.annotation.Id
 import com.stehno.effigy.annotation.Version
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
+
+import static java.sql.Types.VARCHAR
 
 @Entity @EqualsAndHashCode @ToString(includeNames = true)
 class Image {
@@ -30,7 +33,7 @@ class Image {
 
     String description
 
-    @Column(value = 'cont_len', type = 12 /*Types.VARCHAR*/, handler = ContentLengthHandler)
+    @Column(value = 'cont_len', type = VARCHAR, handler = ContentLengthHandler)
     long contentLength
 }
 

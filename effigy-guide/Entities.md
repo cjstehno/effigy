@@ -34,10 +34,8 @@ with the property. By default, if this annotation is not used, the property name
 becomes first_name).
 
 The `@Column` annotation also provides an optional `type` property which allows the SQL type of the column to be explicitly specified as one of the 
-`java.sql.Types` value constants. If no value is provided, the default set of simple Java-to-SQL type mappings will be used.
-
-> BUG: Currently, using `java.sql.Types` constant values is not supported; however, using the equivalent number value will work. See [Effigy-16](https://github.com/cjstehno/effigy/issues/16)
-for more details.
+`java.sql.Types` value constants (Note: _only_ raw int values or references to `java.sql.Types` values will work due to complexities around AST annotation
+ processing). If no value is provided, the default set of simple Java-to-SQL type mappings will be used.
 
 The `@Column` annotation provides an optional `handler` property. This property allow the developer to specify a Class which will be used to convert 
 the column property value to and from the database value. The class is expected to have two static methods:

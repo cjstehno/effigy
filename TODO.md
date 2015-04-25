@@ -3,6 +3,8 @@
 
 > This is just notes to myself - don't try to figure it out :-)
 
+refactor annotation support (in general) to extract expressions rather than constants and then use those expressions in the code generation
+
 
 ================================================
 
