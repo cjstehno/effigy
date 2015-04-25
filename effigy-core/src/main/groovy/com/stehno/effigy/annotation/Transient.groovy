@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 Christopher J. Stehno
+ * Copyright (c) 2015 Christopher J. Stehno
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,9 @@
  * limitations under the License.
  */
 
-package people.entity
-
-import com.stehno.effigy.annotation.*
-import groovy.transform.Canonical
+package com.stehno.effigy.annotation
 
 /**
- * Entity representation of a meeting room.
+ * Annotation used to denote that an entity property should be ignored by the mapping framework.
  */
-@Entity @Canonical
-class Room {
-
-    @Id long id
-    String name
-    int capacity
-
-    @Transient boolean donuts
-
-    @Association @Mapped(keyProperty = 'type')
-    Map<Feature.Type, Feature> features = [:]
-}
+@interface Transient {}

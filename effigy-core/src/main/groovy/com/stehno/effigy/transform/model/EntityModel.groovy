@@ -72,12 +72,20 @@ class EntityModel {
     // does not include relationship fields
     static List<EntityPropertyModel> entityProperties(ClassNode entityNode, boolean includeId = true) {
         entityNode.fields.findAll { f ->
-            !f.static && !f.name.startsWith(DOLLAR_SIGN) && !isAssociation(f) && !isEntity(f.type) && (includeId ? true : !annotatedWith(f, Id))
+            isEntityProperty(f) && (includeId ? true : !annotatedWith(f, Id))
         }.collect { f -> extractProperty(f) }
     }
 
+    private static boolean isEntityProperty(FieldNode f) {
+        !f.static &&
+            !f.name.startsWith(DOLLAR_SIGN) &&
+            !isAssociation(f) &&
+            !isEntity(f.type) &&
+            !annotatedWith(f, Transient)
+    }
+
     private static EntityPropertyModel extractProperty(FieldNode f) {
-        if (!f) {
+        if (!f || annotatedWith(f, Transient)) {
             null
 
         } else if (annotatedWith(f, Id)) {

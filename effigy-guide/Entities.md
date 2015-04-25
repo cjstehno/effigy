@@ -83,6 +83,11 @@ version BIGINT NOT NULL,
 
 Currently, Effigy does not support multiple properties annotated with the `@Version` annotation.
 
+## @Transient
+
+The `@Transient` annotation can be applied to an entity property to denote that the property will be ignored by the effigy processing framework. The 
+property will not participate in any database code generation.
+
 ## @Embedded
 
 The `@Embedded` annotation is used to denote an embedded component property. The properties of the embedded object are mapped to fields of the entity table. 
