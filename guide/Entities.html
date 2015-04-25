@@ -48,6 +48,7 @@
               <li class="unnumbered visible"><a href="Entities.html#column">@Column</a></li>
               <li class="unnumbered visible"><a href="Entities.html#id">@Id</a></li>
               <li class="unnumbered visible"><a href="Entities.html#version">@Version</a></li>
+              <li class="unnumbered visible"><a href="Entities.html#transient">@Transient</a></li>
               <li class="unnumbered visible"><a href="Entities.html#embedded">@Embedded</a></li>
               <li class="unnumbered visible"><a href="Entities.html#component">@Component</a></li>
               <li class="unnumbered visible"><a href="Entities.html#association">@Association</a></li>
@@ -116,6 +117,7 @@
                   <li class="unnumbered visible"><a href="#column">@Column</a></li>
                   <li class="unnumbered visible"><a href="#id">@Id</a></li>
                   <li class="unnumbered visible"><a href="#version">@Version</a></li>
+                  <li class="unnumbered visible"><a href="#transient">@Transient</a></li>
                   <li class="unnumbered visible"><a href="#embedded">@Embedded</a></li>
                   <li class="unnumbered visible"><a href="#component">@Component</a></li>
                   <li class="unnumbered visible"><a href="#association">@Association</a></li>
@@ -144,6 +146,15 @@ static PersonCollectionAssociationExtractor collectionAssociationExtractor(Integ
             <p>These mappers, extractors and helper methods are available for use by classes outside of Effigy itself, however, they are used extensively by internal code.</p>
             <h2 id="column">@Column</h2>
             <p>The <code>@Column</code> annotation is an optional one applied to the entity properties. It is used to provide an alternate name for the database column associated with the property. By default, if this annotation is not used, the property name will be converted from camel-case to underscore-case (e.g. firstName becomes first_name).</p>
+            <p>The <code>@Column</code> annotation also provides an optional <code>type</code> property which allows the SQL type of the column to be explicitly specified as one of the <code>java.sql.Types</code> value constants (Note: <em>only</em> raw int values or references to <code>java.sql.Types</code> values will work due to complexities around AST annotation  processing). If no value is provided, the default set of simple Java-to-SQL type mappings will be used.</p>
+            <p>The <code>@Column</code> annotation provides an optional <code>handler</code> property. This property allow the developer to specify a Class which will be used to convert the column property value to and from the database value. The class is expected to have two static methods:</p>
+            <pre><code class="groovy">static ENTITY readField(DATABASE db_value)
+</code></pre>
+            <p>Which will be used to convert the database field value to that required by the entity property object.</p>
+            <pre><code class="groovy">static DATABASE writeField(ENTITY domainValue)
+</code></pre>
+            <p>Which will be used to convert the entity property object value to that required by the storage database.</p>
+            <p>These methods should be stateless and the conversion types on both sides of the read/write should match what is expected by the entity or database respectively.</p>
             <h2 id="id">@Id</h2>
             <p>The <code>@Id</code> annotation is applied to an entity property that is to be defined as the unique identifier for an instance of the entity. While an id is not explicitly required by Effigy, you will not benefit from most of the functionality without one. An entity id can be a property of any Object type, though generally a Long is recommended.</p>
             <p>The generating and management of ids is handled by your code and/or the database itself, Effigy does not take any action to generate ids. The DDL expected could be something similar to the following:</p>
@@ -156,6 +167,8 @@ static PersonCollectionAssociationExtractor collectionAssociationExtractor(Integ
             <pre><code class="sql">version BIGINT NOT NULL,
 </code></pre>
             <p>Currently, Effigy does not support multiple properties annotated with the <code>@Version</code> annotation.</p>
+            <h2 id="transient">@Transient</h2>
+            <p>The <code>@Transient</code> annotation can be applied to an entity property to denote that the property will be ignored by the effigy processing framework. The property will not participate in any database code generation.</p>
             <h2 id="embedded">@Embedded</h2>
             <p>The <code>@Embedded</code> annotation is used to denote an embedded component property. The properties of the embedded object are mapped to fields of the entity table. The database columns are named as specified by the embedded object property names following the standard name conversion rules, as well as any <code>@Column</code> annotations. Also, a prefix will be prepended to the column names which will be the same as the name of the embedded property in the enclosing entity. The annotation accepts an optional <code>prefix</code> property which allows the prefix to be specified explicitly.</p>
             <p>The type of the embedded object may be an entity; however, it need not be. If the embedded object is an entity, any @Id or @Version annotations will <strong>not</strong> be honored, since the table data is contained in the table for the enclosing entity. The <code>@Column</code> annotation will be honored.</p>
