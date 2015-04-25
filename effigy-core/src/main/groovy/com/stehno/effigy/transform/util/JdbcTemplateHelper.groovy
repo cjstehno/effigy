@@ -22,6 +22,7 @@ import org.codehaus.groovy.ast.expr.Expression
 import org.codehaus.groovy.ast.stmt.Statement
 import org.springframework.jdbc.core.SingleColumnRowMapper
 
+import static org.codehaus.groovy.ast.ClassHelper.OBJECT_TYPE
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
@@ -96,7 +97,7 @@ class JdbcTemplateHelper {
         callX(varX(JDBC_TEMPLATE), UPDATE, args(constX(sql), setter))
     }
 
-    static Expression singleColumnRowMapper(ClassNode requiredType) {
+    static Expression singleColumnRowMapper(ClassNode requiredType = OBJECT_TYPE) {
         ctorX(makeClassSafe(SingleColumnRowMapper), args(classX(requiredType.typeClass)))
     }
 

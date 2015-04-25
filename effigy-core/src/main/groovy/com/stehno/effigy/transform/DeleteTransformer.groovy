@@ -97,6 +97,6 @@ class DeleteTransformer extends MethodImplementingTransformation {
 
         log.debug 'Sql({}:Delete): {}', entityNode.name, sql
 
-        code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(ident.type), sql.params)))
+        code.addStatement(declS(varX(ENTITY_IDS), queryX(sql.build(), singleColumnRowMapper(), sql.params)))
     }
 }
