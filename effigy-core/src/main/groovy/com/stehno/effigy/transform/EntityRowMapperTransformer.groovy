@@ -108,16 +108,20 @@ class EntityRowMapperTransformer implements ASTTransformation {
                                     ]
                                     if( ${p.propertyName}_map.find {k,v-> v != null } ){
                                         entity.${p.propertyName} = new${p.propertyName.capitalize()}( ${p.propertyName}_map )
+                                        emptyEntity = false
                                     }
-                        <%      } else {
-                                    if( p.column.handler ){ %>
-                                        entity.${p.propertyName} = map${p.propertyName.capitalize()}(rs.getObject( prefix + '${p.column.name}' ))
+                        <%      } else { %>
+                                    def ${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
+                                    if( ${p.propertyName} != null ){
+                        <%          if( p.column.handler ){ %>
+                                        entity.${p.propertyName} = map${p.propertyName.capitalize()}(${p.propertyName})
                         <%          } else { %>
-                                        entity.${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
-                        <%          }
-                                } %>
-                                emptyEntity = emptyEntity && (entity.${p.propertyName} == null)
-                        <%  } %>
+                                        entity.${p.propertyName} = ${p.propertyName}
+                        <%          } %>
+                                        emptyEntity = false
+                                    }
+                        <%      }
+                            } %>
 
                             return emptyEntity ? null : entity
                         ''',
