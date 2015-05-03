@@ -35,7 +35,7 @@ class EmbeddedPropertyModel implements EntityPropertyModel {
     List collectSubProperties(Closure closure) {
         def list = []
         fieldNames.eachWithIndex { fn, i ->
-            list << closure(fn, columnNames[i], columnTypes[i])
+            list << closure(fn, columnNames[i])
         }
         list
     }

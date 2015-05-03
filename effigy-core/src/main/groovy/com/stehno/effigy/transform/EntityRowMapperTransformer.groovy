@@ -15,6 +15,7 @@
  */
 
 package com.stehno.effigy.transform
+
 import com.stehno.effigy.transform.jdbc.EntityRowMapper
 import com.stehno.effigy.transform.model.ColumnPropertyModel
 import com.stehno.effigy.transform.model.EmbeddedPropertyModel
@@ -40,6 +41,7 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+
 /**
  * Transformer used for creating a <code>RowMapper</code> instance for the entity.
  */
@@ -82,47 +84,34 @@ class EntityRowMapperTransformer implements ASTTransformation {
                     returnS(ctorX(newClass(emb.type), args(varX(DATA)))),
                     [param(makeClassSafe(Map), DATA)] as Parameter[]
                 ))
+
+                addEmbeddedMappingMethod(mapperClassNode, emb)
             }
 
             def entityProps = entityProperties(entityNode)
 
             // add the custom field mappers (if any)
-            entityProps.findAll { ep -> !(ep instanceof EmbeddedPropertyModel) && ep.column.handler }.each { ep ->
-                mapperClassNode.addMethod(methodN(
-                    PRIVATE,
-                    "map${ep.propertyName.capitalize()}",
-                    newClass(ep.type),
-                    returnS(callReadFieldX(ep as ColumnPropertyModel, 'data')),
-                    params(param(OBJECT_TYPE, 'data'))
-                ))
+            entityProps.findAll { ep -> !(ep instanceof EmbeddedPropertyModel) }.each { ColumnPropertyModel ep ->
+                if (ep.column.handler) {
+                    mapperClassNode.addMethod(methodN(
+                        PRIVATE,
+                        "handle${ep.propertyName.capitalize()}",
+                        newClass(ep.type),
+                        returnS(callReadFieldX(ep, 'data')),
+                        params(param(OBJECT_TYPE, 'data'))
+                    ))
+                }
+
+                addColumnMappingMethod(mapperClassNode, ep)
             }
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(entityNode), block(
                 codeS(
                     '''
                         def emptyEntity = true
-                        <%  props.each { p->
-                                if( p.class.simpleName == 'EmbeddedPropertyModel' ){ %>
-                                    def ${p.propertyName}_map = [
-                                        ${p.collectSubProperties { fld,col,typ-> "$fld : rs.getObject(prefix + '$col')" }.join(',')}
-                                    ]
-                                    if( ${p.propertyName}_map.find {k,v-> v != null } ){
-                                        entity.${p.propertyName} = new${p.propertyName.capitalize()}( ${p.propertyName}_map )
-                                        emptyEntity = false
-                                    }
-                        <%      } else { %>
-                                    def ${p.propertyName} = rs.getObject( prefix + '${p.column.name}' )
-                                    if( ${p.propertyName} != null ){
-                        <%          if( p.column.handler ){ %>
-                                        entity.${p.propertyName} = map${p.propertyName.capitalize()}(${p.propertyName})
-                        <%          } else { %>
-                                        entity.${p.propertyName} = ${p.propertyName}
-                        <%          } %>
-                                        emptyEntity = false
-                                    }
-                        <%      }
-                            } %>
-
+                        <%  props.each { p-> %>
+                                if( !map${p.propertyName.capitalize()}(rs,entity) ) emptyEntity = false
+                        <%  } %>
                             return emptyEntity ? null : entity
                         ''',
                     props: entityProps
@@ -139,6 +128,52 @@ class EntityRowMapperTransformer implements ASTTransformation {
             log.error 'Problem building RowMapper ({}): {}', mapperName, ex.message
             throw ex
         }
+    }
+
+    private static void addColumnMappingMethod(ClassNode mapperNode, ColumnPropertyModel propertyModel) {
+        mapperNode.addMethod(methodN(
+            PRIVATE,
+            "map${propertyModel.propertyName.capitalize()}",
+            Boolean_TYPE,
+            codeS(
+                '''
+                    def value = rs.getObject( prefix + '${p.column.name}' )
+                    if( value != null ){
+                        <% if( p.column.handler ){ %>
+                            value = handle${p.propertyName.capitalize()}(value)
+                        <% } %>
+
+                        entity.${p.propertyName} = value
+                        return false
+                    }
+                    return true
+                ''',
+                p: propertyModel
+            ),
+            params(param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity'))
+        ))
+    }
+
+    private static void addEmbeddedMappingMethod(ClassNode mapperNode, EmbeddedPropertyModel propertyModel) {
+        mapperNode.addMethod(methodN(
+            PRIVATE,
+            "map${propertyModel.propertyName.capitalize()}",
+            Boolean_TYPE,
+            codeS(
+                '''
+                    def values = [
+                        ${p.collectSubProperties { fld,col-> "$fld : rs.getObject(prefix + '$col')" }.join(',')}
+                    ]
+                    if( values.values().any { v-> v != null } ){
+                        entity.${p.propertyName} = new${p.propertyName.capitalize()}( values )
+                        return false
+                    }
+                    return true
+                ''',
+                p: propertyModel
+            ),
+            params(param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity'))
+        ))
     }
 
     /**
