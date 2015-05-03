@@ -23,6 +23,7 @@ import groovy.util.logging.Slf4j
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.BinaryExpression
 import org.codehaus.groovy.ast.expr.MapEntryExpression
 import org.codehaus.groovy.ast.expr.MapExpression
 import org.codehaus.groovy.control.CompilePhase
@@ -41,6 +42,8 @@ import static org.codehaus.groovy.ast.ClassHelper.*
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
 import static org.codehaus.groovy.ast.tools.GenericsUtils.makeClassSafe
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
+import static org.codehaus.groovy.syntax.Token.newSymbol
+import static org.codehaus.groovy.syntax.Types.EQUALS
 
 /**
  * Transformer used for creating a <code>RowMapper</code> instance for the entity.
@@ -51,6 +54,9 @@ class EntityRowMapperTransformer implements ASTTransformation {
 
     private static final String PREFIX = 'prefix'
     private static final String DATA = 'data'
+    private static final String EMPTY_ENTITY = 'emptyEntity'
+    private static final String ENTITY = 'entity'
+    private static final String RS = 'rs'
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {
@@ -69,6 +75,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
      * @param source the source unit
      * @return the created RowMapper implementation class
      */
+    @SuppressWarnings('GroovyAssignabilityCheck')
     private static ClassNode buildRowMapper(ClassNode entityNode, SourceUnit source) {
         String mapperName = "${entityNode.packageName}.${entityNode.nameWithoutPackage}RowMapper"
         try {
@@ -106,17 +113,17 @@ class EntityRowMapperTransformer implements ASTTransformation {
             }
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(entityNode), block(
-                codeS(
-                    '''
-                        def emptyEntity = true
-                        <%  props.each { p-> %>
-                                if( !map${p.propertyName.capitalize()}(rs,entity) ) emptyEntity = false
-                        <%  } %>
-                            return emptyEntity ? null : entity
-                        ''',
-                    props: entityProps
-                )
-            ), [param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity')] as Parameter[]))
+                declS(varX(EMPTY_ENTITY), constX(true)),
+                *entityProps.collect { p ->
+                    ifS(
+                        notX(
+                            callThisX("map${p.propertyName.capitalize()}" as String, args(varX(RS), varX(ENTITY)))
+                        ),
+                        new BinaryExpression(varX(EMPTY_ENTITY), newSymbol(EQUALS, -1, -1), constX(false))
+                    )
+                },
+                returnS(ternaryX(varX(EMPTY_ENTITY), constX(null), varX(ENTITY)))
+            ), params(param(make(ResultSet), RS), param(OBJECT_TYPE, ENTITY))))
 
             source.AST.addClass(mapperClassNode)
 
@@ -150,7 +157,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
                 ''',
                 p: propertyModel
             ),
-            params(param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity'))
+            params(param(make(ResultSet), RS), param(OBJECT_TYPE, ENTITY))
         ))
     }
 
@@ -172,7 +179,7 @@ class EntityRowMapperTransformer implements ASTTransformation {
                 ''',
                 p: propertyModel
             ),
-            params(param(make(ResultSet), 'rs'), param(OBJECT_TYPE, 'entity'))
+            params(param(make(ResultSet), RS), param(OBJECT_TYPE, ENTITY))
         ))
     }
 
