@@ -33,7 +33,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import java.sql.ResultSet
 
-import static com.stehno.effigy.transform.model.EntityModel.embeddedEntityProperties
+import static com.stehno.effigy.transform.model.ColumnModelType.ID
 import static com.stehno.effigy.transform.model.EntityModel.entityProperties
 import static com.stehno.effigy.transform.util.AstUtils.*
 import static com.stehno.effigy.transform.util.FieldTypeHandlerHelper.callReadFieldX
@@ -83,44 +83,52 @@ class EntityRowMapperTransformer implements ASTTransformation {
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'newEntity', newClass(entityNode), returnS(ctorX(newClass(entityNode)))))
 
-            embeddedEntityProperties(entityNode).each { emb ->
-                mapperClassNode.addMethod(methodN(
-                    PROTECTED,
-                    "new${emb.propertyName.capitalize()}",
-                    newClass(emb.type),
-                    returnS(ctorX(newClass(emb.type), args(varX(DATA)))),
-                    [param(makeClassSafe(Map), DATA)] as Parameter[]
-                ))
-
-                addEmbeddedMappingMethod(mapperClassNode, emb)
-            }
-
             def entityProps = entityProperties(entityNode)
 
-            // add the custom field mappers (if any)
-            entityProps.findAll { ep -> !(ep instanceof EmbeddedPropertyModel) }.each { ColumnPropertyModel ep ->
-                if (ep.column.handler) {
+            entityProps.each { ep ->
+                if (ep instanceof EmbeddedPropertyModel) {
                     mapperClassNode.addMethod(methodN(
                         PRIVATE,
-                        "handle${ep.propertyName.capitalize()}",
+                        "new${ep.propertyName.capitalize()}",
                         newClass(ep.type),
-                        returnS(callReadFieldX(ep, 'data')),
-                        params(param(OBJECT_TYPE, 'data'))
+                        returnS(ctorX(newClass(ep.type), args(varX(DATA)))),
+                        params(param(makeClassSafe(Map), DATA))
                     ))
-                }
 
-                addColumnMappingMethod(mapperClassNode, ep)
+                    addEmbeddedMappingMethod(mapperClassNode, ep)
+
+                } else {
+                    if (ep.column.handler) {
+                        mapperClassNode.addMethod(methodN(
+                            PRIVATE,
+                            "handle${ep.propertyName.capitalize()}",
+                            newClass(ep.type),
+                            returnS(callReadFieldX(ep, 'data')),
+                            params(param(OBJECT_TYPE, 'data'))
+                        ))
+                    }
+
+                    addColumnMappingMethod(mapperClassNode, ep)
+                }
             }
 
             mapperClassNode.addMethod(methodN(PROTECTED, 'mapping', newClass(entityNode), block(
                 declS(varX(EMPTY_ENTITY), constX(true)),
                 *entityProps.collect { p ->
-                    ifS(
-                        notX(
-                            callThisX("map${p.propertyName.capitalize()}" as String, args(varX(RS), varX(ENTITY)))
-                        ),
-                        new BinaryExpression(varX(EMPTY_ENTITY), newSymbol(EQUALS, -1, -1), constX(false))
-                    )
+                    if (p instanceof ColumnPropertyModel && p.modelType == ID) {
+                        ifElseS(
+                            callThisX("map${p.propertyName.capitalize()}" as String, args(varX(RS), varX(ENTITY))),
+                            returnS(constX(null)),
+                            stmt(new BinaryExpression(varX(EMPTY_ENTITY), newSymbol(EQUALS, -1, -1), constX(false)))
+                        )
+                    } else {
+                        ifS(
+                            notX(
+                                callThisX("map${p.propertyName.capitalize()}" as String, args(varX(RS), varX(ENTITY)))
+                            ),
+                            new BinaryExpression(varX(EMPTY_ENTITY), newSymbol(EQUALS, -1, -1), constX(false))
+                        )
+                    }
                 },
                 returnS(ternaryX(varX(EMPTY_ENTITY), constX(null), varX(ENTITY)))
             ), params(param(make(ResultSet), RS), param(OBJECT_TYPE, ENTITY))))

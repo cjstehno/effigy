@@ -9,7 +9,7 @@ buildscript {
 }
 
 subprojects {
-    version = '0.4.0'
+    version = '0.4.1'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'

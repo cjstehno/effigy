@@ -114,12 +114,6 @@ class EntityModel {
         return entityNode.nameWithoutPackage.toLowerCase() + PLURAL
     }
 
-    static List<EmbeddedPropertyModel> embeddedEntityProperties(ClassNode entityNode) {
-        entityNode.fields.findAll { f -> annotatedWith(f, Embedded) }.collect { field ->
-            extractEmbeddedProperty(field)
-        }
-    }
-
     static List<AssociationPropertyModel> associations(ClassNode entityNode) {
         entityNode.fields.findAll { f -> annotatedWith(f, Association) || isEntity(f.type) }.collect { assoc ->
             def annotationNode = assoc.getAnnotations(make(Association))[0]
