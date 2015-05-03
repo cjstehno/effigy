@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.690s</div>
+<div class="counter">0.620s</div>
 <p>duration</p>
 </div>
 </td>
@@ -82,17 +82,17 @@
 </thead>
 <tr>
 <td class="success">boolean updateAge(String name, int age)</td>
-<td>0.606s</td>
+<td>0.555s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">int addSomeone(String name, int age)</td>
-<td>0.020s</td>
+<td>0.015s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">long addSomeone(String name, int age):setter</td>
-<td>0.064s</td>
+<td>0.050s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -100,50 +100,50 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>10:41:58.292 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
-10:41:58.299 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
-10:41:58.332 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (java.lang.Integer) for method (ages).
-10:41:58.519 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
-10:41:58.519 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
-10:41:58.540 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (int) for method (count).
-10:41:58.583 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
-10:41:58.583 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
-10:41:58.585 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (int) for method (count).
+<pre>21:15:35.246 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
+21:15:35.257 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
+21:15:35.306 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (java.lang.Integer) for method (ages).
+21:15:35.446 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
+21:15:35.446 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
+21:15:35.460 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (int) for method (count).
+21:15:35.496 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Removed abstract from repository class (testing.UpdateTestRepository).
+21:15:35.497 [Test worker] DEBUG c.s.e.t.RepositoryTransformer - Added autowired JdbcTemplate property to repository class (testing.UpdateTestRepository).
+21:15:35.498 [Test worker] DEBUG c.s.e.transform.SqlSelectTransformer - Resolved return type (int) for method (count).
 </pre>
 </span>
 </div>
 <div id="tab2" class="tab">
 <h2>Standard error</h2>
 <span class="code">
-<pre>Apr 25, 2015 10:41:57 AM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
+<pre>May 02, 2015 9:15:34 PM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
 INFO: Creating embedded database 'testdb'
-Apr 25, 2015 10:41:57 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:34 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [schema-a.sql]
-Apr 25, 2015 10:41:57 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:34 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executed SQL script from class path resource [schema-a.sql] in 2 ms.
-Apr 25, 2015 10:41:57 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:34 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [data-a.sql]
-Apr 25, 2015 10:41:57 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:34 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executed SQL script from class path resource [data-a.sql] in 2 ms.
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
 INFO: Creating embedded database 'testdb'
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [schema-a.sql]
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executed SQL script from class path resource [schema-a.sql] in 1 ms.
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [data-a.sql]
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
-INFO: Executed SQL script from class path resource [data-a.sql] in 1 ms.
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+INFO: Executed SQL script from class path resource [data-a.sql] in 2 ms.
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseFactory initDatabase
 INFO: Creating embedded database 'testdb'
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [schema-a.sql]
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executed SQL script from class path resource [schema-a.sql] in 0 ms.
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executing SQL script from class path resource [data-a.sql]
-Apr 25, 2015 10:41:58 AM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
+May 02, 2015 9:15:35 PM org.springframework.jdbc.datasource.init.ScriptUtils executeSqlScript
 INFO: Executed SQL script from class path resource [data-a.sql] in 1 ms.
 </pre>
 </span>
@@ -156,7 +156,7 @@ INFO: Executed SQL script from class path resource [data-a.sql] in 1 ms.
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 2.3</a> at Apr 25, 2015 10:41:59 AM</p>
+<a href="http://www.gradle.org">Gradle 2.3</a> at May 2, 2015 9:15:35 PM</p>
 </div>
 </div>
 </body>
