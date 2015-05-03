@@ -33,7 +33,7 @@ development artifact using:
 
 Then add it to your dependencies:
 
-    com.stehno.effigy:effigy-core:0.4.0
+    com.stehno.effigy:effigy-core:0.4.1
 
 > The most stable method at this point is to build it yourself, since the current codebase may or may not be reflected in the published build.
 
