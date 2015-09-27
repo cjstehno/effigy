@@ -1,20 +1,9 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.github.ben-manes:gradle-versions-plugin:0.8'
-    }
-}
-
 subprojects {
-    version = '0.4.1'
+    version = '0.5.0'
     group = 'com.stehno.effigy'
 
     apply plugin: 'groovy'
     apply plugin: 'codenarc'
-    apply plugin: 'com.github.ben-manes.versions'
 
     sourceCompatibility = 8
     targetCompatibility = 8
@@ -32,13 +21,13 @@ subprojects {
     }
 
     dependencies {
-        compile 'org.codehaus.groovy:groovy-all:2.4.3'
+        compile 'org.codehaus.groovy:groovy-all:2.4.4'
 
         testCompile 'junit:junit:4.12'
         testCompile 'org.mockito:mockito-all:1.9.5'
 
-        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.3"
-        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.3"
+        groovyDoc "org.codehaus.groovy:groovy-groovydoc:2.4.4"
+        groovyDoc "org.codehaus.groovy:groovy-ant:2.4.4"
     }
 
     test {
@@ -50,7 +39,7 @@ subprojects {
     }
 
     codenarc {
-        toolVersion = '0.23'
+        toolVersion = '0.24.1'
     }
 
     codenarcMain {
@@ -98,5 +87,5 @@ task cleanGuide(type:Exec,group:'Documentation', description:'Cleans the user gu
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
+    gradleVersion = '2.7'
 }
