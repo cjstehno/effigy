@@ -16,102 +16,184 @@
 
 package com.stehno.effigy.transform
 
-import com.stehno.effigy.annotation.PreparedStatementSetter
-import com.stehno.effigy.annotation.ResultSetExtractor
-import com.stehno.effigy.annotation.RowMapper
-import com.stehno.effigy.transform.jdbc.RowMapperRegistry
-import groovy.util.logging.Slf4j
-import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.MethodNode
+import com.stehno.effigy.JdbcStrategy
+import com.stehno.effigy.transform.model.SqlSelectModel
+import com.stehno.effigy.transform.sql.SqlTemplate
+import groovy.sql.Sql
+import groovy.transform.TypeChecked
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.control.CompilePhase
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.transform.AbstractASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
+import org.springframework.jdbc.core.JdbcOperations
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.support.JdbcAccessor
 
-import static com.stehno.effigy.transform.ClassManipulationUtils.applyArguments
-import static com.stehno.effigy.transform.SqlHelperAnnotation.resolveHelperX
-import static com.stehno.effigy.transform.sql.RawSqlBuilder.rawSql
-import static com.stehno.effigy.transform.util.AnnotationUtils.extractString
-import static com.stehno.effigy.transform.util.JdbcTemplateHelper.queryX
-import static org.codehaus.groovy.ast.ClassHelper.VOID_TYPE
+import javax.sql.DataSource
+
 import static org.codehaus.groovy.ast.ClassHelper.make
 import static org.codehaus.groovy.ast.tools.GeneralUtils.*
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass
 
-/**
- * Transformer used to process <code>@SqlSelect</code> annotated methods.
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION) @TypeChecked
+class SqlSelectTransformer extends AbstractASTTransformation {
+
+    // FIXME: add @ParamName annotation to use a replacement name different from the method parameter name
+
+    // FIXME: row mapper support
+    // FIXME: result set extractor support
+    // FIXME: strategy support
+    // FIXME: support for rename param or use as ordinal (via Param annot)
+
+    // FIXME: sql should allow groovy templating
+    // -- select a,b,c from stuff where d=:{foo.d} and e=:{foo.d * 2}
+
+
+    private static final List<ClassNode> ALLOWED_SOURCE_TYPES = [
+        make(DataSource), make(JdbcTemplate), make(JdbcOperations), make(JdbcAccessor), make(Sql)
+    ].asImmutable()
+
+    @Override
+    void visit(ASTNode[] nodes, SourceUnit source) {
+        AnnotationNode annotationNode = nodes[0] as AnnotationNode
+        MethodNode methodNode = nodes[1] as MethodNode
+
+        SqlSelectModel model = SqlSelectModel.extract(annotationNode)
+
+        VariableExpression sourceX = findSource(methodNode.declaringClass, model.source)
+        SqlTemplate sqlTemplate = new SqlTemplate(model.sql)
+        // TODO: should the model just provide this?
+
+        methodNode.code = model.strategy == JdbcStrategy.SPRING ? springMethod() : groovyMethod(methodNode, sourceX, sqlTemplate)
+    }
+
+    static enum ReturnCategory {
+        SINGLE, COLLECTION
+    }
+
+    private static ReturnCategory returnCategory(MethodNode methodNode) {
+        /*
+    void is error
+    single object or primitive
+    collection (Collection, Array)
+    other is error
  */
-@Slf4j
-class SqlSelectTransformer extends MethodImplementingTransformation {
 
-    private static final RowMapperRegistry ROW_MAPPERS = new RowMapperRegistry()
-    private static final String RESULTS = 'results'
-    private static final String VALUE = 'value'
-
-    SqlSelectTransformer() {
-        entityRequired = false
     }
 
-    @Override
-    protected boolean isValidReturnType(ClassNode returnType, ClassNode entityNode) {
-        returnType != VOID_TYPE
-    }
+    private static Statement groovyMethod(MethodNode methodNode, VariableExpression sourceX, SqlTemplate sqlTemplate) {
+        // FIXME: resolve the way the DataSource is provided
 
-    @Override
-    protected void implementMethod(AnnotationNode annotationNode, ClassNode repoNode, ClassNode entityNode, MethodNode methodNode) {
-        def code = block()
+        Expression sqlX
+        if (sourceX.type == ALLOWED_SOURCE_TYPES[0]) {
+            // use DataSource
+            sqlX = ctorX(make(Sql), args(sourceX))
 
-        def sql = rawSql(extractString(annotationNode, VALUE)).parameters(methodNode.parameters)
-        def setter = resolveHelperX(repoNode, methodNode, PreparedStatementSetter, org.springframework.jdbc.core.PreparedStatementSetter)
-        def extractor = resolveHelperX(repoNode, methodNode, ResultSetExtractor, org.springframework.jdbc.core.ResultSetExtractor)
+        } else if (sourceX.type == ALLOWED_SOURCE_TYPES[1]) {
+            // get .dataSource
+            sqlX = ctorX(make(Sql), args(callX(sourceX, 'getDataSource')))
 
-        //noinspection GroovyAssignabilityCheck
-        Expression qx = queryX(
-            sql.build(),
-            applyArguments(
-                methodNode,
-                ResultSetExtractor,
-                code,
-                extractor
-            ) ?: applyArguments(methodNode, RowMapper, code, resolveRowMapper(repoNode, methodNode)),
-            setter ? applyArguments(methodNode, PreparedStatementSetter, code, setter) : sql.params
+        } else if (sourceX.type == ALLOWED_SOURCE_TYPES[2]) {
+            throw new IllegalArgumentException("JdbcOperations does not provide a DataSource for use in a Groovy strategy.")
+
+        } else if (sourceX.type == ALLOWED_SOURCE_TYPES[3]) {
+            // get .dataSource
+            sqlX = ctorX(make(Sql), args(callX(sourceX, 'getDataSource')))
+
+        } else if (sourceX.type == ALLOWED_SOURCE_TYPES[4]) {
+            // use the Sql
+            sqlX = sourceX
+        }
+
+        def code = block(
+            declS(varX('_sql'), sqlX)
         )
 
-        if (extractor) {
-            // assume extractors do their own return type conversion
-            code.addStatement(returnS(qx))
+        // FIXME: translate the sql and use the arguments
+        // FIMXE: resolve the row mapper or extractor
+
+        ReturnCategory returnCategory = returnCategory(methodNode)
+        if (returnCategory == ReturnCategory.SINGLE) {
+            // single return value
+            // sql.firstRow(_sqlText, args...)
 
         } else {
-            if (methodNode.returnType.isArray() || methodNode.returnType.interfaces.contains(make(Collection))) {
-                // just return the results and let groovy handle casting
-                code.addStatement(returnS(qx))
+            // collection return value
+            // sql.eachRow(_sqlText, args){ row->
+        }
 
+        return code
+    }
+
+    private static Statement springMethod() {
+
+    }
+
+    // TODO: refactor this - it's ugly and not very efficient (probably extracted too)
+    private static VariableExpression findSource(final ClassNode classNode, final String sourceName) {
+        if (sourceName) {
+            // search the types for a source with the given name
+
+            PropertyNode sourceProperty = classNode.properties.find { pn ->
+                pn.name == sourceName && pn.type in ALLOWED_SOURCE_TYPES
+            }
+
+            if (sourceProperty) {
+                return varX(sourceName, newClass(sourceProperty.type))
+            }
+
+            FieldNode sourceField = classNode.fields.find { fn ->
+                fn.name == sourceName && fn.type in ALLOWED_SOURCE_TYPES
+            }
+
+            if (sourceField) {
+                return varX(sourceName, newClass(sourceField.type))
+            }
+
+            MethodNode methodNode = classNode.methods.find { mn ->
+                mn.name == sourceName && mn.returnType in ALLOWED_SOURCE_TYPES
+            }
+
+            if (sourceField) {
+                return varX(sourceName, newClass(methodNode.returnType))
             } else {
-                // return the first element in the results
-                code.addStatement(declS(varX(RESULTS), qx))
-                code.addStatement(returnS(callX(varX(RESULTS), 'get', args(constX(0)))))
+                throw new IllegalArgumentException("No source ($sourceName) found in class (${classNode.name}).")
+            }
+
+        } else {
+            // search for types in order
+
+            for (ClassNode sourceType in ALLOWED_SOURCE_TYPES) {
+                String typeSourceName = "${sourceType.nameWithoutPackage[0].toLowerCase()}${sourceType.nameWithoutPackage[1..-1]}" as String
+
+                PropertyNode sourceProperty = classNode.properties.find { pn -> pn.name == typeSourceName }
+
+                if (sourceProperty) {
+                    return varX(typeSourceName, newClass(sourceType))
+                }
+
+                FieldNode sourceField = classNode.fields.find { fn -> fn.name == typeSourceName }
+
+                if (sourceField) {
+                    return varX(typeSourceName, newClass(sourceType))
+                }
+
+                MethodNode methodNode = classNode.methods.find { mn -> mn.name == typeSourceName }
+
+                if (sourceField) {
+                    return varX(typeSourceName, newClass(sourceType))
+                } else {
+                    throw new IllegalArgumentException("No source (${sourceType.nameWithoutPackage} $typeSourceName) found in class (${classNode.name}).")
+                }
+
             }
         }
 
-        updateMethod repoNode, methodNode, code
-    }
-
-    private static Expression resolveRowMapper(final ClassNode repoNode, final MethodNode methodNode) {
-        resolveHelperX(
-            repoNode,
-            methodNode,
-            RowMapper,
-            org.springframework.jdbc.core.RowMapper
-        ) ?: ROW_MAPPERS.findRowMapper(resolveReturnType(methodNode))
-    }
-
-    private static ClassNode resolveReturnType(final MethodNode methodNode) {
-        def returnType = methodNode.returnType
-
-        if (methodNode.returnType.isUsingGenerics()) {
-            returnType = methodNode.returnType.genericsTypes[0].type
-        }
-
-        log.debug 'Resolved return type ({}) for method ({}).', returnType.name, methodNode.name
-
-        returnType
     }
 }
+
 

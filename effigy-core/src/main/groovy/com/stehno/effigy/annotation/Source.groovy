@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package com.stehno.effigy.transform.sql
+package com.stehno.effigy.annotation
 
-import org.junit.Test
+import java.lang.annotation.*
 
-class SqlTemplateTest {
+/**
+ * Created by cjstehno on 9/27/15.
+ */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@interface Source {
 
-    @Test void 'multiple replacements'() {
-        def template = new SqlTemplate('select @a,#b,@c from somewhere where x = :x and y = :x')
-
-        assert template.propertyNames().size() == 2
-        assert template.propertyNames().containsAll(['@a', '@c'])
-
-        assert template.macroNames().size() == 1
-        assert template.macroNames().contains('#b')
-
-        // TODO: not sure this is what I want to happen or not, investigate further
-        assert template.variableNames().size() == 2
-    }
+    String value()
 }

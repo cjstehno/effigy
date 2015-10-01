@@ -19,15 +19,14 @@ package com.stehno.effigy.annotation
 import java.lang.annotation.*
 
 /**
- * Augments a Map property annotated with the @Association annotation to enable additional meta configuration.
+ * Created by cjstehno on 9/27/15.
  */
-@Target(ElementType.FIELD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@interface Mapped {
+@interface Param {
 
-    /**
-     * Specifies the property whose value is to be used as the map key. If this annotation is not used, the entity id will be used.
-     */
-    String keyProperty()
+    String name() default ''
+
+    int[] ordinals() default []
 }

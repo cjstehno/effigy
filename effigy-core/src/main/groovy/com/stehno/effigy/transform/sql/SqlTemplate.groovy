@@ -16,90 +16,28 @@
 
 package com.stehno.effigy.transform.sql
 
-import org.codehaus.groovy.ast.ClassNode
-
-import static com.stehno.effigy.transform.model.EntityModel.*
+import groovy.transform.ToString
 
 /**
- * A templatized SQL statement.
+ * Created by cjstehno on 9/29/15.
  */
+@ToString(includeNames = true, includeFields = true)
 class SqlTemplate {
 
     private static final VARIABLE_PATTERN = /:[A-Za-z0-9]*/
-    private static final PROPERTY_PATTERN = /@[A-Za-z0-9]*/
-    private static final MACRO_PATTERN = /#[A-Za-z0-9]*/
+    private final String sql
 
-    final String text
-
-    SqlTemplate(final String text) {
-        this.text = text
+    SqlTemplate(final String sql) {
+        this.sql = sql
     }
 
-    /**
-     * Retrieves the property names from the string (the @name values).
-     *
-     * return a Set of property names (including the @ prefix)
+    /*
+        supports
+            named variables "select a,b from foo where x=:someX"
+            properties "select a,b from foo where x=:{bar.x * 10}"
+            ordinal "select a,b from foo where x=? and y=?"
+
+            names must match args or Param annot values
+            ordinal must match method arg order or Param annot values
      */
-    Set<String> propertyNames() {
-        text.findAll(PROPERTY_PATTERN).unique()
-    }
-
-    /**
-     * Retrieves the variable replacement names from the string (the :name values).
-     *
-     * @return a List of the variable names (including the : prefix)
-     */
-    List<String> variableNames() {
-        text.findAll(VARIABLE_PATTERN)
-    }
-
-    /**
-     * Retrieves the macro replacement names from the string (the #name values).
-     *
-     * @return a List of the macro names (including the # prefix)
-     */
-    List<String> macroNames() {
-        text.findAll(MACRO_PATTERN)
-    }
-
-    /**
-     * Converts the Sql template text into valid a valid SQL fragment based on the provided entity node. The
-     * properties are converted to the proper column names and the replacement variables are converted to proper
-     * JDBC placeholders (?).
-     *
-     * Also converts the macros to their proper column names (supports #id and #version).
-     *
-     * e.g.
-     *
-     * @firstName = :firstName
-     *
-     * -becomes-
-     *
-     *  first_name = ?
-     *
-     * @param entityNode the entity node to be referenced in the SQL fragment
-     * @return the converted SQL fragment
-     */
-    @SuppressWarnings('GroovyAssignabilityCheck')
-    String sql(ClassNode entityNode) {
-        String sql = text.replaceAll(VARIABLE_PATTERN, '?')
-
-        String tableName = entityTable(entityNode)
-
-        // TODO: pull this out into more configurable form - could support more macros
-        macroNames().each { macro ->
-            if (macro.equalsIgnoreCase('#id')) {
-                sql = sql.replace(macro, "${tableName}.${identifier(entityNode).column.name}")
-
-            } else if (macro.equalsIgnoreCase('#version')) {
-                sql = sql.replace(macro, "${tableName}.${versioner(entityNode).column.name}")
-            }
-        }
-
-        propertyNames().each { String pname ->
-            sql = sql.replaceAll(pname, "${tableName}.${entityProperty(entityNode, pname[1..-1]).column.name}")
-        }
-
-        sql
-    }
 }

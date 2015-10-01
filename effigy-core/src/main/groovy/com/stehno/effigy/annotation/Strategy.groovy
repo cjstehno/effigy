@@ -16,14 +16,17 @@
 
 package com.stehno.effigy.annotation
 
+import com.stehno.effigy.JdbcStrategy
+
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote that the annotated parameter is to be used as the limit for the query. The annotated
- * parameter should be an Integer or int.
+ * Created by cjstehno on 9/27/15.
  */
-@Target(ElementType.PARAMETER)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@interface Limit {
+@interface Strategy {
+
+    JdbcStrategy strategy()
 }

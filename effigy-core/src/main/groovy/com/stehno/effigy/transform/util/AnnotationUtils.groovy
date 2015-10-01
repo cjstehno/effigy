@@ -16,41 +16,36 @@
 
 package com.stehno.effigy.transform.util
 
+import groovy.transform.TypeChecked
 import org.codehaus.groovy.ast.AnnotationNode
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.AnnotationConstantExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
+
+import static groovy.transform.TypeCheckingMode.SKIP
 
 /**
- * Utilities for working with annotations and AST transformations.
+ * Created by cjstehno on 9/29/15.
  */
+@TypeChecked
 class AnnotationUtils {
 
-    // FIXME: most of these will only work with constant expressions - document and/or refactor
-
-    static ClassNode extractClass(AnnotationNode annotation, String key) {
-        def pair = annotation.members.find { pair -> pair.key == key }
-        if (pair == null) {
-            return null
+    static AnnotationConstantExpression extractAnnotation(AnnotationNode annotation, String name) {
+        def member = annotation.members[name] as AnnotationConstantExpression
+        if (member) {
+            return member
+        } else {
+            throw new IllegalArgumentException("Annotation member (String $name) has no specified value.")
         }
-        return pair.value.type
     }
 
-    static String extractString(AnnotationNode annotation, String key, String defvalue = null) {
-        def pair = annotation.members.find { pair -> pair.key == key }
-        return pair ? pair.value.value : defvalue
+    static AnnotationConstantExpression extractAnnotation(AnnotationNode annotation, String name, AnnotationConstantExpression defaultValue) {
+        def member = annotation.members[name] as AnnotationConstantExpression
+        return member ?: defaultValue
     }
 
-    static boolean extractBoolean(AnnotationNode annotation, String key, boolean defvalue = false) {
-        def pair = annotation.members.find { pair -> pair.key == key }
-        return pair ? pair.value.value : defvalue
-    }
-
-    static Integer extractInteger(AnnotationNode annotation, String key, Integer defvalue = null) {
-        def pair = annotation.members.find { pair -> pair.key == key }
-        return pair ? pair.value.value : defvalue
-    }
-
-    static extractExpression(AnnotationNode node, String name, Expression defaultValue = null) {
-        node?.getMember(name) ?: defaultValue
+    @TypeChecked(SKIP)
+    static <E> E extractEnum(AnnotationNode annotation, String name, E defaultValue) {
+        def member = annotation.members[name] as PropertyExpression
+        return member?.property?.text ? defaultValue.class.valueOf(member.property.text) : defaultValue
     }
 }

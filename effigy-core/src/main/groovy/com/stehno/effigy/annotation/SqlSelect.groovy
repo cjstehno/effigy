@@ -16,10 +16,14 @@
 
 package com.stehno.effigy.annotation
 
+import com.stehno.effigy.JdbcStrategy
+import com.stehno.effigy.transform.SqlSelectTransformer
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
+
 import java.lang.annotation.*
 
 /**
- * Annotation used to denote a custom SQL-based select query method in an Effigy repository.
+ * Annotation used to denote a custom SQL-based select query method in a repository.
  *
  * A "select" method may accept any type or primitive as input parameters; however, the name of the parameter will used as the name of the replacement
  * variable in the SQL statement, so they will need to be consistent.
@@ -31,6 +35,7 @@ import java.lang.annotation.*
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@GroovyASTTransformationClass(classes = [SqlSelectTransformer])
 @interface SqlSelect {
 
     /**
@@ -38,4 +43,31 @@ import java.lang.annotation.*
      * using the parameter name prefixed with a colon (e.g. `:firstName`).
      */
     String value()
+
+    /**
+     Type           | Default Name
+     DataSource     | dataSource
+     JdbcOperations | jdbcOperations
+     JdbcTemplate   | jdbcTemplate (.dataSource)
+     JdbcAccessor   | jdbcAccessor (.dataSource)
+
+     look for a property, field, method
+     strategy does not matter (they can be mixed)
+     */
+    String source() default ''
+
+    /**
+     * FIXME: document
+     */
+    JdbcStrategy strategy() default JdbcStrategy.GROOVY
+
+    /**
+     * FIXME: document
+     */
+    RowMapper mapper() default @RowMapper()
+
+    /**
+     * FIXME: document
+     */
+    ResultSetExtractor extractor() default @ResultSetExtractor()
 }
