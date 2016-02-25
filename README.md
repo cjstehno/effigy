@@ -1,7 +1,7 @@
 
 # Effigy
 
-> WARNING: this project is not ready for general use yet
+> WARNING: this project is not ready for general use yet - in fact, it is effectively dormant. The different SQL dialects and deeper use cases make this project overly difficult to implement (for free). I think this is still a valid project, it's just too much work unless I either need it for something or get paid to develop it. If you would like to donate code or money towards its further development, please feel free to contact me.
 
 ## Introduction
 
